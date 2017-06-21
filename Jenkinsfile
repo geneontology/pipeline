@@ -10,7 +10,7 @@ pipeline {
 			sh 'echo "$BRANCH_NAME"'
 			sh 'cat env.txt'
 			sh 'cat branch.txt'
-		    }
+		    },
 		    "Reset base": {
 			// Get a mount point ready
 			sh 'mkdir -p $WORKSPACE/mnt || true'
