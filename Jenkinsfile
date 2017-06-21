@@ -9,7 +9,7 @@ pipeline {
 		sh 'cat env.txt'
 		sh 'cat branch.txt'
 		// Ninja in our file credentials from Jenkins.
-		withCredentials([file(credentialsId: 'id_rsa_nopass.skyhook', variable: 'SKYHOOK_IDENTITY')]) {
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    // Try and ssh fuse skyhook onto our local system.
 		    sh 'sshfs -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 		}
