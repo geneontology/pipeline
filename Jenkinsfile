@@ -8,6 +8,8 @@ pipeline {
 		sh 'echo "$BRANCH_NAME"'
 		sh 'cat env.txt'
 		sh 'cat branch.txt'
+		// Get a mount point ready
+		sh 'mkdir -p $WORKSPACE/mnt || true'
 		// Ninja in our file credentials from Jenkins.
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    // Try and ssh fuse skyhook onto our local system.
