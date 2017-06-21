@@ -1,7 +1,7 @@
 pipeline {
     agent any
     stages {
-	stage('Reset') {
+	stage('Reset base') {
 	    steps {
 		sh 'env > env.txt'
 		sh 'echo $BRANCH_NAME > branch.txt'
@@ -20,10 +20,18 @@ pipeline {
 		sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME || true'
 		// Rebuild directory structure.
 		sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
+		sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
+		sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
+		sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/share || true'
+		sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools || true'
+		sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/reporting || true'
+		sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/contrib || true'
+		sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/robot || true'
 		// Tag the top to let the world know I was at least
 		// here.
 		sh 'date > $WORKSPACE/mnt/$BRANCH_NAME/timestamp.txt'
-		// TODO: This should be wrapped in exception handling.
+		// TODO: This should be wrapped in exception
+		// handling. In fact, this whole thing should be.
 		sh 'fusermount -u $WORKSPACE/mnt/'
 	    }
 	}
