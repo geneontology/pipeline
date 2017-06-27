@@ -69,7 +69,7 @@ pipeline {
 			    // sure maven-help-plugin is installed
 			    sh 'mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version'
 			    // Now get and set the version.
-			    sh "VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | sed 's/-SNAPSHOT//'`"
+			    sh 'VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v \'\\[\' | sed \'s/-SNAPSHOT//\'`'
 			    sh 'BUILD=`git rev-parse --short HEAD`'
 			    sh 'mvn versions:set -DnewVersion=$VERSION+$BUILD'
 			    sh 'mvn -U clean install'
