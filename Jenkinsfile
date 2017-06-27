@@ -62,8 +62,11 @@ pipeline {
 		    },
 		    "Ready robot": {
 			// Legacy: build 'robot-build'
+			sh 'ls'
 			git 'https://github.com/ontodev/robot.git'
+			sh 'ls'
 			dir('./robot') {
+			    sh 'ls'
 			    // Update the POMs by replacing "SNAPSHOT"
 			    // with the current Git hash. First make
 			    // sure maven-help-plugin is installed
