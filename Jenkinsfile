@@ -47,10 +47,13 @@ pipeline {
 		parallel(
 		    "Ready owltools": {
 			// Legacy: build 'owltools-build'
+			pwd
 			sh 'ls'
 			git 'https://github.com/owlcollab/owltools.git'
+			pwd
 			sh 'ls'
 			dir('./owltools') {
+			    pwd
 			    sh 'ls'
 			    sh 'mvn -U clean install -DskipTests -Dmaven.javadoc.skip=true -Dsource.skip=true'
 			    // Attempt to rsync produced bin.
