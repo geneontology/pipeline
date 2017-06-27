@@ -41,20 +41,47 @@ pipeline {
 		)
 	    }
 	}
-	// stage('Ready production software') {
-	//     steps {
-	// 	parallel(
-	// 	    "Ready owltools": {
-	// 		build 'owltools-build'
-			
-	// 	    },
-	// 	    "Ready robot": {
-	// 		build 'robot-build'
-			
-	// 	    }
-	// 	)
-	//     }
-	// }
+	// Build owltools and get it into the shared filesystem.
+	stage('Ready production software') {
+	    steps {
+		parallel(
+		    "Ready owltools": {
+			// Legacy: build 'owltools-build'
+			git 'https://github.com/owlcollab/owltools.git'
+			dir('./owltools') {
+			    sh 'mvn -U clean install -DskipTests -Dmaven.javadoc.skip=true -Dsource.skip=true'
+			    // Attempt to rsync produced bin.
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Runner/target/owltools skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Oort/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-NCBI/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/'
+				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Oort/reporting/ skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/reporting'
+				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Runner/contrib/ skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/contrib'
+			    }
+			}
+		    },
+		    "Ready robot": {
+			// Legacy: build 'robot-build'
+			git 'https://github.com/ontodev/robot.git'
+			dir('./robot') {
+			    // Update the POMs by replacing "SNAPSHOT"
+			    // with the current Git hash. First make
+			    // sure maven-help-plugin is installed
+			    sh 'mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version'
+			    // Now get and set the version.
+			    sh "VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | sed 's/-SNAPSHOT//'`"
+			    sh 'BUILD=`git rev-parse --short HEAD`'
+			    sh 'mvn versions:set -DnewVersion=$VERSION+$BUILD'
+			    sh 'mvn -U clean install'
+			    // Attempt to rsync produced bin.
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			    }
+			}
+		    }
+		)
+	    }
+	}
 	// stage('Produce ontology') {
 	//     steps {
 	// 	build 'ontology-production'
