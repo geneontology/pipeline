@@ -47,14 +47,12 @@ pipeline {
 		parallel(
 		    "Ready owltools": {
 			// Legacy: build 'owltools-build'
-			sh 'pwd'
-			sh 'ls'
-			git 'https://github.com/owlcollab/owltools.git'
-			sh 'pwd'
-			sh 'ls'
+			//sh 'pwd'
+			//sh 'ls'
 			dir('./owltools') {
-			    sh 'pwd'
-			    sh 'ls'
+			    //sh 'pwd'
+			    //sh 'ls'
+			    git 'https://github.com/owlcollab/owltools.git'
 			    sh 'mvn -U clean install -DskipTests -Dmaven.javadoc.skip=true -Dsource.skip=true'
 			    // Attempt to rsync produced bin.
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
