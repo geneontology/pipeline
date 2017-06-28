@@ -115,7 +115,7 @@ pipeline {
 		    // sh 'export PATH=$PATH:`pwd`/bin'
 		    // builds
 		    dir('./src/ontology') {
-			withEnv(['PATH=$PATH:../../owltools:../../owltools/reporting:../../oboedit:../../bin']){
+			withEnv(['PATH+EXTRA=../../owltools:../../owltools/reporting:../../oboedit:../../bin']){
 			    sh 'make all'
 			    sh 'make prepare_release'
 			}
