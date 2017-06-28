@@ -114,7 +114,12 @@ pipeline {
 		    // sh 'export PATH=$PATH:`pwd`/oboedit'
 		    // sh 'export PATH=$PATH:`pwd`/bin'
 		    // builds
-		    sh 'PATH=$PATH:`pwd`/owltools:`pwd`/owltools/reporting:`pwd`/oboedit:`pwd`/bin cd src/ontology && make all && make prepare_release'
+		    withEnv(['PATH=$PATH:`pwd`/owltools:`pwd`/owltools/reporting:`pwd`/oboedit:`pwd`/bin']){
+			dir('./src/ontology') {
+			    sh 'make all'
+			    sh 'make prepare_release'
+			}
+		    }
 		}
 	    }
 	}
