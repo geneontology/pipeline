@@ -105,8 +105,8 @@ pipeline {
 		    sh 'chmod 755 owltools/owltools'
 		    // TODO: explanation
 		    sh 'mkdir -p bin'
-		    sh 'wget http://skyhook.berkeleybop.org/bin/robot -O bin/robot'
-		    sh 'wget http://skyhook.berkeleybop.org/bin/robot.jar -O bin/robot.jar'
+		    sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot -O bin/robot'
+		    sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot.jar -O bin/robot.jar'
 		    sh 'chmod +x bin/*'
 		    // add owltools to path, required for scripts
 		    sh 'export PATH=$PATH:`pwd`/owltools'
