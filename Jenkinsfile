@@ -114,7 +114,11 @@ pipeline {
 		    // sh 'export PATH=$PATH:`pwd`/oboedit'
 		    // sh 'export PATH=$PATH:`pwd`/bin'
 		    // builds
+		    // 
 		    dir('./src/ontology') {
+			// Note weird pipeline syntax to change the
+			// PATH var--O was unable to the "correct"
+			// `pwd` thing, so here we are.
 			withEnv(['PATH+EXTRA=../../owltools:../../owltools/reporting:../../oboedit:../../bin']){
 			    sh 'make all'
 			    sh 'make prepare_release'
