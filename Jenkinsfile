@@ -30,7 +30,7 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/reporting || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/contrib || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/robot || true'
+			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/robot || true'
 			// Tag the top to let the world know I was at least
 			// here.
 			sh 'date > $WORKSPACE/mnt/$BRANCH_NAME/timestamp.txt'
@@ -70,7 +70,7 @@ pipeline {
 		    	    // sure maven-help-plugin is installed
 		    	    sh 'mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version'
 		    	    // Now get and set the version.
-		    	    //sh 'VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | sed 's/-SNAPSHOT//'`'
+		    	    // Originally: sh 'VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | sed 's/-SNAPSHOT//'`'
 		    	    sh 'VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v \'\\[\' | sed \'s/-SNAPSHOT//\'`'
 		    	    sh 'BUILD=`git rev-parse --short HEAD`'
 		    	    sh 'mvn versions:set -DnewVersion=$VERSION+$BUILD'
@@ -84,11 +84,41 @@ pipeline {
 		)
 	    }
 	}
-	// stage('Produce ontology') {
-	//     steps {
-	// 	build 'ontology-production'
-	//     }
-	// }
+	// See https://github.com/geneontology/go-ontology for details
+	// on the ontology release pipeline. This ticket runs
+	// daily(TODO?) and creates all the files normally included in
+	// a a release, and deploys to S3
+	stage('Produce ontology') {
+	    steps {
+		// Legacy: build 'ontology-production'
+		dir('./go-ontology') {
+		    git 'https://github.com/geneontology/go-ontology.git'
+		    // Default namespace
+		    sh 'OBO=http://purl.obolibrary.org/obo'
+		    // TODO: explanation
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools ./'
+		    }
+		    sh 'chmod 755 owltools/ontology-release-runner'
+		    sh 'chmod 755 owltools/reporting/compare-obo-files.pl'
+		    sh 'chmod 755 owltools/reporting/compare-defs.pl'
+		    sh 'chmod 755 owltools/owltools'
+		    // TODO: explanation
+		    sh 'mkdir -p bin'
+		    sh 'wget http://skyhook.berkeleybop.org/bin/robot -O bin/robot'
+		    sh 'wget http://skyhook.berkeleybop.org/bin/robot.jar -O bin/robot.jar'
+		    sh 'chmod +x bin/*'
+		    // add owltools to path, required for scripts
+		    sh 'export PATH=$PATH:`pwd`/owltools'
+		    sh 'export PATH=$PATH:`pwd`/owltools/reporting'
+		    sh 'export PATH=$PATH:`pwd`/oboedit'
+		    sh 'export PATH=$PATH:`pwd`/bin'
+		    // builds
+		    sh 'cd src/ontology && make all'
+		    sh 'cd src/ontology && make prepare_release'
+		}
+	    }
+	}
 	// stage('Produce GAFs') {
 	//     steps {
 	// 	build 'gaf-production'
