@@ -109,13 +109,12 @@ pipeline {
 		    sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot.jar -O bin/robot.jar'
 		    sh 'chmod +x bin/*'
 		    // add owltools to path, required for scripts
-		    sh 'export PATH=$PATH:`pwd`/owltools'
-		    sh 'export PATH=$PATH:`pwd`/owltools/reporting'
-		    sh 'export PATH=$PATH:`pwd`/oboedit'
-		    sh 'export PATH=$PATH:`pwd`/bin'
+		    // sh 'export PATH=$PATH:`pwd`/owltools'
+		    // sh 'export PATH=$PATH:`pwd`/owltools/reporting'
+		    // sh 'export PATH=$PATH:`pwd`/oboedit'
+		    // sh 'export PATH=$PATH:`pwd`/bin'
 		    // builds
-		    sh 'cd src/ontology && make all'
-		    sh 'cd src/ontology && make prepare_release'
+		    sh 'PATH=$PATH:`pwd`/owltools:`pwd`/owltools/reporting:`pwd`/oboedit:`pwd`/bin cd src/ontology && make all && make prepare_release'
 		}
 	    }
 	}
