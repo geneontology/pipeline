@@ -2,7 +2,10 @@ pipeline {
     agent any
     // In additional to manual runs, trigger somewhere around 8pm.
     triggers {
-	cron('H 20 * * *')
+	// Nightly @8pm, for "snapshot".
+	cron('0 20 * * *')
+	// First of the month @8pm, for "release" (also "current").
+	//cron('0 20 1 * *')
     }
     stages {
 	stage('Initialize') {
@@ -112,14 +115,8 @@ pipeline {
 		    sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot -O bin/robot'
 		    sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot.jar -O bin/robot.jar'
 		    sh 'chmod +x bin/*'
-		    // add owltools to path, required for scripts
-		    // sh 'export PATH=$PATH:`pwd`/owltools'
-		    // sh 'export PATH=$PATH:`pwd`/owltools/reporting'
-		    // sh 'export PATH=$PATH:`pwd`/oboedit'
-		    // sh 'export PATH=$PATH:`pwd`/bin'
-		    // builds
-		    // 
 		    dir('./src/ontology') {
+			// Add owltools to path, required for scripts.
 			// Note weird pipeline syntax to change the
 			// PATH var--O was unable to the "correct"
 			// `pwd` thing, so here we are.
@@ -191,7 +188,23 @@ pipeline {
 			    // TODO/BUG: This should be going to
 			    // the $BRANCH_NAME instead of the
 			    // hardcoded "snapshot".
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/$BRANCH_NAME/ontology/ s3://go-data-product-snapshot/ontology/'
+
+			    // Well, we need to do a couple of things
+			    // here in a structured way, so we'll go
+			    // ahead and drop into the scripting mode.
+			    script {
+				if( env.BRANCH_NAME == 'snapshot' ){
+				    // Simple case: snapshot -> snapshot.
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/snapshot/ontology/ s3://go-data-product-snapshot/ontology/'
+				}
+				if( env.BRANCH_NAME == 'release' ){
+				    // Simple case: release -> current.
+				    // Same as above.
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/release/ontology/ s3://go-data-product-current/ontology/'
+				    // Hard case case: release -> dated path.
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/release/ontology/ s3://go-data-product-release/`date +%Y-%m-%d`/ontology/'
+				}
+			    }
 			}
 			// Bail on the filesystem.
 			sh 'fusermount -u $WORKSPACE/mnt/'
