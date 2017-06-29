@@ -161,30 +161,36 @@ pipeline {
 	// }
 	stage('Publish') {
 	    steps {
-		parallel(
-		    "Ontology publish": {
-			// Legacy: build 'ontology-publish'
-			// Experimental stanza to support mounting the
-			// sshfs using the "hidden" skyhook identity.
-			sh 'mkdir -p $WORKSPACE/mnt/ || true'
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-			}
-			// Copy the product to the right location.
-			// cp ./pipeline/target/* $WORKSPACE/mnt/annotations/
-			withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
-			    // TODO/BUG: This should be going to the
-			    // $BRANCH_NAME instead of the hardcoded
-			    // "snapshot".
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/$BRANCH_NAME/ontology/ s3://go-data-product-snapshot/ontology/'
-			}
-			// Bail on the filesystem.
-			sh 'fusermount -u $WORKSPACE/mnt/'
-		    }//,
-	// 	    "GAF publish": {
-	// 		build 'gaf-publish'
-	// 	    }
-		)
+		if( env.BRANCH_NAME != "snapshot" &&
+		    env.BRANCH_NAME != "release" ){
+		    echo "No public exposure of $BRANCH_NAME."
+		}else{
+		    parallel(
+			"Ontology publish": {
+			    // Legacy: build 'ontology-publish'
+			    // Experimental stanza to support mounting
+			    // the sshfs using the "hidden" skyhook
+			    // identity.
+			    sh 'mkdir -p $WORKSPACE/mnt/ || true'
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+			    }
+			    // Copy the product to the right location.
+			    // cp ./pipeline/target/* $WORKSPACE/mnt/annotations/
+			    withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
+				// TODO/BUG: This should be going to
+				// the $BRANCH_NAME instead of the
+				// hardcoded "snapshot".
+				sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/$BRANCH_NAME/ontology/ s3://go-data-product-snapshot/ontology/'
+			    }
+			    // Bail on the filesystem.
+			    sh 'fusermount -u $WORKSPACE/mnt/'
+			}//,
+			// 	    "GAF publish": {
+			// 		build 'gaf-publish'
+			// 	    }
+		    )
+		}
 	    }
 	}
 	// stage('Deploy') {
