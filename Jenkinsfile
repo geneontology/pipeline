@@ -161,7 +161,7 @@ pipeline {
 	// }
 	stage('Silent end') {
 	    when {
-                expression { BRANCH_NAME !=~ /(snapshot|release)/ }
+                expression { ! (BRANCH_NAME ==~ /(snapshot|release)/) }
 	    }
 	    steps {
 		echo "No public exposure of $BRANCH_NAME."
@@ -209,5 +209,10 @@ pipeline {
 	// 	echo 'TODO: final'
 	//     }
 	// }
+    }
+    post { 
+        changed { 
+            echo 'I will always say Hello again!'
+        }
     }
 }
