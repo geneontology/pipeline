@@ -164,13 +164,13 @@ pipeline {
 	//     }
 	// }
 	// TODO: Do we really want this?
-	stage('Silent end') {
-	    // when { expression { ! (BRANCH_NAME ==~ /(snapshot|release)/) } }
-	    when { not { anyOf { branch 'release'; branch 'snapshot' } } }
-	    steps {
-		echo "No public exposure of $BRANCH_NAME."
-	    }
-	}
+	// stage('Silent end') {
+	//     // when { expression { ! (BRANCH_NAME ==~ /(snapshot|release)/) } }
+	//     when { not { anyOf { branch 'release'; branch 'snapshot' } } }
+	//     steps {
+	// 	echo "No public exposure of $BRANCH_NAME."
+	//     }
+	// }
 	stage('Publish') {
 	    // when { expression { BRANCH_NAME ==~ /(snapshot|release)/ } }
 	    when { anyOf { branch 'release'; branch 'snapshot' } }
