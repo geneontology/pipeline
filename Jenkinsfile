@@ -161,7 +161,7 @@ pipeline {
 	// }
 	stage('Publish') {
 	    steps {
-		if( env.BRANCH_NAME != "snapshot" && env.BRANCH_NAME != "release" ){
+		if (env.BRANCH_NAME != "snapshot") {
 		    echo "No public exposure of $BRANCH_NAME."
 		}else{
 		    parallel(
