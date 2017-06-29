@@ -210,9 +210,10 @@ pipeline {
 	//     }
 	// }
     }
+    // TODO: Let's make an announcement if things go badly.
     post { 
         changed { 
-            echo 'I will always say Hello again!'
+            echo 'There has been a change in the pipeline.'
         }
     }
 }
