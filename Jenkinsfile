@@ -3,9 +3,9 @@ pipeline {
     // In additional to manual runs, trigger somewhere around 8pm.
     triggers {
 	// Nightly @8pm, for "snapshot".
-	cron('0 20 * * *')
+	// cron('0 20 * * *')
 	// First of the month @8pm, for "release" (also "current").
-	//cron('0 20 1 * *')
+	// cron('0 20 1 * *')
     }
     stages {
 	stage('Initialize') {
