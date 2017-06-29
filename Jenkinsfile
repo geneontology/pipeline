@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    // In additional to manual runs, trigger somewhere around 8pm.
+    triggers {
+	cron('H 20 * * *')
+    }
     stages {
 	stage('Initialize') {
 	    steps {
