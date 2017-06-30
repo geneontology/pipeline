@@ -1,11 +1,12 @@
 pipeline {
     agent any
-    // In additional to manual runs, trigger somewhere around 8pm.
+    // In additional to manual runs, trigger somewhere at midnight to
+    // give us the max time in a day to get things right.
     triggers {
-	// Nightly @8pm, for "snapshot".
-	//cron('0 20 * * *')
-	// First of the month @8pm, for "release" (also "current").
-	cron('0 20 1 * *')
+	// Nightly @12am, for "snapshot".
+	//cron('0 0 * * *')
+	// First of the month @12am, for "release" (also "current").
+	cron('0 0 1 * *')
     }
     stages {
 	stage('Initialize') {
