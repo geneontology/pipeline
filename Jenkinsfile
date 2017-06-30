@@ -3,9 +3,9 @@ pipeline {
     // In additional to manual runs, trigger somewhere around 8pm.
     //triggers {
 	// Nightly @8pm, for "snapshot".
-	// cron('0 20 * * *')
+	//cron('0 20 * * *')
 	// First of the month @8pm, for "release" (also "current").
-	// cron('0 20 1 * *')
+	//cron('0 20 1 * *')
     //}
     stages {
 	stage('Initialize') {
@@ -202,7 +202,7 @@ pipeline {
 				    // Same as above.
 				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/release/ontology/ s3://go-data-product-current/ontology/'
 				    // Hard case case: release -> dated path.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/release/ontology/ s3://go-data-product-release/`date +%Y-%m-%d`/ontology/'
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
 				}
 			    }
 			}
