@@ -184,7 +184,6 @@ pipeline {
 			    // pip3 install ../graphstore/rule-runner
 
 			    // make all
-			    sh 'make test'
 			    sh 'make extra_files'
 			    sh 'make all_pombase'
 			}
