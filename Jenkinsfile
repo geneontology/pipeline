@@ -169,7 +169,7 @@ pipeline {
 		    // Make minimal GAF products.
 		    dir('./pipeline') {
 			// Gunna need some memory.
-			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G']){
+			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', 'PATH+EXTRA=../bin']){
 			    sh 'make clean'
 			    // TODO: For the time being, let's just
 			    // try to get through this with pombase.
