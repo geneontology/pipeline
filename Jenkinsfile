@@ -36,7 +36,8 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
 			// Tag the top to let the world know I was at least
 			// here.
-			sh 'date > $WORKSPACE/mnt/$BRANCH_NAME/timestamp.txt'
+			sh 'echo "TODO: Note software versions." > $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
+			sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
 			// TODO: This should be wrapped in exception
 			// handling. In fact, this whole thing should be.
 			sh 'fusermount -u $WORKSPACE/mnt/'
