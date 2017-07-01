@@ -174,7 +174,7 @@ pipeline {
 			    // TODO: For the time being, let's just
 			    // try to get through this with pombase.
 
-			    // source environment.sh
+			    sh 'source environment.sh'
 			    // 
 			    // or
 			    // 
