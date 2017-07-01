@@ -34,10 +34,10 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/share || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/reporting || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/contrib || true'
+			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/share || true'
+			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools || true'
+			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/reporting || true'
+			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/contrib || true'
 			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/robot || true'
 			// Tag the top to let the world know I was at least
 			// here.
@@ -62,11 +62,11 @@ pipeline {
 			    sh 'mvn -f OWLTools-Parent/pom.xml -U clean install -DskipTests -Dmaven.javadoc.skip=true -Dsource.skip=true'
 			    // Attempt to rsync produced bin.
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Runner/target/owltools skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/'
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Oort/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/'
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-NCBI/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/'
-				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Oort/reporting/ skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/reporting'
-				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Runner/contrib/ skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/contrib'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Runner/target/owltools skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Oort/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-NCBI/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Oort/reporting/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Runner/contrib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 			    }
 			}
 		    },
@@ -130,17 +130,17 @@ pipeline {
 		    // Default namespace
 		    sh 'OBO=http://purl.obolibrary.org/obo'
 		    // TODO: explanation
+		    sh 'mkdir -p bin/'
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools ./'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
 		    }
-		    sh 'chmod 755 owltools/ontology-release-runner'
-		    sh 'chmod 755 owltools/reporting/compare-obo-files.pl'
-		    sh 'chmod 755 owltools/reporting/compare-defs.pl'
-		    sh 'chmod 755 owltools/owltools'
+		    // sh 'chmod 755 owltools/ontology-release-runner'
+		    // sh 'chmod 755 owltools/reporting/compare-obo-files.pl'
+		    // sh 'chmod 755 owltools/reporting/compare-defs.pl'
+		    // sh 'chmod 755 owltools/owltools'
 		    // TODO: explanation
-		    sh 'mkdir -p bin'
-		    sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot -O bin/robot'
-		    sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot.jar -O bin/robot.jar'
+		    // sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot -O bin/robot'
+		    // sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot.jar -O bin/robot.jar'
 		    sh 'chmod +x bin/*'
 		    dir('./src/ontology') {
 			// Add owltools to path, required for scripts.
@@ -161,7 +161,19 @@ pipeline {
 	stage('Produce GAFs') {
 	    steps {
 		// Legacy: build 'gaf-production'
-		echo "Minimally build GAFs"
+		dir('./go-site') {
+		    git 'https://github.com/geneontology/go-site.git'
+		    
+		    // // Bring in tools environment.
+		    // // First, owltools.
+		    // withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // 	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools ./'
+		    // }
+		    // sh 'chmod 755 owltools/ontology-release-runner'
+		    // sh 'chmod 755 owltools/reporting/compare-obo-files.pl'
+		    // sh 'chmod 755 owltools/reporting/compare-defs.pl'
+		    // sh 'chmod 755 owltools/owltools'
+		}
 	    }
 	}
 	// stage('TODO: Sanity I') {
