@@ -34,11 +34,6 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
-			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/share || true'
-			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools || true'
-			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/reporting || true'
-			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/contrib || true'
-			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/robot || true'
 			// Tag the top to let the world know I was at least
 			// here.
 			sh 'date > $WORKSPACE/mnt/$BRANCH_NAME/timestamp.txt'
@@ -53,14 +48,13 @@ pipeline {
 	stage('Ready production software') {
 	    steps {
 		parallel(
-		    // Into owltools/.
 		    "Ready owltools": {
 			// Legacy: build 'owltools-build'
 			dir('./owltools') {
 			    // Remember that git lays out into CWD.
 			    git 'https://github.com/owlcollab/owltools.git'
 			    sh 'mvn -f OWLTools-Parent/pom.xml -U clean install -DskipTests -Dmaven.javadoc.skip=true -Dsource.skip=true'
-			    // Attempt to rsync produced bin.
+			    // Attempt to rsync produced into bin/.
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Runner/target/owltools skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Oort/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
@@ -70,7 +64,6 @@ pipeline {
 			    }
 			}
 		    },
-		    // Into bin/.
 		    "Ready robot": {
 		    	// Legacy: build 'robot-build'
 		    	dir('./robot') {
@@ -85,32 +78,31 @@ pipeline {
 		    	    sh 'BUILD=`git rev-parse --short HEAD`'
 		    	    sh 'mvn versions:set -DnewVersion=$VERSION+$BUILD'
 		    	    sh 'mvn -U clean install'
-		    	    // Attempt to rsync produced bin.
+		    	    // Attempt to rsync produced into bin/.
 		    	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 		    	    }
 		    	}
 		    },
-		    // Into bin/.
 		    "Ready arachne": {
 		    	dir('./arachne') {
 		    	    sh 'wget -N https://github.com/balhoff/arachne/releases/download/v1.0.2/arachne-1.0.2.tgz'
 			    sh 'tar -xvf arachne-1.0.2.tgz'
-		    	    // Attempt to rsync produced bin.
+		    	    // Attempt to rsync produced into bin/.
 		    	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 		    	    }
 		    	}
 		    },
-		    // Into bin/.
 		    "Ready minerva": {
 			dir('./minerva') {
 			    // Remember that git lays out into CWD.
 			    git 'https://github.com/geneontology/minerva.git'
+			    // Needs to have owltools available.
 			    withEnv(['PATH+EXTRA=../../bin', 'CLASSPATH+EXTRA=../../bin']){
 				sh 'mvn -U clean install'
 			    }
-			    // Attempt to rsync produced bin.
+			    // Attempt to rsync produced into bin/.
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" minerva-server/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" minerva-cli/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
@@ -131,19 +123,16 @@ pipeline {
 		    git 'https://github.com/geneontology/go-ontology.git'
 		    // Default namespace
 		    sh 'OBO=http://purl.obolibrary.org/obo'
-		    // TODO: explanation
+
+		    // Make all software products available in bin/.
 		    sh 'mkdir -p bin/'
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
 		    }
-		    // sh 'chmod 755 owltools/ontology-release-runner'
-		    // sh 'chmod 755 owltools/reporting/compare-obo-files.pl'
-		    // sh 'chmod 755 owltools/reporting/compare-defs.pl'
-		    // sh 'chmod 755 owltools/owltools'
-		    // TODO: explanation
-		    // sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot -O bin/robot'
-		    // sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot.jar -O bin/robot.jar'
 		    sh 'chmod +x bin/*'
+
+		    // Make ontology products and get them into
+		    // skyhook.
 		    dir('./src/ontology') {
 			// Add owltools to path, required for scripts.
 			// Note weird pipeline syntax to change the
@@ -166,15 +155,36 @@ pipeline {
 		dir('./go-site') {
 		    git 'https://github.com/geneontology/go-site.git'
 		    
-		    // // Bring in tools environment.
-		    // // First, owltools.
-		    // withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // 	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools ./'
-		    // }
-		    // sh 'chmod 755 owltools/ontology-release-runner'
-		    // sh 'chmod 755 owltools/reporting/compare-obo-files.pl'
-		    // sh 'chmod 755 owltools/reporting/compare-defs.pl'
-		    // sh 'chmod 755 owltools/owltools'
+		    // Make all software products available in bin/.
+		    sh 'mkdir -p bin/'
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+		    }
+		    sh 'chmod +x bin/*'
+
+		    // Make minimal GAF products.
+		    dir('./pipeline') {
+			// Gunna need some memory.
+			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G']){
+			    sh 'make clean'
+			    // TODO: For the time being, let's just
+			    // try to get through this with pombase.
+
+			    // source environment.sh
+			    // 
+			    // or
+			    // 
+			    // python3 -m venv target/env
+			    // . target/env/bin/activate
+			    // pip3 install -r requirements.txt
+			    // pip3 install ../graphstore/rule-runner
+
+			    // make all
+			    sh 'make test'
+			    sh 'make extra_files'
+			    sh 'make all_pombase'
+			}
+		    }
 		}
 	    }
 	}
