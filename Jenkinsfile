@@ -53,6 +53,7 @@ pipeline {
 	stage('Ready production software') {
 	    steps {
 		parallel(
+		    // Into owltools/.
 		    "Ready owltools": {
 			// Legacy: build 'owltools-build'
 			dir('./owltools') {
@@ -69,6 +70,7 @@ pipeline {
 			    }
 			}
 		    },
+		    // Into bin/.
 		    "Ready robot": {
 		    	// Legacy: build 'robot-build'
 		    	dir('./robot') {
@@ -88,6 +90,30 @@ pipeline {
 		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 		    	    }
 		    	}
+		    },
+		    // Into bin/.
+		    "Ready arachne": {
+		    	dir('./arachne') {
+		    	    sh 'wget -N https://github.com/balhoff/arachne/releases/download/v1.0.2/arachne-1.0.2.tgz'
+			    sh 'tar -xvf arachne-1.0.2.tgz'
+		    	    // Attempt to rsync produced bin.
+		    	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+		    	    }
+		    	}
+		    },
+		    // Into bin/.
+		    "Ready minerva": {
+			dir('./minerva') {
+			    // Remember that git lays out into CWD.
+			    git 'https://github.com/geneontology/minerva.git'
+			    sh 'mvn -U clean install'
+			    // Attempt to rsync produced bin.
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" minerva-server/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" minerva-cli/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			    }
+			}
 		    }
 		)
 	    }
@@ -132,11 +158,12 @@ pipeline {
 		}
 	    }
 	}
-	// stage('Produce GAFs') {
-	//     steps {
-	// 	build 'gaf-production'
-	//     }
-	// }
+	stage('Produce GAFs') {
+	    steps {
+		// Legacy: build 'gaf-production'
+		echo "Minimally build GAFs"
+	    }
+	}
 	// stage('TODO: Sanity I') {
 	//     steps {
 	// 	echo 'TODO: sanity'
