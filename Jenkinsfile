@@ -107,7 +107,9 @@ pipeline {
 			dir('./minerva') {
 			    // Remember that git lays out into CWD.
 			    git 'https://github.com/geneontology/minerva.git'
-			    sh 'mvn -U clean install'
+			    withEnv(['PATH+EXTRA=../../bin', 'CLASSPATH+EXTRA=../../bin']){
+				sh 'mvn -U clean install'
+			    }
 			    // Attempt to rsync produced bin.
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" minerva-server/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
