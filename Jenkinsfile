@@ -174,15 +174,16 @@ pipeline {
 			    // TODO: For the time being, let's just
 			    // try to get through this with pombase.
 
-			    sh 'source environment.sh'
+			    //sh 'source environment.sh'
 			    // 
 			    // or
 			    // 
-			    // python3 -m venv target/env
-			    // . target/env/bin/activate
-			    // pip3 install -r requirements.txt
-			    // pip3 install ../graphstore/rule-runner
+			    sh 'python3 -m venv target/env'
+			    sh '. target/env/bin/activate'
+			    sh 'pip3 install -r requirements.txt'
+			    sh 'pip3 install ../graphstore/rule-runner'
 
+			    // TODO: 
 			    // make all
 			    sh 'make extra_files'
 			    sh 'make all_pombase'
