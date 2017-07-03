@@ -168,20 +168,31 @@ pipeline {
 
 		    // Make minimal GAF products.
 		    dir('./pipeline') {
+			sh 'make clean'
+			sh 'python3 -m venv target/env'
 			// Gunna need some memory.
-			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', 'PATH+EXTRA=../bin']){
-			    sh 'make clean'
+			// In addition to the memory, try and simulate
+			// the environment changes for pyenv activate.
+			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', 'PATH+EXTRA=../bin', 'PYTHONHOME=', 'VIRTUAL_ENV=$PWD/target/env']){
+			    sh 'echo $VIRTUAL_ENV'
 			    // TODO: For the time being, let's just
 			    // try to get through this with pombase.
-
+			    
 			    //sh 'source environment.sh'
 			    // 
 			    // or
 			    // 
-			    sh 'python3 -m venv target/env'
-			    sh '. target/env/bin/activate'
+			    // sh '. target/env/bin/activate'
 			    sh 'pip3 install -r requirements.txt'
 			    sh 'pip3 install ../graphstore/rule-runner'
+			    // 
+			    // or
+			    // 
+			    // VIRTUAL_ENV="/home/sjcarbon/local/src/git/go-site/pipeline/target/env"
+			    // PATH="$VIRTUAL_ENV/bin:$PATH"
+			    // if [ -n "$PYTHONHOME" ] ; then
+			    //   unset PYTHONHOME
+			    // fi
 
 			    // TODO: 
 			    // make all
