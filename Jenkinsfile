@@ -174,6 +174,8 @@ pipeline {
 			// In addition to the memory, try and simulate
 			// the environment changes for pyenv activate.
 			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', 'PATH+EXTRA=../bin', 'PYTHONHOME=', 'VIRTUAL_ENV=$PWD/target/env']){
+			    sh 'env > env.txt'
+			    sh 'cat env.txt'
 			    sh 'echo $VIRTUAL_ENV'
 			    // TODO: For the time being, let's just
 			    // try to get through this with pombase.
