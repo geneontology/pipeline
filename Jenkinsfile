@@ -265,14 +265,14 @@ pipeline {
 			    script {
 				if( env.BRANCH_NAME == 'snapshot' ){
 				    // Simple case: snapshot -> snapshot.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/snapshot/ontology/ s3://go-data-product-snapshot/ontology/'
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/ontology/ s3://go-data-product-snapshot/ontology/'
 				}
 				if( env.BRANCH_NAME == 'release' ){
 				    // Simple case: release -> current.
 				    // Same as above.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/release/ontology/ s3://go-data-product-current/ontology/'
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-current/ontology/'
 				    // Hard case case: release -> dated path.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
 				}
 			    }
 			}
