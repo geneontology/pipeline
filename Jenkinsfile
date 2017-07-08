@@ -174,7 +174,7 @@ pipeline {
 			// In addition to the memory, try and simulate
 			// the environment changes for pyenv activate.
 			// Note the complex assignment of VIRTUAL_ENV.
-			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', 'PATH+EXTRA=../bin', 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
+			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', 'PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin', 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
 			    sh 'echo $VIRTUAL_ENV'
@@ -293,6 +293,11 @@ pipeline {
 	// stage('TODO: Final status') {
 	//     steps {
 	// 	echo 'TODO: final'
+	//     }
+	// }
+	// stage('Flush') {
+	//     steps {
+	// 	echo 'TODO: Flush/invalidate CDN'
 	//     }
 	// }
     }
