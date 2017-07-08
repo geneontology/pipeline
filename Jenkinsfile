@@ -173,8 +173,9 @@ pipeline {
 			// Gunna need some memory.
 			// In addition to the memory, try and simulate
 			// the environment changes for pyenv activate.
-			// Note the complex assignment of VIRTUAL_ENV.
-			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', 'PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin', 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
+			// Note the complex assignment of VIRTUAL_ENV and PATH.
+			// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
+			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
 			    sh 'echo $VIRTUAL_ENV'
