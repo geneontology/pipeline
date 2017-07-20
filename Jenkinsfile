@@ -169,6 +169,8 @@ pipeline {
 		    // Make minimal GAF products.
 		    dir('./pipeline') {
 			sh 'make clean'
+			// Technically, a meaningless line as we will
+			// simulate that with withEnv.
 			sh 'python3 -m venv target/env'
 			// Gunna need some memory.
 			// In addition to the memory, try and simulate
@@ -178,6 +180,8 @@ pipeline {
 			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
+			    sh 'which python'
+			    sh 'which python3'
 			    sh 'echo $VIRTUAL_ENV'
 			    // TODO: For the time being, let's just
 			    // try to get through this with pombase.
