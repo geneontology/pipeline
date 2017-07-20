@@ -215,7 +215,7 @@ pipeline {
 			    // sh 'make all_pombase'
 			    //
 			    sh 'chmod +x wrapper.sh'
-			    sh 'wrapper.sh'
+			    sh './wrapper.sh'
 			}
 		    }
 		}
