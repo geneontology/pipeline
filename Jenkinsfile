@@ -182,6 +182,8 @@ pipeline {
 			    sh 'cat env.txt'
 			    sh 'which python'
 			    sh 'which python3'
+			    sh 'which pip3'
+			    sh 'pip3 freeze'
 			    sh 'echo $VIRTUAL_ENV'
 			    // TODO: For the time being, let's just
 			    // try to get through this with pombase.
