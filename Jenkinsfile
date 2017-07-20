@@ -208,11 +208,14 @@ pipeline {
 			    // TODO: 
 			    // make all
 			    // sh 'make extra_files'
-			    sh 'mkdir -p target'
-			    sh 'which python3'
-			    sh 'pip3 install PyYAML'
-			    sh 'python3 ./util/generate-makefile.py ../metadata/datasets/*.yaml > target/Makefile'
-			    sh 'make all_pombase'
+			    // sh 'mkdir -p target'
+			    // sh 'which python3'
+			    // sh 'pip3 install PyYAML'
+			    // sh 'python3 ./util/generate-makefile.py ../metadata/datasets/*.yaml > target/Makefile'
+			    // sh 'make all_pombase'
+			    //
+			    sh 'chmod +x wrapper.sh'
+			    sh 'wrapper.sh'
 			}
 		    }
 		}
