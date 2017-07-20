@@ -98,6 +98,7 @@ pipeline {
 		    },
 		    // // Do we need this anymore?
 		    // "Ready RDFox": {
+		    // // Legacy: build 'rdfox-cli-build'
 		    // 	dir('./rdfox-cli') {
 		    // 	    // Remember that git lays out into CWD.
 		    // 	    git 'https://github.com/balhoff/rdfox-cli.git'
@@ -222,6 +223,17 @@ pipeline {
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			    sh 'find ./target/groups -type f -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
 			}
+		    }
+		}
+	    }
+	}
+	// A new step to think about. What is our core metadata?
+	stage('Produce metadata') {
+	    steps {
+		dir('./go-site') {
+		    git 'https://github.com/geneontology/go-site.git'
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" metadata/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/metadata'
 		    }
 		}
 	    }
