@@ -183,6 +183,7 @@ pipeline {
 			    sh 'which python'
 			    sh 'which python3'
 			    sh 'which pip3'
+			    sh 'cat `which pip3`'
 			    sh 'pip3 freeze'
 			    sh 'echo $VIRTUAL_ENV'
 			    // TODO: For the time being, let's just
@@ -206,7 +207,9 @@ pipeline {
 
 			    // TODO: 
 			    // make all
-			    sh 'make extra_files'
+			    // sh 'make extra_files'
+			    sh 'mkdir -p target'
+			    sh 'python3 ./util/generate-makefile.py ../metadata/datasets/*.yaml > target/Makefile.tmp && mv target/Makefile.tmp target/Makefile'
 			    sh 'make all_pombase'
 			}
 		    }
