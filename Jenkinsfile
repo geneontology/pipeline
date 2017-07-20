@@ -32,6 +32,7 @@ pipeline {
 			sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME || true'
 			// Rebuild directory structure.
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
 			// Tag the top to let the world know I was at least
@@ -95,6 +96,22 @@ pipeline {
 		    	    }
 		    	}
 		    },
+		    // // Do we need this anymore?
+		    // "Ready RDFox": {
+		    // 	dir('./rdfox-cli') {
+		    // 	    // Remember that git lays out into CWD.
+		    // 	    git 'https://github.com/balhoff/rdfox-cli.git'
+		    // 	    // "Build".
+		    // 	    sh 'wget http://www.cs.ox.ac.uk/isg/tools/RDFox/release/RDFox-linux.zip -O RDFox.zip'
+		    // 	    sh 'unzip -u RDFox.zip'
+		    // 	    sh 'cp RDFox/lib/JRDFox.jar lib/'
+		    // 	    sh 'sbt universal:packageZipTarball'
+		    // 	    // Attempt to rsync produced into bin/.
+		    // 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/universal/rdfox-cli.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+		    // 	    }
+		    // 	}
+		    // },
 		    "Ready minerva": {
 			dir('./minerva') {
 			    // Remember that git lays out into CWD.
@@ -256,7 +273,6 @@ pipeline {
 			    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 			}
 			// Copy the product to the right location.
-			// cp ./pipeline/target/* $WORKSPACE/mnt/annotations/
 			withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
 			    // Well, we need to do a couple of things
 			    // here in a structured way, so we'll go
@@ -290,7 +306,6 @@ pipeline {
 			    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 			}
 			// Copy the product to the right location.
-			// cp ./pipeline/target/* $WORKSPACE/mnt/annotations/
 			withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
 			    // Well, we need to do a couple of things
 			    // here in a structured way, so we'll go
