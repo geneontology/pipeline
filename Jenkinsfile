@@ -170,53 +170,39 @@ pipeline {
 		    dir('./pipeline') {
 			sh 'make clean'
 			// Technically, a meaningless line as we will
-			// simulate that with withEnv.
+			// simulate this with entirely withEnv
+			// anyways.
 			sh 'python3 -m venv target/env'
 			// Gunna need some memory.
 			// In addition to the memory, try and simulate
-			// the environment changes for pyenv activate.
+			// the environment changes for python venv activate.
 			// Note the complex assignment of VIRTUAL_ENV and PATH.
 			// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
+			// Note that the ".local/bin" line may be unnecessary
+			// in the future as we fix errors in the package
+			// handling for the bins in rule-runner.
 			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin:${HOME}/.local/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
+			    // Note environment for future debugging.
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
-			    sh 'which python'
-			    sh 'which python3'
-			    sh 'which pip3'
-			    sh 'cat `which pip3`'
-			    sh 'pip3 freeze'
-			    sh 'echo $VIRTUAL_ENV'
-			    // TODO: For the time being, let's just
-			    // try to get through this with pombase.
-			    
-			    //sh 'source environment.sh'
-			    // 
-			    // or
-			    // 
-			    // sh '. target/env/bin/activate'
+			    // WARNING: Okay, this is our current
+			    // workaround for the shebang line limits
+			    // and long workspace names in Jenkins
+			    // declarative
+			    // (https://github.com/pypa/pip/issues/1773).
+			    // There are other tacks we might take
 			    sh 'python3 ./target/env/bin/pip3 install -r requirements.txt'
 			    sh 'python3 ./target/env/bin/pip3 install ../graphstore/rule-runner'
-			    // 
-			    // or
-			    // 
-			    // VIRTUAL_ENV="/home/sjcarbon/local/src/git/go-site/pipeline/target/env"
-			    // PATH="$VIRTUAL_ENV/bin:$PATH"
-			    // if [ -n "$PYTHONHOME" ] ; then
-			    //   unset PYTHONHOME
-			    // fi
-
-			    // TODO: 
-			    // make all
+			    // TODO: make all
+			    // Needed temporarily to create
+			    // "all_pombase" target.
 			    sh 'make extra_files'
-			    // sh 'mkdir -p target'
-			    // sh 'which python3'
-			    // sh 'pip3 install PyYAML'
-			    // sh 'python3 ./util/generate-makefile.py ../metadata/datasets/*.yaml > target/Makefile'
+			    // TODO: For the time being, let's just
+			    // try to get through this with pombase.
 			    sh 'make all_pombase'
-			    // 
-			    //sh 'chmod +x wrapper.sh'
-			    //sh './wrapper.sh'
 			}
+			// Flatten onto skyhook.
+			sh 'find ./pipeline/target/groups -type f -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \;'
 		    }
 		}
 	    }
