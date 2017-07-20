@@ -194,8 +194,8 @@ pipeline {
 			    // or
 			    // 
 			    // sh '. target/env/bin/activate'
-			    sh 'pip3 install -r requirements.txt'
-			    sh 'pip3 install ../graphstore/rule-runner'
+			    sh 'python3 ./target/env/bin/pip3 install -r requirements.txt'
+			    sh 'python3 ./target/env/bin/pip3 install ../graphstore/rule-runner'
 			    // 
 			    // or
 			    // 
@@ -207,15 +207,15 @@ pipeline {
 
 			    // TODO: 
 			    // make all
-			    // sh 'make extra_files'
+			    sh 'make extra_files'
 			    // sh 'mkdir -p target'
 			    // sh 'which python3'
 			    // sh 'pip3 install PyYAML'
 			    // sh 'python3 ./util/generate-makefile.py ../metadata/datasets/*.yaml > target/Makefile'
-			    // sh 'make all_pombase'
-			    //
-			    sh 'chmod +x wrapper.sh'
-			    sh './wrapper.sh'
+			    sh 'make all_pombase'
+			    // 
+			    //sh 'chmod +x wrapper.sh'
+			    //sh './wrapper.sh'
 			}
 		    }
 		}
