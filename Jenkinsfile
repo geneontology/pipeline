@@ -209,7 +209,9 @@ pipeline {
 			    // make all
 			    // sh 'make extra_files'
 			    sh 'mkdir -p target'
-			    sh 'python3 ./util/generate-makefile.py ../metadata/datasets/*.yaml > target/Makefile.tmp && mv target/Makefile.tmp target/Makefile'
+			    sh 'which python3'
+			    sh 'pip3 install PyYAML'
+			    sh 'python3 ./util/generate-makefile.py ../metadata/datasets/*.yaml > target/Makefile'
 			    sh 'make all_pombase'
 			}
 		    }
