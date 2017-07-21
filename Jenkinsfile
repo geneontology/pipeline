@@ -210,7 +210,7 @@ pipeline {
 			// Note that the ".local/bin" line may be unnecessary
 			// in the future as we fix errors in the package
 			// handling for the bins in rule-runner.
-			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin:${HOME}/.local/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
+			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
 			    // Note environment for future debugging.
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
