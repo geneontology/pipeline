@@ -274,8 +274,7 @@ pipeline {
 	//     }
 	// }
 	stage('Publish') {
-	    // when { expression { BRANCH_NAME ==~ /(snapshot|release)/ } }
-	    when { anyOf { branch 'release'; branch 'snapshot' } }
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
 		parallel(
 		    "Ontology publish": {
@@ -293,6 +292,10 @@ pipeline {
 			    // here in a structured way, so we'll go
 			    // ahead and drop into the scripting mode.
 			    script {
+				if( env.BRANCH_NAME == 'master' ){
+				    // Simple case: master -> experimental.
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/master/ontology/ s3://go-data-product-experimental/ontology/'
+				}
 				if( env.BRANCH_NAME == 'snapshot' ){
 				    // Simple case: snapshot -> snapshot.
 				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/ontology/ s3://go-data-product-snapshot/ontology/'
@@ -323,6 +326,10 @@ pipeline {
 			    // here in a structured way, so we'll go
 			    // ahead and drop into the scripting mode.
 			    script {
+				if( env.BRANCH_NAME == 'master' ){
+				    // Simple case: master -> experimental.
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/master/metadata/ s3://go-data-product-experimental/metadata/'
+				}
 				if( env.BRANCH_NAME == 'snapshot' ){
 				    // Simple case: snapshot -> snapshot.
 				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/metadata/ s3://go-data-product-snapshot/metadata/'
@@ -356,6 +363,10 @@ pipeline {
 			    // here in a structured way, so we'll go
 			    // ahead and drop into the scripting mode.
 			    script {
+				if( env.BRANCH_NAME == 'master' ){
+				    // Simple case: master -> experimental.
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/master/annotations/ s3://go-data-product-experimental/annotations/'
+				}
 				if( env.BRANCH_NAME == 'snapshot' ){
 				    // Simple case: snapshot -> snapshot.
 				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/annotations/ s3://go-data-product-snapshot/annotations/'
