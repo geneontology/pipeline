@@ -274,121 +274,119 @@ pipeline {
 	// 	echo "No public exposure of $BRANCH_NAME."
 	//     }
 	// }
-	stage('Publish') {
+	stage('Publish ontology') {
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
-		parallel(
-		    "Ontology publish": {
-			// Legacy: build 'ontology-publish'
-			// Experimental stanza to support mounting
-			// the sshfs using the "hidden" skyhook
-			// identity.
-			sh 'mkdir -p $WORKSPACE/mnt/ || true'
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		// Legacy: build 'ontology-publish'
+		// Experimental stanza to support mounting
+		// the sshfs using the "hidden" skyhook
+		// identity.
+		sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		}
+		// Copy the product to the right location.
+		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
+		    // Well, we need to do a couple of things
+		    // here in a structured way, so we'll go
+		    // ahead and drop into the scripting mode.
+		    script {
+			if( env.BRANCH_NAME == 'master' ){
+			    // Simple case: master -> experimental.
+			    // Note no CloudFront invalidate.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/ontology/ s3://go-data-product-experimental/ontology/'
 			}
-			// Copy the product to the right location.
-			withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
-			    // Well, we need to do a couple of things
-			    // here in a structured way, so we'll go
-			    // ahead and drop into the scripting mode.
-			    script {
-				if( env.BRANCH_NAME == 'master' ){
-				    // Simple case: master -> experimental.
-				    // Note no CloudFront invalidate.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/ontology/ s3://go-data-product-experimental/ontology/'
-				}
-				if( env.BRANCH_NAME == 'snapshot' ){
-				    // Simple case: snapshot -> snapshot.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/ontology/ s3://go-data-product-snapshot/ontology/'
-				}
-				if( env.BRANCH_NAME == 'release' ){
-				    // Simple case: release -> current.
-				    // Same as above.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-current/ontology/'
-				    // Hard case case: release -> dated path.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
-				}
-			    }
+			if( env.BRANCH_NAME == 'snapshot' ){
+			    // Simple case: snapshot -> snapshot.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/ontology/ s3://go-data-product-snapshot/ontology/'
 			}
-			// Bail on the filesystem.
-			sh 'fusermount -u $WORKSPACE/mnt/'
-		    },
-		    // Publish metadata next--less likely to fail than
-		    // GAF, less important than ontologies.
-		    "Metadata publish": {
-			// Setup fuse for transfer.
-			sh 'mkdir -p $WORKSPACE/mnt/ || true'
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+			if( env.BRANCH_NAME == 'release' ){
+			    // Simple case: release -> current.
+			    // Same as above.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-current/ontology/'
+			    // Hard case case: release -> dated path.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
 			}
-			// Copy the product to the right location.
-			withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
-			    // Well, we need to do a couple of things
-			    // here in a structured way, so we'll go
-			    // ahead and drop into the scripting mode.
-			    script {
-				if( env.BRANCH_NAME == 'master' ){
-				    // Simple case: master -> experimental.
-				    // Note no CloudFront invalidate.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/metadata/ s3://go-data-product-experimental/metadata/'
-				}
-				if( env.BRANCH_NAME == 'snapshot' ){
-				    // Simple case: snapshot -> snapshot.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/metadata/ s3://go-data-product-snapshot/metadata/'
-				}
-				if( env.BRANCH_NAME == 'release' ){
-				    // Simple case: release -> current.
-				    // Same as above.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-current/metadata/'
-				    // Hard case case: release -> dated path.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-release/metadata/`date +%Y-%m-%d`/'
-				}
-			    }
-			}
-			// Bail on the filesystem.
-			sh 'fusermount -u $WORKSPACE/mnt/'
-		    },
-		    // Get the GAF/annotation data out separately--at
-		    // least we got the ontologies out.
-		    // TODO: Make a function to capture the repetition
-		    // between this and the ontology publishing.
-		    "GAF publish": {
-			// Legacy: build 'gaf-publish'
-			// Setup fuse for transfer.
-			sh 'mkdir -p $WORKSPACE/mnt/ || true'
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-			}
-			// Copy the product to the right location.
-			withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
-			    // Well, we need to do a couple of things
-			    // here in a structured way, so we'll go
-			    // ahead and drop into the scripting mode.
-			    script {
-				if( env.BRANCH_NAME == 'master' ){
-				    // Simple case: master -> experimental.
-				    // Note no CloudFront invalidate.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/annotations/ s3://go-data-product-experimental/annotations/'
-				}
-				if( env.BRANCH_NAME == 'snapshot' ){
-				    // Simple case: snapshot -> snapshot.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/annotations/ s3://go-data-product-snapshot/annotations/'
-				}
-				if( env.BRANCH_NAME == 'release' ){
-				    // Simple case: release -> current.
-				    // Same as above.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-current/annotations/'
-				    // Hard case case: release -> dated path.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-release/annotations/`date +%Y-%m-%d`/'
-				}
-			    }
-			}
-			// Bail on the filesystem.
-			sh 'fusermount -u $WORKSPACE/mnt/'
 		    }
-		)
+		}
+		// Bail on the filesystem.
+		sh 'fusermount -u $WORKSPACE/mnt/'
 	    }
+	}
+	// Publish metadata next--less likely to fail than
+	// GAF, less important than ontologies.
+	stage('Publish metadata') {
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    // Setup fuse for transfer.
+	    sh 'mkdir -p $WORKSPACE/mnt/ || true'
+	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+	    }
+			// Copy the product to the right location.
+	    withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
+		// Well, we need to do a couple of things
+		// here in a structured way, so we'll go
+		// ahead and drop into the scripting mode.
+		script {
+		    if( env.BRANCH_NAME == 'master' ){
+			// Simple case: master -> experimental.
+			// Note no CloudFront invalidate.
+			sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/metadata/ s3://go-data-product-experimental/metadata/'
+		    }
+		    if( env.BRANCH_NAME == 'snapshot' ){
+			// Simple case: snapshot -> snapshot.
+			sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/metadata/ s3://go-data-product-snapshot/metadata/'
+		    }
+		    if( env.BRANCH_NAME == 'release' ){
+			// Simple case: release -> current.
+			// Same as above.
+			sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-current/metadata/'
+			// Hard case case: release -> dated path.
+			sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-release/metadata/`date +%Y-%m-%d`/'
+		    }
+		}
+	    }
+	    // Bail on the filesystem.
+	    sh 'fusermount -u $WORKSPACE/mnt/'
+	}
+	// Get the GAF/annotation data out separately--at
+	// least we got the ontologies out.
+	// TODO: Make a function to capture the repetition
+	// between this and the ontology publishing.
+	stage('Publish GAFs') {
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    // Legacy: build 'gaf-publish'
+	    // Setup fuse for transfer.
+	    sh 'mkdir -p $WORKSPACE/mnt/ || true'
+	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+	    }
+	    // Copy the product to the right location.
+	    withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
+		// Well, we need to do a couple of things
+		// here in a structured way, so we'll go
+		// ahead and drop into the scripting mode.
+		script {
+		    if( env.BRANCH_NAME == 'master' ){
+			// Simple case: master -> experimental.
+			// Note no CloudFront invalidate.
+			sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/annotations/ s3://go-data-product-experimental/annotations/'
+		    }
+		    if( env.BRANCH_NAME == 'snapshot' ){
+			// Simple case: snapshot -> snapshot.
+			sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/annotations/ s3://go-data-product-snapshot/annotations/'
+		    }
+		    if( env.BRANCH_NAME == 'release' ){
+			// Simple case: release -> current.
+			// Same as above.
+			sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-current/annotations/'
+			// Hard case case: release -> dated path.
+			sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-release/annotations/`date +%Y-%m-%d`/'
+		    }
+		}
+	    }
+	    // Bail on the filesystem.
+	    sh 'fusermount -u $WORKSPACE/mnt/'
 	}
 	// stage('Deploy') {
 	//     steps {
