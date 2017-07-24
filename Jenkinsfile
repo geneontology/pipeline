@@ -295,7 +295,8 @@ pipeline {
 			    script {
 				if( env.BRANCH_NAME == 'master' ){
 				    // Simple case: master -> experimental.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/master/ontology/ s3://go-data-product-experimental/ontology/'
+				    // Note no CloudFront invalidate.
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/ontology/ s3://go-data-product-experimental/ontology/'
 				}
 				if( env.BRANCH_NAME == 'snapshot' ){
 				    // Simple case: snapshot -> snapshot.
@@ -329,7 +330,8 @@ pipeline {
 			    script {
 				if( env.BRANCH_NAME == 'master' ){
 				    // Simple case: master -> experimental.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/master/metadata/ s3://go-data-product-experimental/metadata/'
+				    // Note no CloudFront invalidate.
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/metadata/ s3://go-data-product-experimental/metadata/'
 				}
 				if( env.BRANCH_NAME == 'snapshot' ){
 				    // Simple case: snapshot -> snapshot.
@@ -366,7 +368,8 @@ pipeline {
 			    script {
 				if( env.BRANCH_NAME == 'master' ){
 				    // Simple case: master -> experimental.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/master/annotations/ s3://go-data-product-experimental/annotations/'
+				    // Note no CloudFront invalidate.
+				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/annotations/ s3://go-data-product-experimental/annotations/'
 				}
 				if( env.BRANCH_NAME == 'snapshot' ){
 				    // Simple case: snapshot -> snapshot.
