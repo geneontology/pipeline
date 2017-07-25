@@ -392,6 +392,11 @@ pipeline {
 		sh 'fusermount -u $WORKSPACE/mnt/'
 	    }
 	}
+	// stage('Published indexes') {
+	//     steps {
+	// 	echo 'TODO: Create S3 indicies'
+	//     }
+	// }
 	// stage('Deploy') {
 	//     steps {
 	// 	echo 'TODO: deploy AmiGO'
