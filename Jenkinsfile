@@ -197,7 +197,6 @@ pipeline {
 
 		    // Make minimal GAF products.
 		    dir('./pipeline') {
-			sh 'make clean'
 			// Technically, a meaningless line as we will
 			// simulate this with entirely withEnv
 			// anyways.
@@ -222,6 +221,8 @@ pipeline {
 			    // There are other tacks we might take
 			    sh 'python3 ./target/env/bin/pip3 install -r requirements.txt'
 			    sh 'python3 ./target/env/bin/pip3 install ../graphstore/rule-runner'
+			    // Ready, set...
+			    sh 'make clean'
 
 			    // Do this thing.
 			    sh 'make all'
