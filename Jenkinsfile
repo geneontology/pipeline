@@ -224,16 +224,16 @@ pipeline {
 			    // Ready, set...
 			    sh 'make clean'
 
-			    // Do this thing.
-			    sh 'make all'
+			    // // Do this thing.
+			    // sh 'make all'
 
-			    // // Do this thing for testing.
-			    // // Needed temporarily to create
-			    // // "all_pombase" target.
-			    // sh 'make extra_files'
-			    // // TODO: For the time being, let's just
-			    // // try to get through this with pombase.
-			    // sh 'make all_pombase'
+			    // Do this thing for testing.
+			    // Needed temporarily to create
+			    // "all_pombase" target.
+			    sh 'make extra_files'
+			    // TODO: For the time being, let's just
+			    // try to get through this with pombase.
+			    sh 'make all_pombase'
 			}
 			// Flatten onto skyhook.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
