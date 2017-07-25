@@ -248,20 +248,42 @@ pipeline {
 	// 	echo 'TODO: sanity'
 	//     }
 	// }
-	// stage('Produce derivatives') {
-	//     steps {
-	// 	parallel(
-	// 	    "Produce index": {
-	// 		echo 'TODO: index'
-			
-	// 	    },
-	// 	    "Produce graphstore": {
-	// 		echo 'TODO: graphstore'
-			
-	// 	    }
-	// 	)
-	//     }
-	// }
+	stage('Produce derivatives') {
+	    steps {
+		parallel(
+		    "GOlr index (TODO)": {
+			echo 'TODO: index'
+		    },
+		    "Blazegraph journal": {
+			dir('./go-site') {
+			    git 'https://github.com/geneontology/go-site.git'
+
+			    // Make all software products available in bin/.
+			    sh 'mkdir -p bin/'
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+			    }
+			    sh 'chmod +x bin/*'
+
+			    // Make Blazegraph journal.
+			    dir('./pipeline') {
+				sh 'python3 -m venv target/env'
+				withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
+				    // Note environment for future debugging.
+				    sh 'env > env.txt'
+				    sh 'cat env.txt'
+				    sh 'python3 ./target/env/bin/pip3 install -r requirements.txt'
+				    sh 'python3 ./target/env/bin/pip3 install ../graphstore/rule-runner'
+				    // Ready, set...
+				    sh 'make clean'
+				    sh 'make target/blazegraph.jnl'
+				}
+			    }
+			}
+		    }
+		)
+	    }
+	}
 	// stage('TODO: Sanity II') {
 	//     steps {
 	// 	echo 'TODO: sanity'
