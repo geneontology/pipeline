@@ -32,16 +32,13 @@ pipeline {
 			sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME || true'
 			// Rebuild directory structure.
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/share || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/reporting || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/owltools/contrib || true'
-			//sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/robot || true'
 			// Tag the top to let the world know I was at least
 			// here.
-			sh 'date > $WORKSPACE/mnt/$BRANCH_NAME/timestamp.txt'
+			sh 'echo "TODO: Note software versions." > $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
+			sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
 			// TODO: This should be wrapped in exception
 			// handling. In fact, this whole thing should be.
 			sh 'fusermount -u $WORKSPACE/mnt/'
@@ -59,13 +56,13 @@ pipeline {
 			    // Remember that git lays out into CWD.
 			    git 'https://github.com/owlcollab/owltools.git'
 			    sh 'mvn -f OWLTools-Parent/pom.xml -U clean install -DskipTests -Dmaven.javadoc.skip=true -Dsource.skip=true'
-			    // Attempt to rsync produced bin.
+			    // Attempt to rsync produced into bin/.
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Runner/target/owltools skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/'
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Oort/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/'
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-NCBI/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/'
-				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Oort/reporting/ skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/reporting'
-				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Runner/contrib/ skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools/contrib'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Runner/target/owltools skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Oort/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-NCBI/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Oort/reporting/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Runner/contrib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 			    }
 			}
 		    },
@@ -83,11 +80,56 @@ pipeline {
 		    	    sh 'BUILD=`git rev-parse --short HEAD`'
 		    	    sh 'mvn versions:set -DnewVersion=$VERSION+$BUILD'
 		    	    sh 'mvn -U clean install'
-		    	    // Attempt to rsync produced bin.
+		    	    // Attempt to rsync produced into bin/.
 		    	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 		    	    }
 		    	}
+		    },
+		    "Ready arachne": {
+		    	dir('./arachne') {
+		    	    sh 'wget -N https://github.com/balhoff/arachne/releases/download/v1.0.2/arachne-1.0.2.tgz'
+			    sh 'tar -xvf arachne-1.0.2.tgz'
+		    	    // Attempt to rsync produced into bin/.
+		    	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+		    	    }
+		    	}
+		    },
+		    // // Do we need this anymore?
+		    // "Ready RDFox": {
+		    // // Legacy: build 'rdfox-cli-build'
+		    // 	dir('./rdfox-cli') {
+		    // 	    // Remember that git lays out into CWD.
+		    // 	    git 'https://github.com/balhoff/rdfox-cli.git'
+		    // 	    // "Build".
+		    // 	    sh 'wget http://www.cs.ox.ac.uk/isg/tools/RDFox/release/RDFox-linux.zip -O RDFox.zip'
+		    // 	    sh 'unzip -u RDFox.zip'
+		    // 	    sh 'cp RDFox/lib/JRDFox.jar lib/'
+		    // 	    sh 'sbt universal:packageZipTarball'
+		    // 	    // Attempt to rsync produced into bin/.
+		    // 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/universal/rdfox-cli.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+		    // 	    }
+		    // 	}
+		    // },
+		    "Ready minerva": {
+			dir('./minerva') {
+			    // Remember that git lays out into CWD.
+			    git 'https://github.com/geneontology/minerva.git'
+			    // Needs to have owltools available.
+			    withEnv(['PATH+EXTRA=../../bin', 'CLASSPATH+EXTRA=../../bin']){
+				// TODO: Skip tests until figure out
+				// pathing issues.
+				//sh 'mvn -U clean install'
+				sh 'mvn -U clean install -DskipTests -Dmaven.javadoc.skip=true -Dsource.skip=true'
+			    }
+			    // Attempt to rsync produced into bin/.
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" minerva-server/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" minerva-cli/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			    }
+			}
 		    }
 		)
 	    }
@@ -103,25 +145,22 @@ pipeline {
 		    git 'https://github.com/geneontology/go-ontology.git'
 		    // Default namespace
 		    sh 'OBO=http://purl.obolibrary.org/obo'
-		    // TODO: explanation
+
+		    // Make all software products available in bin/.
+		    sh 'mkdir -p bin/'
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/owltools ./'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
 		    }
-		    sh 'chmod 755 owltools/ontology-release-runner'
-		    sh 'chmod 755 owltools/reporting/compare-obo-files.pl'
-		    sh 'chmod 755 owltools/reporting/compare-defs.pl'
-		    sh 'chmod 755 owltools/owltools'
-		    // TODO: explanation
-		    sh 'mkdir -p bin'
-		    sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot -O bin/robot'
-		    sh 'wget http://skyhook.berkeleybop.org/$BRANCH_NAME/bin/robot.jar -O bin/robot.jar'
 		    sh 'chmod +x bin/*'
+
+		    // Make ontology products and get them into
+		    // skyhook.
 		    dir('./src/ontology') {
 			// Add owltools to path, required for scripts.
 			// Note weird pipeline syntax to change the
 			// PATH var--O was unable to the "correct"
 			// `pwd` thing, so here we are.
-			withEnv(['PATH+EXTRA=../../owltools:../../owltools/reporting:../../oboedit:../../bin']){
+			withEnv(['PATH+EXTRA=../../bin']){
 			    sh 'make all'
 			    sh 'make prepare_release'
 			}
@@ -132,11 +171,77 @@ pipeline {
 		}
 	    }
 	}
-	// stage('Produce GAFs') {
-	//     steps {
-	// 	build 'gaf-production'
-	//     }
-	// }
+	// A new step to think about. What is our core metadata?
+	stage('Produce metadata') {
+	    steps {
+		dir('./go-site') {
+		    git 'https://github.com/geneontology/go-site.git'
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" metadata/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/metadata'
+		    }
+		}
+	    }
+	}
+	stage('Produce GAFs') {
+	    steps {
+		// Legacy: build 'gaf-production'
+		dir('./go-site') {
+		    git 'https://github.com/geneontology/go-site.git'
+		    
+		    // Make all software products available in bin/.
+		    sh 'mkdir -p bin/'
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+		    }
+		    sh 'chmod +x bin/*'
+
+		    // Make minimal GAF products.
+		    dir('./pipeline') {
+			sh 'make clean'
+			// Technically, a meaningless line as we will
+			// simulate this with entirely withEnv
+			// anyways.
+			sh 'python3 -m venv target/env'
+			// Gunna need some memory.
+			// In addition to the memory, try and simulate
+			// the environment changes for python venv activate.
+			// Note the complex assignment of VIRTUAL_ENV and PATH.
+			// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
+			// Note that the ".local/bin" line may be unnecessary
+			// in the future as we fix errors in the package
+			// handling for the bins in rule-runner.
+			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
+			    // Note environment for future debugging.
+			    sh 'env > env.txt'
+			    sh 'cat env.txt'
+			    // WARNING: Okay, this is our current
+			    // workaround for the shebang line limits
+			    // and long workspace names in Jenkins
+			    // declarative
+			    // (https://github.com/pypa/pip/issues/1773).
+			    // There are other tacks we might take
+			    sh 'python3 ./target/env/bin/pip3 install -r requirements.txt'
+			    sh 'python3 ./target/env/bin/pip3 install ../graphstore/rule-runner'
+
+			    // Do this thing.
+			    sh 'make all'
+
+			    // // Do this thing for testing.
+			    // // Needed temporarily to create
+			    // // "all_pombase" target.
+			    // sh 'make extra_files'
+			    // // TODO: For the time being, let's just
+			    // // try to get through this with pombase.
+			    // sh 'make all_pombase'
+			}
+			// Flatten onto skyhook.
+			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    sh 'find ./target/groups -type f -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
+			}
+		    }
+		}
+	    }
+	}
 	// stage('TODO: Sanity I') {
 	//     steps {
 	// 	echo 'TODO: sanity'
@@ -169,53 +274,129 @@ pipeline {
 	// 	echo "No public exposure of $BRANCH_NAME."
 	//     }
 	// }
-	stage('Publish') {
-	    // when { expression { BRANCH_NAME ==~ /(snapshot|release)/ } }
-	    when { anyOf { branch 'release'; branch 'snapshot' } }
+	stage('Publish ontology') {
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
-		parallel(
-		    "Ontology publish": {
-			// Legacy: build 'ontology-publish'
-			// Experimental stanza to support mounting
-			// the sshfs using the "hidden" skyhook
-			// identity.
-			sh 'mkdir -p $WORKSPACE/mnt/ || true'
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		// Legacy: build 'ontology-publish'
+		// Experimental stanza to support mounting
+		// the sshfs using the "hidden" skyhook
+		// identity.
+		sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		}
+		// Copy the product to the right location.
+		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
+		    // Well, we need to do a couple of things
+		    // here in a structured way, so we'll go
+		    // ahead and drop into the scripting mode.
+		    script {
+			if( env.BRANCH_NAME == 'master' ){
+			    // Simple case: master -> experimental.
+			    // Note no CloudFront invalidate.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/ontology/ s3://go-data-product-experimental/ontology/'
 			}
-			// Copy the product to the right location.
-			// cp ./pipeline/target/* $WORKSPACE/mnt/annotations/
-			withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
-			    // TODO/BUG: This should be going to
-			    // the $BRANCH_NAME instead of the
-			    // hardcoded "snapshot".
-
-			    // Well, we need to do a couple of things
-			    // here in a structured way, so we'll go
-			    // ahead and drop into the scripting mode.
-			    script {
-				if( env.BRANCH_NAME == 'snapshot' ){
-				    // Simple case: snapshot -> snapshot.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/snapshot/ontology/ s3://go-data-product-snapshot/ontology/'
-				}
-				if( env.BRANCH_NAME == 'release' ){
-				    // Simple case: release -> current.
-				    // Same as above.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/release/ontology/ s3://go-data-product-current/ontology/'
-				    // Hard case case: release -> dated path.
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
-				}
-			    }
+			if( env.BRANCH_NAME == 'snapshot' ){
+			    // Simple case: snapshot -> snapshot.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/ontology/ s3://go-data-product-snapshot/ontology/'
 			}
-			// Bail on the filesystem.
-			sh 'fusermount -u $WORKSPACE/mnt/'
-		    }//,
-		    // 	    "GAF publish": {
-		    // 		build 'gaf-publish'
-			// 	    }
-		)
+			if( env.BRANCH_NAME == 'release' ){
+			    // Simple case: release -> current.
+			    // Same as above.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-current/ontology/'
+			    // Hard case case: release -> dated path.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
+			}
+		    }
+		}
+		// Bail on the filesystem.
+		sh 'fusermount -u $WORKSPACE/mnt/'
 	    }
 	}
+	// Publish metadata next--less likely to fail than
+	// GAF, less important than ontologies.
+	stage('Publish metadata') {
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    steps {
+		// Setup fuse for transfer.
+		sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		}
+		// Copy the product to the right location.
+		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
+		    // Well, we need to do a couple of things
+		    // here in a structured way, so we'll go
+		    // ahead and drop into the scripting mode.
+		    script {
+			if( env.BRANCH_NAME == 'master' ){
+			    // Simple case: master -> experimental.
+			    // Note no CloudFront invalidate.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/metadata/ s3://go-data-product-experimental/metadata/'
+			}
+			if( env.BRANCH_NAME == 'snapshot' ){
+			    // Simple case: snapshot -> snapshot.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/metadata/ s3://go-data-product-snapshot/metadata/'
+			}
+			if( env.BRANCH_NAME == 'release' ){
+			    // Simple case: release -> current.
+			    // Same as above.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-current/metadata/'
+			    // Hard case case: release -> dated path.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-release/metadata/`date +%Y-%m-%d`/'
+			}
+		    }
+		}
+		// Bail on the filesystem.
+		sh 'fusermount -u $WORKSPACE/mnt/'
+	    }	    
+	}
+	// Get the GAF/annotation data out separately--at
+	// least we got the ontologies out.
+	// TODO: Make a function to capture the repetition
+	// between this and the ontology publishing.
+	stage('Publish GAFs') {
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    steps {
+		// Legacy: build 'gaf-publish'
+		// Setup fuse for transfer.
+		sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		}
+		// Copy the product to the right location.
+		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
+		    // Well, we need to do a couple of things
+		    // here in a structured way, so we'll go
+		    // ahead and drop into the scripting mode.
+		    script {
+			if( env.BRANCH_NAME == 'master' ){
+			    // Simple case: master -> experimental.
+			    // Note no CloudFront invalidate.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/annotations/ s3://go-data-product-experimental/annotations/'
+			}
+			if( env.BRANCH_NAME == 'snapshot' ){
+			    // Simple case: snapshot -> snapshot.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/annotations/ s3://go-data-product-snapshot/annotations/'
+			}
+			if( env.BRANCH_NAME == 'release' ){
+			    // Simple case: release -> current.
+			    // Same as above.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-current/annotations/'
+			    // Hard case case: release -> dated path.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-release/annotations/`date +%Y-%m-%d`/'
+			}
+		    }
+		}
+		// Bail on the filesystem.
+		sh 'fusermount -u $WORKSPACE/mnt/'
+	    }
+	}
+	// stage('Published indexes') {
+	//     steps {
+	// 	echo 'TODO: Create S3 indicies'
+	//     }
+	// }
 	// stage('Deploy') {
 	//     steps {
 	// 	echo 'TODO: deploy AmiGO'
@@ -224,6 +405,11 @@ pipeline {
 	// stage('TODO: Final status') {
 	//     steps {
 	// 	echo 'TODO: final'
+	//     }
+	// }
+	// stage('Flush') {
+	//     steps {
+	// 	echo 'TODO: Flush/invalidate CDN'
 	//     }
 	// }
     }
