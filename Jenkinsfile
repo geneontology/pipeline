@@ -286,7 +286,7 @@ pipeline {
 				    sh 'make extra_files'
 				    // ...wait for it--get the
 				    // inferred ttl files produced.
-				    dir('./target') {
+				    //dir('./target') {
 					// WARNING/BUG: Unfortunately,
 					// as we need the GAFs done
 					// and done, we have to do
@@ -295,7 +295,7 @@ pipeline {
 					sh 'make all_pombase'
 					//sh 'make all_targets_ttl'
 					sh 'make ttl_all_pombase'
-				    }
+				    //}
 				    // Go!
 				    sh 'make target/blazegraph.jnl'
 				}
