@@ -281,6 +281,9 @@ pipeline {
 				    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 				    // Ready, set...
 				    sh 'make clean'
+				    // ...do this thing for generating
+				    // the target/Makefile...
+				    sh 'make extra_files'
 				    // ...wait for it--get the
 				    // inferred ttl files produced.
 				    dir('./target') {
