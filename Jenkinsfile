@@ -200,16 +200,13 @@ pipeline {
 			// Technically, a meaningless line as we will
 			// simulate this with entirely withEnv
 			// anyways.
-			sh 'python3 -m venv target/env'
+			sh 'python3 -m venv mypyenv'
 			// Gunna need some memory.
 			// In addition to the memory, try and simulate
 			// the environment changes for python venv activate.
 			// Note the complex assignment of VIRTUAL_ENV and PATH.
 			// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
-			// Note that the ".local/bin" line may be unnecessary
-			// in the future as we fix errors in the package
-			// handling for the bins in rule-runner.
-			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
+			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 			    // Note environment for future debugging.
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
@@ -219,21 +216,28 @@ pipeline {
 			    // declarative
 			    // (https://github.com/pypa/pip/issues/1773).
 			    // There are other tacks we might take
-			    sh 'python3 ./target/env/bin/pip3 install -r requirements.txt'
-			    sh 'python3 ./target/env/bin/pip3 install ../graphstore/rule-runner'
+			    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
+			    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 			    // Ready, set...
 			    sh 'make clean'
 
 			    // Do this thing.
-			    sh 'make all'
-
-			    // // Do this thing for testing.
-			    // // Needed temporarily to create
-			    // // "all_pombase" target.
-			    // sh 'make extra_files'
-			    // // TODO: For the time being, let's just
-			    // // try to get through this with pombase.
-			    // sh 'make all_pombase'
+			    script {
+				// In non-dev cases, try and do the
+				// whole shebang.
+				if( env.BRANCH_NAME != 'master' ){
+				    sh 'make all'
+				}
+				if( env.BRANCH_NAME == 'master' ){
+				    // Do this thing for testing.
+				    // Needed temporarily to create
+				    // "all_pombase" target.
+				    sh 'make extra_files'
+				    // TODO: For the time being, let's just
+				    // try to get through this with pombase.
+				    sh 'make all_pombase'
+				}
+			    }
 			}
 			// Flatten onto skyhook.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -248,20 +252,43 @@ pipeline {
 	// 	echo 'TODO: sanity'
 	//     }
 	// }
-	// stage('Produce derivatives') {
-	//     steps {
-	// 	parallel(
-	// 	    "Produce index": {
-	// 		echo 'TODO: index'
-			
-	// 	    },
-	// 	    "Produce graphstore": {
-	// 		echo 'TODO: graphstore'
-			
-	// 	    }
-	// 	)
-	//     }
-	// }
+	stage('Produce derivatives') {
+	    when { anyOf { branch 'master' } }
+	    steps {
+		parallel(
+		    "GOlr index (TODO)": {
+			echo 'TODO: index'
+		    },
+		    "Blazegraph journal": {
+			dir('./go-site') {
+			    git 'https://github.com/geneontology/go-site.git'
+
+			    // Make all software products available in bin/.
+			    sh 'mkdir -p bin/'
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+			    }
+			    sh 'chmod +x bin/*'
+
+			    // Make Blazegraph journal.
+			    dir('./pipeline') {
+				sh 'python3 -m venv mypyenv'
+				withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+				    // Note environment for future debugging.
+				    sh 'env > env.txt'
+				    sh 'cat env.txt'
+				    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
+				    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
+				    // Ready, set...
+				    sh 'make clean'
+				    sh 'make target/blazegraph.jnl'
+				}
+			    }
+			}
+		    }
+		)
+	    }
+	}
 	// stage('TODO: Sanity II') {
 	//     steps {
 	// 	echo 'TODO: sanity'
