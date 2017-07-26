@@ -287,6 +287,12 @@ pipeline {
 				    // ...wait for it--get the
 				    // inferred ttl files produced.
 				    dir('./target') {
+					// WARNING/BUG: Unfortunately,
+					// as we need the GAFs done
+					// and done, we have to do
+					// this again--cannot let this
+					// get ouf of master.
+					sh 'make all_pombase'
 					//sh 'make all_targets_ttl'
 					sh 'make ttl_all_pombase'
 				    }
