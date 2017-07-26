@@ -281,6 +281,12 @@ pipeline {
 				    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 				    // Ready, set...
 				    sh 'make clean'
+				    // ...wait for it--get the
+				    // inferred ttl files produced.
+				    dir('./target') {
+					sh 'make all_targets_ttl'
+				    }
+				    // Go!
 				    sh 'make target/blazegraph.jnl'
 				}
 			    }
