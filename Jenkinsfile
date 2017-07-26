@@ -246,6 +246,7 @@ pipeline {
 	//     }
 	// }
 	stage('Produce derivatives') {
+	    when { anyOf { branch 'master' } }
 	    steps {
 		parallel(
 		    "GOlr index (TODO)": {
