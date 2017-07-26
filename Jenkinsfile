@@ -287,7 +287,8 @@ pipeline {
 				    // ...wait for it--get the
 				    // inferred ttl files produced.
 				    dir('./target') {
-					sh 'make all_targets_ttl'
+					//sh 'make all_targets_ttl'
+					sh 'make ttl_all_pombase'
 				    }
 				    // Go!
 				    sh 'make target/blazegraph.jnl'
