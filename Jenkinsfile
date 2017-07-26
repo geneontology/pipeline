@@ -200,16 +200,13 @@ pipeline {
 			// Technically, a meaningless line as we will
 			// simulate this with entirely withEnv
 			// anyways.
-			sh 'python3 -m venv target/env'
+			sh 'python3 -m venv mypyenv'
 			// Gunna need some memory.
 			// In addition to the memory, try and simulate
 			// the environment changes for python venv activate.
 			// Note the complex assignment of VIRTUAL_ENV and PATH.
 			// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
-			// Note that the ".local/bin" line may be unnecessary
-			// in the future as we fix errors in the package
-			// handling for the bins in rule-runner.
-			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
+			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv"]){
 			    // Note environment for future debugging.
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
@@ -219,8 +216,8 @@ pipeline {
 			    // declarative
 			    // (https://github.com/pypa/pip/issues/1773).
 			    // There are other tacks we might take
-			    sh 'python3 ./target/env/bin/pip3 install -r requirements.txt'
-			    sh 'python3 ./target/env/bin/pip3 install ../graphstore/rule-runner'
+			    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
+			    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 			    // Ready, set...
 			    sh 'make clean'
 
@@ -267,13 +264,13 @@ pipeline {
 
 			    // Make Blazegraph journal.
 			    dir('./pipeline') {
-				sh 'python3 -m venv target/env'
-				withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/target/env/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/target/env"]){
+				sh 'python3 -m venv mypyenv'
+				withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv"]){
 				    // Note environment for future debugging.
 				    sh 'env > env.txt'
 				    sh 'cat env.txt'
-				    sh 'python3 ./target/env/bin/pip3 install -r requirements.txt'
-				    sh 'python3 ./target/env/bin/pip3 install ../graphstore/rule-runner'
+				    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
+				    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 				    // Ready, set...
 				    sh 'make clean'
 				    sh 'make target/blazegraph.jnl'
