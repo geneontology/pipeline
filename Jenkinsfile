@@ -32,6 +32,9 @@ pipeline {
 			sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME || true'
 			// Rebuild directory structure.
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
+			// WARNING/BUG: needed for arachne to run at
+			// this point.
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/lib || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
@@ -93,6 +96,9 @@ pipeline {
 		    	    // Attempt to rsync produced into bin/.
 		    	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				// WARNING/BUG: needed for arachne to
+				// run at this point.
+		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
 		    	    }
 		    	}
 		    },
@@ -223,8 +229,8 @@ pipeline {
 
 			    // Do this thing.
 			    script {
-				// In non-dev cases, try and do the
-				// whole shebang.
+				// WARNING: In non-dev cases, try and
+				// do the whole shebang.
 				if( env.BRANCH_NAME != 'master' ){
 				    sh 'make all'
 				}
@@ -267,6 +273,9 @@ pipeline {
 			    sh 'mkdir -p bin/'
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+				// WARNING/BUG: needed for arachne to
+				// run at this point.
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
 			    }
 			    sh 'chmod +x bin/*'
 
@@ -286,16 +295,14 @@ pipeline {
 				    sh 'make extra_files'
 				    // ...wait for it--get the
 				    // inferred ttl files produced.
-				    //dir('./target') {
-					// WARNING/BUG: Unfortunately,
-					// as we need the GAFs done
-					// and done, we have to do
-					// this again--cannot let this
-					// get ouf of master.
-					sh 'make all_pombase'
-					//sh 'make all_targets_ttl'
-					sh 'make ttl_all_pombase'
-				    //}
+				    // WARNING/BUG: Unfortunately,
+				    // as we need the GAFs done
+				    // and done, we have to do
+				    // this again--cannot let this
+				    // get ouf of master.
+				    sh 'make all_pombase'
+				    //sh 'make all_targets_ttl'
+				    sh 'make ttl_all_pombase'
 				    // Go!
 				    sh 'make target/blazegraph.jnl'
 				}
@@ -334,7 +341,7 @@ pipeline {
 		    // Well, we need to do a couple of things
 		    // here in a structured way, so we'll go
 		    // ahead and drop into the scripting mode.
-		    script {
+		    script {			
 			if( env.BRANCH_NAME == 'master' ){
 			    // Simple case: master -> experimental.
 			    // Note no CloudFront invalidate.
