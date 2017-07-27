@@ -35,6 +35,7 @@ pipeline {
 			// WARNING/BUG: needed for arachne to run at
 			// this point.
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/lib || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/product || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
@@ -305,6 +306,10 @@ pipeline {
 				    sh 'make ttl_all_pombase'
 				    // Go!
 				    sh 'make target/blazegraph.jnl'
+				}
+				// Get the journal onto skyhook.
+				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph.jnl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/product/'
 				}
 			    }
 			}
