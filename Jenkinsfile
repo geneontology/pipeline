@@ -308,19 +308,28 @@ pipeline {
 				    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 				    // Ready, set...
 				    sh 'make clean'
-				    // ...do this thing for generating
-				    // the target/Makefile...
-				    sh 'make extra_files'
-				    // ...wait for it--get the
-				    // inferred ttl files produced.
-				    // WARNING/BUG: Unfortunately,
-				    // as we need the GAFs done
-				    // and done, we have to do
-				    // this again--cannot let this
-				    // get ouf of master.
-				    sh 'make all_pombase'
-				    //sh 'make all_targets_ttl'
-				    sh 'make ttl_all_pombase'
+				    script {
+					// WARNING: In non-dev cases, try and
+					// do the whole shebang.
+					if( env.BRANCH_NAME != 'master' ){
+					    sh 'make all'
+					}
+					if( env.BRANCH_NAME == 'master' ){
+					    // ...do this thing for generating
+					    // the target/Makefile...
+					    sh 'make extra_files'
+					    // ...wait for it--get the
+					    // inferred ttl files produced.
+					    // WARNING/BUG: Unfortunately,
+					    // as we need the GAFs done
+					    // and done, we have to do
+					    // this again--cannot let this
+					    // get ouf of master.
+					    sh 'make all_pombase'
+					    //sh 'make all_targets_ttl'
+					    sh 'make ttl_all_pombase'
+					}
+				    }
 				    // Go!
 				    sh 'make target/blazegraph.jnl'
 				}
