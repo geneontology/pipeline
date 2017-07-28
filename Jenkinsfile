@@ -262,9 +262,14 @@ pipeline {
 		}
 		// Run sanity checks.
 		sh 'python3 sanity-check-ann-report.py -v -d $WORKSPACE/mnt/$BRANCH_NAME/annotations/'
-		// Bail on the filesystem.
-		sh 'fusermount -u $WORKSPACE/mnt/'
 	    }
+	    // WARNING: Extra safety as I expect this to fail fairly often.
+	    post {
+                always {
+		    // Bail on the filesystem.
+		    sh 'fusermount -u $WORKSPACE/mnt/'
+                }
+            }
 	}
 	stage('Produce derivatives') {
 	    when { anyOf { branch 'master' } }
