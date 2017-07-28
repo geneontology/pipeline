@@ -260,8 +260,13 @@ pipeline {
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 		}
-		// Run sanity checks.
-		sh 'python3 sanity-check-ann-report.py -v -d $WORKSPACE/mnt/$BRANCH_NAME/annotations/'
+		// Ready...
+		dir('./go-site') {
+		    git 'https://github.com/geneontology/go-site.git'
+
+		    // Run sanity checks.
+		    sh 'python3 ./scripts/sanity-check-ann-report.py -v -d $WORKSPACE/mnt/$BRANCH_NAME/annotations/'
+		}
 	    }
 	    // WARNING: Extra safety as I expect this to fail fairly often.
 	    post {
