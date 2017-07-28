@@ -236,13 +236,14 @@ pipeline {
 				    sh 'make all'
 				}
 				if( env.BRANCH_NAME == 'master' ){
-				    // Do this thing for testing.
-				    // Needed temporarily to create
-				    // "all_pombase" target.
-				    sh 'make extra_files'
-				    // TODO: For the time being, let's just
-				    // try to get through this with pombase.
-				    sh 'make all_pombase'
+				    sh 'make all'
+				    // // Do this thing for testing.
+				    // // Needed temporarily to create
+				    // // "all_pombase" target.
+				    // sh 'make extra_files'
+				    // // TODO: For the time being, let's just
+				    // // try to get through this with pombase.
+				    // sh 'make all_pombase'
 				}
 			    }
 			}
@@ -315,19 +316,20 @@ pipeline {
 					    sh 'make all'
 					}
 					if( env.BRANCH_NAME == 'master' ){
-					    // ...do this thing for generating
-					    // the target/Makefile...
-					    sh 'make extra_files'
-					    // ...wait for it--get the
-					    // inferred ttl files produced.
-					    // WARNING/BUG: Unfortunately,
-					    // as we need the GAFs done
-					    // and done, we have to do
-					    // this again--cannot let this
-					    // get ouf of master.
-					    sh 'make all_pombase'
-					    //sh 'make all_targets_ttl'
-					    sh 'make ttl_all_pombase'
+					    sh 'make all'
+					    // // ...do this thing for generating
+					    // // the target/Makefile...
+					    // sh 'make extra_files'
+					    // // ...wait for it--get the
+					    // // inferred ttl files produced.
+					    // // WARNING/BUG: Unfortunately,
+					    // // as we need the GAFs done
+					    // // and done, we have to do
+					    // // this again--cannot let this
+					    // // get ouf of master.
+					    // sh 'make all_pombase'
+					    // //sh 'make all_targets_ttl'
+					    // sh 'make ttl_all_pombase'
 					}
 				    }
 				    // Go!
