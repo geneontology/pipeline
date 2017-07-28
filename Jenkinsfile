@@ -254,11 +254,18 @@ pipeline {
 		}
 	    }
 	}
-	// stage('TODO: Sanity I') {
-	//     steps {
-	// 	echo 'TODO: sanity'
-	//     }
-	// }
+	stage('Sanity I') {
+	    steps {
+		sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		}
+		// Run sanity checks.
+		sh 'python3 sanity-check-ann-report.py -v -d $WORKSPACE/mnt/$BRANCH_NAME/annotations/'
+		// Bail on the filesystem.
+		sh 'fusermount -u $WORKSPACE/mnt/'
+	    }
+	}
 	stage('Produce derivatives') {
 	    when { anyOf { branch 'master' } }
 	    steps {
@@ -317,9 +324,9 @@ pipeline {
 		)
 	    }
 	}
-	// stage('TODO: Sanity II') {
+	// stage('Sanity II (TODO)') {
 	//     steps {
-	// 	echo 'TODO: sanity'
+	// 	echo 'TODO: Sanity II'
 	//     }
 	// }
 	// TODO: Do we really want this?
@@ -448,16 +455,18 @@ pipeline {
 		sh 'fusermount -u $WORKSPACE/mnt/'
 	    }
 	}
-	// stage('Published indexes') {
-	//     steps {
-	// 	echo 'TODO: Create S3 indicies'
-	//     }
-	// }
-	// stage('Deploy') {
-	//     steps {
-	// 	echo 'TODO: deploy AmiGO'
-	//     }
-	// }
+	stage('Deploy (TODO)') {
+	    steps {
+		parallel(
+		    "AmiGO": {
+			echo 'TODO: (re)deploy AmiGO'
+		    },
+		    "Blazegraph": {
+			echo 'TODO: (re)deploy Blazegraph'
+		    }
+		)
+	    }
+	}
 	// stage('TODO: Final status') {
 	//     steps {
 	// 	echo 'TODO: final'
