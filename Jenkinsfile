@@ -257,23 +257,31 @@ pipeline {
 	}
 	stage('Sanity I') {
 	    steps {
+		// Prep a copyover point, as the overhead for doing
+		// large i/o over sshfs seems /really/ high.
+		sh 'mkdir -p $WORKSPACE/copyover/ || true'
+		// Mount the remote filesystem.
 		sh 'mkdir -p $WORKSPACE/mnt/ || true'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 		}
+		// Copy over the files that we want to work on.
+		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
 		// Ready...
 		dir('./go-site') {
 		    git 'https://github.com/geneontology/go-site.git'
 
 		    // Run sanity checks.
-		    sh 'python3 ./scripts/sanity-check-ann-report.py -v -d $WORKSPACE/mnt/$BRANCH_NAME/annotations/'
+		    sh 'python3 ./scripts/sanity-check-ann-report.py -v -d $WORKSPACE/copyover/'
 		}
 	    }
 	    // WARNING: Extra safety as I expect this to fail fairly often.
 	    post {
                 always {
-		    // Bail on the filesystem.
+		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/'
+		    // Purge the copyover point.
+		    sh 'rm -r -f $WORKSPACE/copyover || true'
                 }
             }
 	}
