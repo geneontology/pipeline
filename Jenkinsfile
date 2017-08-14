@@ -285,6 +285,8 @@ pipeline {
                 }
             }
 	}
+	// Note: this is only for experimentation on master at this
+	// point.
 	stage('Produce derivatives') {
 	    when { anyOf { branch 'master' } }
 	    steps {
@@ -322,9 +324,13 @@ pipeline {
 					// do the whole shebang.
 					if( env.BRANCH_NAME != 'master' ){
 					    sh 'make all'
+					    // Also, the _inferred.ttl files.
+					    sh 'make all_targets_ttl'
 					}
 					if( env.BRANCH_NAME == 'master' ){
 					    sh 'make all'
+					    // Also, the _inferred.ttl files.
+					    sh 'make all_targets_ttl'
 					    // // ...do this thing for generating
 					    // // the target/Makefile...
 					    // sh 'make extra_files'
