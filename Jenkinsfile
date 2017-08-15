@@ -213,7 +213,7 @@ pipeline {
 			// the environment changes for python venv activate.
 			// Note the complex assignment of VIRTUAL_ENV and PATH.
 			// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
-			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+			withEnv(['MINERVA_CLI_MEMORY=32G', 'JAVA_OPTS=-Xmx32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 			    // Note environment for future debugging.
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
@@ -311,7 +311,7 @@ pipeline {
 			    // Make Blazegraph journal.
 			    dir('./pipeline') {
 				sh 'python3 -m venv mypyenv'
-				withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+				withEnv(['MINERVA_CLI_MEMORY=32G', 'JAVA_OPTS=-Xmx32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 				    // Note environment for future debugging.
 				    sh 'env > env.txt'
 				    sh 'cat env.txt'
