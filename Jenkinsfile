@@ -32,6 +32,10 @@ pipeline {
 			sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME || true'
 			// Rebuild directory structure.
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
+			// WARNING/BUG: needed for arachne to run at
+			// this point.
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/lib || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/product || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
@@ -93,6 +97,9 @@ pipeline {
 		    	    // Attempt to rsync produced into bin/.
 		    	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				// WARNING/BUG: needed for arachne to
+				// run at this point.
+		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
 		    	    }
 		    	}
 		    },
@@ -206,7 +213,7 @@ pipeline {
 			// the environment changes for python venv activate.
 			// Note the complex assignment of VIRTUAL_ENV and PATH.
 			// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
-			withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+			withEnv(['MINERVA_CLI_MEMORY=32G', 'JAVA_OPTS=-Xmx32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 			    // Note environment for future debugging.
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
@@ -223,19 +230,20 @@ pipeline {
 
 			    // Do this thing.
 			    script {
-				// In non-dev cases, try and do the
-				// whole shebang.
+				// WARNING: In non-dev cases, try and
+				// do the whole shebang.
 				if( env.BRANCH_NAME != 'master' ){
 				    sh 'make all'
 				}
 				if( env.BRANCH_NAME == 'master' ){
-				    // Do this thing for testing.
-				    // Needed temporarily to create
-				    // "all_pombase" target.
-				    sh 'make extra_files'
-				    // TODO: For the time being, let's just
-				    // try to get through this with pombase.
-				    sh 'make all_pombase'
+				    sh 'make all'
+				    // // Do this thing for testing.
+				    // // Needed temporarily to create
+				    // // "all_pombase" target.
+				    // sh 'make extra_files'
+				    // // TODO: For the time being, let's just
+				    // // try to get through this with pombase.
+				    // sh 'make all_pombase'
 				}
 			    }
 			}
@@ -247,11 +255,38 @@ pipeline {
 		}
 	    }
 	}
-	// stage('TODO: Sanity I') {
-	//     steps {
-	// 	echo 'TODO: sanity'
-	//     }
-	// }
+	stage('Sanity I') {
+	    steps {
+		// Prep a copyover point, as the overhead for doing
+		// large i/o over sshfs seems /really/ high.
+		sh 'mkdir -p $WORKSPACE/copyover/ || true'
+		// Mount the remote filesystem.
+		sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		}
+		// Copy over the files that we want to work on.
+		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
+		// Ready...
+		dir('./go-site') {
+		    git 'https://github.com/geneontology/go-site.git'
+
+		    // Run sanity checks.
+		    sh 'python3 ./scripts/sanity-check-ann-report.py -v -d $WORKSPACE/copyover/'
+		}
+	    }
+	    // WARNING: Extra safety as I expect this to fail fairly often.
+	    post {
+                always {
+		    // Bail on the remote filesystem.
+		    sh 'fusermount -u $WORKSPACE/mnt/'
+		    // Purge the copyover point.
+		    sh 'rm -r -f $WORKSPACE/copyover || true'
+                }
+            }
+	}
+	// Note: this is only for experimentation on master at this
+	// point.
 	stage('Produce derivatives') {
 	    when { anyOf { branch 'master' } }
 	    steps {
@@ -267,13 +302,16 @@ pipeline {
 			    sh 'mkdir -p bin/'
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+				// WARNING/BUG: needed for arachne to
+				// run at this point.
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
 			    }
 			    sh 'chmod +x bin/*'
 
 			    // Make Blazegraph journal.
 			    dir('./pipeline') {
 				sh 'python3 -m venv mypyenv'
-				withEnv(['MINERVA_CLI_MEMORY=32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+				withEnv(['MINERVA_CLI_MEMORY=32G', 'JAVA_OPTS=-Xmx32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 				    // Note environment for future debugging.
 				    sh 'env > env.txt'
 				    sh 'cat env.txt'
@@ -281,7 +319,40 @@ pipeline {
 				    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 				    // Ready, set...
 				    sh 'make clean'
+				    // // Make basic and inferred TTL targets .
+				    // script {
+				    // 	// WARNING: In non-dev cases, try and
+				    // 	// do the whole shebang.
+				    // 	if( env.BRANCH_NAME != 'master' ){
+				    // 	    sh 'make all'
+				    // 	    // Also, the _inferred.ttl files.
+				    // 	    sh 'make all_targets_ttl'
+				    // 	}
+				    // 	if( env.BRANCH_NAME == 'master' ){
+				    // 	    sh 'make all'
+				    // 	    // Also, the _inferred.ttl files.
+				    // 	    sh 'make all_targets_ttl'
+				    // 	    // // ...do this thing for generating
+				    // 	    // // the target/Makefile...
+				    // 	    // sh 'make extra_files'
+				    // 	    // // ...wait for it--get the
+				    // 	    // // inferred ttl files produced.
+				    // 	    // // WARNING/BUG: Unfortunately,
+				    // 	    // // as we need the GAFs done
+				    // 	    // // and done, we have to do
+				    // 	    // // this again--cannot let this
+				    // 	    // // get ouf of master.
+				    // 	    // sh 'make all_pombase'
+				    // 	    // //sh 'make all_targets_ttl'
+				    // 	    // sh 'make ttl_all_pombase'
+				    // 	}
+				    // }
+				    // Build blazegraph.
 				    sh 'make target/blazegraph.jnl'
+				}
+				// Get the journal onto skyhook.
+				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph.jnl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/product/'
 				}
 			    }
 			}
@@ -289,9 +360,9 @@ pipeline {
 		)
 	    }
 	}
-	// stage('TODO: Sanity II') {
+	// stage('Sanity II (TODO)') {
 	//     steps {
-	// 	echo 'TODO: sanity'
+	// 	echo 'TODO: Sanity II'
 	//     }
 	// }
 	// TODO: Do we really want this?
@@ -318,7 +389,7 @@ pipeline {
 		    // Well, we need to do a couple of things
 		    // here in a structured way, so we'll go
 		    // ahead and drop into the scripting mode.
-		    script {
+		    script {			
 			if( env.BRANCH_NAME == 'master' ){
 			    // Simple case: master -> experimental.
 			    // Note no CloudFront invalidate.
@@ -420,16 +491,18 @@ pipeline {
 		sh 'fusermount -u $WORKSPACE/mnt/'
 	    }
 	}
-	// stage('Published indexes') {
-	//     steps {
-	// 	echo 'TODO: Create S3 indicies'
-	//     }
-	// }
-	// stage('Deploy') {
-	//     steps {
-	// 	echo 'TODO: deploy AmiGO'
-	//     }
-	// }
+	stage('Deploy (TODO)') {
+	    steps {
+		parallel(
+		    "AmiGO": {
+			echo 'TODO: (re)deploy AmiGO'
+		    },
+		    "Blazegraph": {
+			echo 'TODO: (re)deploy Blazegraph'
+		    }
+		)
+	    }
+	}
 	// stage('TODO: Final status') {
 	//     steps {
 	// 	echo 'TODO: final'
