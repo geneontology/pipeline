@@ -319,34 +319,35 @@ pipeline {
 				    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 				    // Ready, set...
 				    sh 'make clean'
-				    script {
-					// WARNING: In non-dev cases, try and
-					// do the whole shebang.
-					if( env.BRANCH_NAME != 'master' ){
-					    sh 'make all'
-					    // Also, the _inferred.ttl files.
-					    sh 'make all_targets_ttl'
-					}
-					if( env.BRANCH_NAME == 'master' ){
-					    sh 'make all'
-					    // Also, the _inferred.ttl files.
-					    sh 'make all_targets_ttl'
-					    // // ...do this thing for generating
-					    // // the target/Makefile...
-					    // sh 'make extra_files'
-					    // // ...wait for it--get the
-					    // // inferred ttl files produced.
-					    // // WARNING/BUG: Unfortunately,
-					    // // as we need the GAFs done
-					    // // and done, we have to do
-					    // // this again--cannot let this
-					    // // get ouf of master.
-					    // sh 'make all_pombase'
-					    // //sh 'make all_targets_ttl'
-					    // sh 'make ttl_all_pombase'
-					}
-				    }
-				    // Go!
+				    // // Make basic and inferred TTL targets .
+				    // script {
+				    // 	// WARNING: In non-dev cases, try and
+				    // 	// do the whole shebang.
+				    // 	if( env.BRANCH_NAME != 'master' ){
+				    // 	    sh 'make all'
+				    // 	    // Also, the _inferred.ttl files.
+				    // 	    sh 'make all_targets_ttl'
+				    // 	}
+				    // 	if( env.BRANCH_NAME == 'master' ){
+				    // 	    sh 'make all'
+				    // 	    // Also, the _inferred.ttl files.
+				    // 	    sh 'make all_targets_ttl'
+				    // 	    // // ...do this thing for generating
+				    // 	    // // the target/Makefile...
+				    // 	    // sh 'make extra_files'
+				    // 	    // // ...wait for it--get the
+				    // 	    // // inferred ttl files produced.
+				    // 	    // // WARNING/BUG: Unfortunately,
+				    // 	    // // as we need the GAFs done
+				    // 	    // // and done, we have to do
+				    // 	    // // this again--cannot let this
+				    // 	    // // get ouf of master.
+				    // 	    // sh 'make all_pombase'
+				    // 	    // //sh 'make all_targets_ttl'
+				    // 	    // sh 'make ttl_all_pombase'
+				    // 	}
+				    // }
+				    // Build blazegraph.
 				    sh 'make target/blazegraph.jnl'
 				}
 				// Get the journal onto skyhook.
