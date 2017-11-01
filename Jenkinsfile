@@ -266,7 +266,7 @@ pipeline {
 		    // Generate combined annotation report for driving
 		    // annotation download pages and drop it into
 		    // metadata/ for copyover.
-		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover/annotations --metadata ./metadata/datasets --output ./metadata/datasets/combined.report.json'
+		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./metadata/datasets/combined.report.json'
 
 		    // Copy all upstream metadata into metadata folder.
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
