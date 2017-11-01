@@ -178,17 +178,6 @@ pipeline {
 		}
 	    }
 	}
-	// A new step to think about. What is our core metadata?
-	stage('Produce metadata') {
-	    steps {
-		dir('./go-site') {
-		    git 'https://github.com/geneontology/go-site.git'
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" metadata/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/metadata'
-		    }
-		}
-	    }
-	}
 	stage('Produce GAFs') {
 	    steps {
 		// Legacy: build 'gaf-production'
@@ -255,6 +244,46 @@ pipeline {
 		}
 	    }
 	}
+	// A new step to think about. What is our core metadata?
+	stage('Produce metadata') {
+	    steps {
+
+		// Prep a copyover point, as the overhead for doing
+		// large i/o over sshfs seems /really/ high.
+		sh 'mkdir -p $WORKSPACE/copyover/ || true'
+		// Mount the remote filesystem.
+		sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		}
+		// Copy over the files that we want to work on.
+		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
+
+		// Prepare a working directory based around go-site.
+		dir('./go-site') {
+		    git 'https://github.com/geneontology/go-site.git'
+
+		    // Generate combined annotation report for driving
+		    // annotation download pages and drop it into
+		    // metadata/ for copyover.
+		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./metadata/datasets/combined.report.json'
+
+		    // Copy all upstream metadata into metadata folder.
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" metadata/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/metadata'
+		    }
+		}
+	    }
+	    // WARNING: Extra safety as I expect this to sometimes fail.
+	    post {
+                always {
+		    // Bail on the remote filesystem.
+		    sh 'fusermount -u $WORKSPACE/mnt/'
+		    // Purge the copyover point.
+		    sh 'rm -r -f $WORKSPACE/copyover || true'
+                }
+            }
+	}
 	stage('Sanity I') {
 	    steps {
 		// Prep a copyover point, as the overhead for doing
@@ -275,7 +304,7 @@ pipeline {
 		    sh 'python3 ./scripts/sanity-check-ann-report.py -v -d $WORKSPACE/copyover/'
 		}
 	    }
-	    // WARNING: Extra safety as I expect this to fail fairly often.
+	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
                 always {
 		    // Bail on the remote filesystem.
