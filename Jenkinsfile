@@ -267,6 +267,9 @@ pipeline {
 		    // annotation download pages and drop it into
 		    // metadata/ for copyover.
 		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./metadata/datasets/combined.report.json'
+		    // Generate the static download page directly from
+		    // the metadata.
+		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./metadata/datasets/combined.report.json --inject ./scripts/downloads-page-template.html > ./metadata/datasets/downloads.html'
 
 		    // Copy all upstream metadata into metadata folder.
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
