@@ -183,7 +183,7 @@ pipeline {
 		// Legacy: build 'gaf-production'
 		dir('./go-site') {
 		    git 'https://github.com/geneontology/go-site.git'
-		    
+
 		    // Make all software products available in bin/.
 		    sh 'mkdir -p bin/'
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -267,9 +267,14 @@ pipeline {
 		    // annotation download pages and drop it into
 		    // metadata/ for copyover.
 		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./metadata/datasets/combined.report.json'
+
 		    // Generate the static download page directly from
 		    // the metadata.
 		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./metadata/datasets/combined.report.json --inject ./scripts/downloads-page-template.html > ./metadata/datasets/downloads.html'
+
+		    // Generate the a users.yaml report for missing data
+		    // in the GO pattern.
+		    sh 'python3 ./scripts/sanity-check-users-and-groups.py --users metadata/users.yaml --groups metadata/groups.yaml > ./metadata/users-and-groups-report.txt'
 
 		    // Copy all upstream metadata into metadata folder.
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -421,7 +426,7 @@ pipeline {
 		    // Well, we need to do a couple of things
 		    // here in a structured way, so we'll go
 		    // ahead and drop into the scripting mode.
-		    script {			
+		    script {
 			if( env.BRANCH_NAME == 'master' ){
 			    // Simple case: master -> experimental.
 			    // Note no CloudFront invalidate.
@@ -480,7 +485,7 @@ pipeline {
 		}
 		// Bail on the filesystem.
 		sh 'fusermount -u $WORKSPACE/mnt/'
-	    }	    
+	    }
 	}
 	// Get the GAF/annotation data out separately--at
 	// least we got the ontologies out.
@@ -547,8 +552,8 @@ pipeline {
 	// }
     }
     // TODO: Let's make an announcement if things go badly.
-    post { 
-        changed { 
+    post {
+        changed {
             echo 'There has been a change in the pipeline.'
         }
     }
