@@ -35,10 +35,14 @@ pipeline {
 			// WARNING/BUG: needed for arachne to run at
 			// this point.
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/lib || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/product || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/ttl || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/blazegraph || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/solr || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
 			// Tag the top to let the world know I was at least
 			// here.
 			sh 'echo "TODO: Note software versions." > $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
@@ -178,7 +182,7 @@ pipeline {
 		}
 	    }
 	}
-	stage('Produce GAFs') {
+	stage('Produce GAFs, TTLs, and journal (mega-step)') {
 	    steps {
 		// Legacy: build 'gaf-production'
 		dir('./go-site') {
@@ -225,20 +229,39 @@ pipeline {
 				    sh 'make all'
 				}
 				if( env.BRANCH_NAME == 'master' ){
+				    // For GAF joy, plus "extras".
 				    sh 'make all'
-				    // // Do this thing for testing.
-				    // // Needed temporarily to create
-				    // // "all_pombase" target.
-				    // sh 'make extra_files'
-				    // // TODO: For the time being, let's just
-				    // // try to get through this with pombase.
-				    // sh 'make all_pombase'
+				    // Make basic (non-enriched/reasoned) TTLs.
+				    sh 'make all_targets_ttl'
+
+				    // Make journals with what we have
+				    // on the filesystem, for
+				    // convenience at this point.
+				    // -internal" is /everything/.
+				    sh 'make target/blazegraph-internal.jnl'
+				    // "-production" is just GAFs + "production"
+				    // models.
+				    sh 'make target/blazegraph-production.jnl'
+
+				    // As long as we're here and have
+				    // everything handy: this is
+				    // SPARTA!
+				    sh 'make -e target/sparta-report.json'
 				}
 			    }
+
 			}
-			// Flatten onto skyhook.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    // Flatten GAFs onto skyhook.
 			    sh 'find ./target/groups -type f -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
+			    // TODO: Flatten the TTL product into products
+			    // somehow?
+			    // ...
+			    // Copy the journals directly to products.
+                	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph-production.jnl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+                	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph-internal.jnl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+			    // Copy the reports into reports.
+                            sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 			}
 		    }
 		}
@@ -265,20 +288,26 @@ pipeline {
 
 		    // Generate combined annotation report for driving
 		    // annotation download pages and drop it into
-		    // metadata/ for copyover.
-		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./metadata/datasets/combined.report.json'
+		    // reports/ for copyover.
+		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./combined.report.json'
 
 		    // Generate the static download page directly from
 		    // the metadata.
-		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./metadata/datasets/combined.report.json --inject ./scripts/downloads-page-template.html > ./metadata/datasets/downloads.html'
+		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --inject ./scripts/downloads-page-template.html > ./downloads.html'
 
 		    // Generate the a users.yaml report for missing data
 		    // in the GO pattern.
-		    sh 'python3 ./scripts/sanity-check-users-and-groups.py --users metadata/users.yaml --groups metadata/groups.yaml > ./metadata/users-and-groups-report.txt'
+		    sh 'python3 ./scripts/sanity-check-users-and-groups.py --users metadata/users.yaml --groups metadata/groups.yaml > ./users-and-groups-report.txt'
 
-		    // Copy all upstream metadata into metadata folder.
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			// Copy all upstream metadata into metadata folder.
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" metadata/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/metadata'
+
+			// Copy all of the reports (and download page)
+			// to the reports directory.
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./combined.report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./downloads.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./users-and-groups-report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 		    }
 		}
 	    }
@@ -325,83 +354,95 @@ pipeline {
 	// Note: this is only for experimentation on master at this
 	// point.
 	stage('Produce derivatives') {
-	    when { anyOf { branch 'master' } }
 	    steps {
 		parallel(
 		    "GOlr index (TODO)": {
 			echo 'TODO: index'
-		    },
-		    "Blazegraph journal": {
-			dir('./go-site') {
-			    git 'https://github.com/geneontology/go-site.git'
-
-			    // Make all software products available in bin/.
-			    sh 'mkdir -p bin/'
-			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-				// WARNING/BUG: needed for arachne to
-				// run at this point.
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
-			    }
-			    sh 'chmod +x bin/*'
-
-			    // Make Blazegraph journal.
-			    dir('./pipeline') {
-				sh 'python3 -m venv mypyenv'
-				withEnv(['MINERVA_CLI_MEMORY=32G', 'JAVA_OPTS=-Xmx32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
-				    // Note environment for future debugging.
-				    sh 'env > env.txt'
-				    sh 'cat env.txt'
-				    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
-				    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
-				    // Ready, set...
-				    sh 'make clean'
-				    // // Make basic and inferred TTL targets .
-				    // script {
-				    // 	// WARNING: In non-dev cases, try and
-				    // 	// do the whole shebang.
-				    // 	if( env.BRANCH_NAME != 'master' ){
-				    // 	    sh 'make all'
-				    // 	    // Also, the _inferred.ttl files.
-				    // 	    sh 'make all_targets_ttl'
-				    // 	}
-				    // 	if( env.BRANCH_NAME == 'master' ){
-				    // 	    sh 'make all'
-				    // 	    // Also, the _inferred.ttl files.
-				    // 	    sh 'make all_targets_ttl'
-				    // 	    // // ...do this thing for generating
-				    // 	    // // the target/Makefile...
-				    // 	    // sh 'make extra_files'
-				    // 	    // // ...wait for it--get the
-				    // 	    // // inferred ttl files produced.
-				    // 	    // // WARNING/BUG: Unfortunately,
-				    // 	    // // as we need the GAFs done
-				    // 	    // // and done, we have to do
-				    // 	    // // this again--cannot let this
-				    // 	    // // get ouf of master.
-				    // 	    // sh 'make all_pombase'
-				    // 	    // //sh 'make all_targets_ttl'
-				    // 	    // sh 'make ttl_all_pombase'
-				    // 	}
-				    // }
-				    // Build blazegraph.
-				    sh 'make target/blazegraph.jnl'
-				}
-				// Get the journal onto skyhook.
-				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph.jnl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/product/'
-				}
-			    }
-			}
 		    }
+		    // },
+		    // "Blazegraph journal": {
+		    // }
 		)
 	    }
 	}
-	// stage('Sanity II (TODO)') {
+	// stage('Produce derivatives') {
+	//     when { anyOf { branch 'master' } }
 	//     steps {
-	// 	echo 'TODO: Sanity II'
+	// 	parallel(
+	// 	    "GOlr index (TODO)": {
+	// 		echo 'TODO: index'
+	// 	    },
+	// 	    "Blazegraph journal": {
+	// 		dir('./go-site') {
+	// 		    git 'https://github.com/geneontology/go-site.git'
+
+	// 		    // Make all software products available in bin/.
+	// 		    sh 'mkdir -p bin/'
+	// 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+	// 			// WARNING/BUG: needed for arachne to
+	// 			// run at this point.
+	// 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+	// 		    }
+	// 		    sh 'chmod +x bin/*'
+
+	// 		    // Make Blazegraph journal.
+	// 		    dir('./pipeline') {
+	// 			sh 'python3 -m venv mypyenv'
+	// 			withEnv(['MINERVA_CLI_MEMORY=32G', 'JAVA_OPTS=-Xmx32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+	// 			    // Note environment for future debugging.
+	// 			    sh 'env > env.txt'
+	// 			    sh 'cat env.txt'
+	// 			    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
+	// 			    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
+	// 			    // Ready, set...
+	// 			    sh 'make clean'
+	// 			    // // Make basic and inferred TTL targets .
+	// 			    // script {
+	// 			    // 	// WARNING: In non-dev cases, try and
+	// 			    // 	// do the whole shebang.
+	// 			    // 	if( env.BRANCH_NAME != 'master' ){
+	// 			    // 	    sh 'make all'
+	// 			    // 	    // Also, the _inferred.ttl files.
+	// 			    // 	    sh 'make all_targets_ttl'
+	// 			    // 	}
+	// 			    // 	if( env.BRANCH_NAME == 'master' ){
+	// 			    // 	    sh 'make all'
+	// 			    // 	    // Also, the _inferred.ttl files.
+	// 			    // 	    sh 'make all_targets_ttl'
+	// 			    // 	    // // ...do this thing for generating
+	// 			    // 	    // // the target/Makefile...
+	// 			    // 	    // sh 'make extra_files'
+	// 			    // 	    // // ...wait for it--get the
+	// 			    // 	    // // inferred ttl files produced.
+	// 			    // 	    // // WARNING/BUG: Unfortunately,
+	// 			    // 	    // // as we need the GAFs done
+	// 			    // 	    // // and done, we have to do
+	// 			    // 	    // // this again--cannot let this
+	// 			    // 	    // // get ouf of master.
+	// 			    // 	    // sh 'make all_pombase'
+	// 			    // 	    // //sh 'make all_targets_ttl'
+	// 			    // 	    // sh 'make ttl_all_pombase'
+	// 			    // 	}
+	// 			    // }
+	// 			    // Build blazegraph.
+	// 			    sh 'make target/blazegraph.jnl'
+	// 			}
+	// 			// Get the journal onto skyhook.
+	// 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph.jnl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/'
+	// 			}
+	// 		    }
+	// 		}
+	// 	    }
+	// 	)
 	//     }
 	// }
+	stage('Sanity II (TODO)') {
+	    steps {
+		echo 'TODO: Sanity II'
+	    }
+	}
 	// TODO: Do we really want this?
 	// stage('Silent end') {
 	//     // when { expression { ! (BRANCH_NAME ==~ /(snapshot|release)/) } }
@@ -451,7 +492,7 @@ pipeline {
 	}
 	// Publish metadata next--less likely to fail than
 	// GAF, less important than ontologies.
-	stage('Publish metadata') {
+	stage('Publish metadata and reports') {
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
 		// Setup fuse for transfer.
@@ -469,17 +510,21 @@ pipeline {
 			    // Simple case: master -> experimental.
 			    // Note no CloudFront invalidate.
 			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/metadata/ s3://go-data-product-experimental/metadata/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/reports/ s3://go-data-product-experimental/reports/'
 			}
 			if( env.BRANCH_NAME == 'snapshot' ){
 			    // Simple case: snapshot -> snapshot.
 			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/metadata/ s3://go-data-product-snapshot/metadata/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/reports/ s3://go-data-product-snapshot/reports/'
 			}
 			if( env.BRANCH_NAME == 'release' ){
 			    // Simple case: release -> current.
 			    // Same as above.
 			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-current/metadata/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/reports/ s3://go-data-product-current/reports/'
 			    // Hard case case: release -> dated path.
 			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-release/metadata/`date +%Y-%m-%d`/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/reports/ s3://go-data-product-release/reports/`date +%Y-%m-%d`/'
 			}
 		    }
 		}
@@ -491,7 +536,7 @@ pipeline {
 	// least we got the ontologies out.
 	// TODO: Make a function to capture the repetition
 	// between this and the ontology publishing.
-	stage('Publish GAFs') {
+	stage('Publish GAFs, TTLs, and Journal') {
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
 		// Legacy: build 'gaf-publish'
@@ -502,9 +547,9 @@ pipeline {
 		}
 		// Copy the product to the right location.
 		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
-		    // Well, we need to do a couple of things
-		    // here in a structured way, so we'll go
-		    // ahead and drop into the scripting mode.
+		    // Well, we need to do a couple of things here in
+		    // a structured way, so we'll go ahead and drop
+		    // into the scripting mode.
 		    script {
 			if( env.BRANCH_NAME == 'master' ){
 			    // Simple case: master -> experimental.
@@ -514,13 +559,16 @@ pipeline {
 			if( env.BRANCH_NAME == 'snapshot' ){
 			    // Simple case: snapshot -> snapshot.
 			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/annotations/ s3://go-data-product-snapshot/annotations/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/products/ s3://go-data-product-snapshot/products/'
 			}
 			if( env.BRANCH_NAME == 'release' ){
 			    // Simple case: release -> current.
 			    // Same as above.
 			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-current/annotations/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/products/ s3://go-data-product-current/products/'
 			    // Hard case case: release -> dated path.
 			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-release/annotations/`date +%Y-%m-%d`/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/products/ s3://go-data-product-release/products/`date +%Y-%m-%d`/'
 			}
 		    }
 		}
