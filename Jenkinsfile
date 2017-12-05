@@ -229,10 +229,12 @@ pipeline {
 				    sh 'make all'
 				}
 				if( env.BRANCH_NAME == 'master' ){
-				    // For GAF joy, plus "extras".
-				    sh 'make all'
+				    // // For GAF joy, plus "extras".
+				    // sh 'make all'
+				    // Shaking the magic beads for "extras".
+                		    sh 'make -e extra_files'
 				    // Make basic (non-enriched/reasoned) TTLs.
-				    sh 'make all_targets_ttl'
+				    sh 'make -e all_targets_ttl'
 
 				    // Make journals with what we have
 				    // on the filesystem, for
