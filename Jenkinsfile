@@ -257,7 +257,7 @@ pipeline {
 			    // Flatten GAFs onto skyhook. Plus: json,
 			    // md reports, text files, etc. Everything
 			    // but the TTLs for now.
-			    sh 'find ./target/groups -type f -regex "^.*\.\(gaf\|gpad\|gpi\|gz\|json\|txt\|md\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
+			    sh 'find ./target/groups -type f -regex "^.*\\.\\(gaf\\|gpad\\|gpi\\|gz\\|json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
 			    // Flatten the TTLs into products/ttl/.
 			    sh 'find ./target/groups -type f -name "*.ttl" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
 			    // Copy the journals directly to products.
