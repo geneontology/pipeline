@@ -107,23 +107,20 @@ pipeline {
 		    	    }
 		    	}
 		    },
-		    // // Do we need this anymore?
-		    // "Ready RDFox": {
-		    // // Legacy: build 'rdfox-cli-build'
-		    // 	dir('./rdfox-cli') {
-		    // 	    // Remember that git lays out into CWD.
-		    // 	    git 'https://github.com/balhoff/rdfox-cli.git'
-		    // 	    // "Build".
-		    // 	    sh 'wget http://www.cs.ox.ac.uk/isg/tools/RDFox/release/RDFox-linux.zip -O RDFox.zip'
-		    // 	    sh 'unzip -u RDFox.zip'
-		    // 	    sh 'cp RDFox/lib/JRDFox.jar lib/'
-		    // 	    sh 'sbt universal:packageZipTarball'
-		    // 	    // Attempt to rsync produced into bin/.
-		    // 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/universal/rdfox-cli.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-		    // 	    }
-		    // 	}
-		    // },
+		    "Ready blazegraph-runner": {
+    			dir('./blazegraph-runner') {
+    	                    sh 'wget -N https://github.com/balhoff/blazegraph-runner/releases/download/v1.2.3/blazegraph-runner-1.2.3.tgz'
+    	                    sh 'tar -xvf blazegraph-runner-1.2.3.tgz'
+		    	    // Attempt to rsync bin into bin/.
+    	                    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+    	                        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.2.3/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+    	        		// WARNING/BUG: needed for
+    	        		// blazegraph-runner to run at this
+    	        		// point.
+    	    		    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.2.3/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
+    	                    }
+    	                }
+		    },
 		    "Ready minerva": {
 			dir('./minerva') {
 			    // Remember that git lays out into CWD.
