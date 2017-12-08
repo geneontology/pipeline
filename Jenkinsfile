@@ -558,6 +558,7 @@ pipeline {
 			    // Simple case: master -> experimental.
 			    // Note no CloudFront invalidate.
 			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/annotations/ s3://go-data-product-experimental/annotations/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/products/ s3://go-data-product-experimental/products/'
 			}
 			if( env.BRANCH_NAME == 'snapshot' ){
 			    // Simple case: snapshot -> snapshot.
