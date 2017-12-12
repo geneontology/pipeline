@@ -514,22 +514,22 @@ pipeline {
 			if( env.BRANCH_NAME == 'master' ){
 			    // Simple case: master -> experimental.
 			    // Note no CloudFront invalidate.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/metadata/ s3://go-data-product-experimental/metadata/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/reports/ s3://go-data-product-experimental/reports/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain sync mnt/master/metadata/ s3://go-data-product-experimental/metadata/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain sync mnt/master/reports/ s3://go-data-product-experimental/reports/'
 			}
 			if( env.BRANCH_NAME == 'snapshot' ){
 			    // Simple case: snapshot -> snapshot.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/metadata/ s3://go-data-product-snapshot/metadata/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/reports/ s3://go-data-product-snapshot/reports/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/snapshot/metadata/ s3://go-data-product-snapshot/metadata/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/snapshot/reports/ s3://go-data-product-snapshot/reports/'
 			}
 			if( env.BRANCH_NAME == 'release' ){
 			    // Simple case: release -> current.
 			    // Same as above.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-current/metadata/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/reports/ s3://go-data-product-current/reports/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-current/metadata/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/reports/ s3://go-data-product-current/reports/'
 			    // Hard case case: release -> dated path.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-release/metadata/`date +%Y-%m-%d`/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/reports/ s3://go-data-product-release/reports/`date +%Y-%m-%d`/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-release/metadata/`date +%Y-%m-%d`/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/reports/ s3://go-data-product-release/reports/`date +%Y-%m-%d`/'
 			}
 		    }
 		}
@@ -559,22 +559,22 @@ pipeline {
 			if( env.BRANCH_NAME == 'master' ){
 			    // Simple case: master -> experimental.
 			    // Note no CloudFront invalidate.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/annotations/ s3://go-data-product-experimental/annotations/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/products/ s3://go-data-product-experimental/products/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain sync mnt/master/annotations/ s3://go-data-product-experimental/annotations/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain sync mnt/master/products/ s3://go-data-product-experimental/products/'
 			}
 			if( env.BRANCH_NAME == 'snapshot' ){
 			    // Simple case: snapshot -> snapshot.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/annotations/ s3://go-data-product-snapshot/annotations/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/products/ s3://go-data-product-snapshot/products/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/snapshot/annotations/ s3://go-data-product-snapshot/annotations/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/snapshot/products/ s3://go-data-product-snapshot/products/'
 			}
 			if( env.BRANCH_NAME == 'release' ){
 			    // Simple case: release -> current.
 			    // Same as above.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-current/annotations/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/products/ s3://go-data-product-current/products/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-current/annotations/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/products/ s3://go-data-product-current/products/'
 			    // Hard case case: release -> dated path.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-release/annotations/`date +%Y-%m-%d`/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/products/ s3://go-data-product-release/products/`date +%Y-%m-%d`/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-release/annotations/`date +%Y-%m-%d`/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/products/ s3://go-data-product-release/products/`date +%Y-%m-%d`/'
 			}
 		    }
 		}
