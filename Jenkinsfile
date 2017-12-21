@@ -11,6 +11,11 @@ pipeline {
     stages {
 	stage('Initialize') {
 	    steps {
+		// Very first: pause for a few minutes to give a
+		// chance to cancel and clean the workspace before use.
+		sleep time: 3, unit: 'MINUTES'
+		cleanWs()
+		// Start readying environment.
 		parallel(
 		    "Report": {
 			sh 'env > env.txt'
