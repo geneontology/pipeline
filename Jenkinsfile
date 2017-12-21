@@ -9,8 +9,17 @@ pipeline {
 	//cron('0 0 1 * *')
     }
     stages {
+	// Very first: pause for a few minutes to give a chance to
+	// cancel and clean the workspace before use.
+	stage('Ready and clean') {
+	    steps {
+		sleep time: 1, unit: 'MINUTES'
+		cleanWs()
+	    }
+	}
 	stage('Initialize') {
 	    steps {
+		// Start preparing environment.
 		parallel(
 		    "Report": {
 			sh 'env > env.txt'
@@ -118,24 +127,6 @@ pipeline {
     	    		    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.2.3/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
     	                    }
     	                }
-		    },
-		    "Ready minerva": {
-			dir('./minerva') {
-			    // Remember that git lays out into CWD.
-			    git 'https://github.com/geneontology/minerva.git'
-			    // Needs to have owltools available.
-			    withEnv(['PATH+EXTRA=../../bin', 'CLASSPATH+EXTRA=../../bin']){
-				// TODO: Skip tests until figure out
-				// pathing issues.
-				//sh 'mvn -U clean install'
-				sh 'mvn -U clean install -DskipTests -Dmaven.javadoc.skip=true -Dsource.skip=true'
-			    }
-			    // Attempt to rsync produced into bin/.
-			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" minerva-server/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" minerva-cli/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-			    }
-			}
 		    }
 		)
 	    }
@@ -206,7 +197,7 @@ pipeline {
 			// the environment changes for python venv activate.
 			// Note the complex assignment of VIRTUAL_ENV and PATH.
 			// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
-			withEnv(['MINERVA_CLI_MEMORY=32G', 'JAVA_OPTS=-Xmx32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+			withEnv(['JAVA_OPTS=-Xmx32G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 			    // Note environment for future debugging.
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
