@@ -363,92 +363,32 @@ pipeline {
 		)
 	    }
 	}
-	// stage('Produce derivatives') {
-	//     when { anyOf { branch 'master' } }
-	//     steps {
-	// 	parallel(
-	// 	    "GOlr index (TODO)": {
-	// 		echo 'TODO: index'
-	// 	    },
-	// 	    "Blazegraph journal": {
-	// 		dir('./go-site') {
-	// 		    git 'https://github.com/geneontology/go-site.git'
-
-	// 		    // Make all software products available in bin/.
-	// 		    sh 'mkdir -p bin/'
-	// 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-	// 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-	// 			// WARNING/BUG: needed for arachne to
-	// 			// run at this point.
-	// 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
-	// 		    }
-	// 		    sh 'chmod +x bin/*'
-
-	// 		    // Make Blazegraph journal.
-	// 		    dir('./pipeline') {
-	// 			sh 'python3 -m venv mypyenv'
-	// 			withEnv(['MINERVA_CLI_MEMORY=32G', 'JAVA_OPTS=-Xmx32G', 'OWLTOOLS_MEMORY=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
-	// 			    // Note environment for future debugging.
-	// 			    sh 'env > env.txt'
-	// 			    sh 'cat env.txt'
-	// 			    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
-	// 			    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
-	// 			    // Ready, set...
-	// 			    sh 'make clean'
-	// 			    // // Make basic and inferred TTL targets .
-	// 			    // script {
-	// 			    // 	// WARNING: In non-dev cases, try and
-	// 			    // 	// do the whole shebang.
-	// 			    // 	if( env.BRANCH_NAME != 'master' ){
-	// 			    // 	    sh 'make all'
-	// 			    // 	    // Also, the _inferred.ttl files.
-	// 			    // 	    sh 'make all_targets_ttl'
-	// 			    // 	}
-	// 			    // 	if( env.BRANCH_NAME == 'master' ){
-	// 			    // 	    sh 'make all'
-	// 			    // 	    // Also, the _inferred.ttl files.
-	// 			    // 	    sh 'make all_targets_ttl'
-	// 			    // 	    // // ...do this thing for generating
-	// 			    // 	    // // the target/Makefile...
-	// 			    // 	    // sh 'make extra_files'
-	// 			    // 	    // // ...wait for it--get the
-	// 			    // 	    // // inferred ttl files produced.
-	// 			    // 	    // // WARNING/BUG: Unfortunately,
-	// 			    // 	    // // as we need the GAFs done
-	// 			    // 	    // // and done, we have to do
-	// 			    // 	    // // this again--cannot let this
-	// 			    // 	    // // get ouf of master.
-	// 			    // 	    // sh 'make all_pombase'
-	// 			    // 	    // //sh 'make all_targets_ttl'
-	// 			    // 	    // sh 'make ttl_all_pombase'
-	// 			    // 	}
-	// 			    // }
-	// 			    // Build blazegraph.
-	// 			    sh 'make target/blazegraph.jnl'
-	// 			}
-	// 			// Get the journal onto skyhook.
-	// 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-	// 			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph.jnl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/'
-	// 			}
-	// 		    }
-	// 		}
-	// 	    }
-	// 	)
-	//     }
-	// }
 	stage('Sanity II (TODO)') {
 	    steps {
 		echo 'TODO: Sanity II'
 	    }
 	}
-	// TODO: Do we really want this?
-	// stage('Silent end') {
-	//     // when { expression { ! (BRANCH_NAME ==~ /(snapshot|release)/) } }
-	//     when { not { anyOf { branch 'release'; branch 'snapshot' } } }
-	//     steps {
-	// 	echo "No public exposure of $BRANCH_NAME."
-	//     }
-	// }
+	stage('Pre-publish') {
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    steps {
+		sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		}
+		// Prepare a working directory based around go-site.
+		dir('./go-site') {
+		    git 'https://github.com/geneontology/go-site.git'
+		    script {
+			if( env.BRANCH_NAME == 'master' ){
+			    // Create index for S3 in-place.
+			    sh 'python3 ./scripts/directory-indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt --prefix http://experimental.geneontology.io -x'
+			}
+		    }
+		}
+	    }
+	    // Bail on the filesystem.
+	    sh 'fusermount -u $WORKSPACE/mnt/'
+	}
 	stage('Publish ontology') {
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
