@@ -385,9 +385,9 @@ pipeline {
 			}
 		    }
 		}
+		// Bail on the filesystem.
+		sh 'fusermount -u $WORKSPACE/mnt/'
 	    }
-	    // Bail on the filesystem.
-	    sh 'fusermount -u $WORKSPACE/mnt/'
 	}
 	stage('Publish ontology') {
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
