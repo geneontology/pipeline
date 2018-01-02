@@ -277,6 +277,13 @@ pipeline {
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/reports/* $WORKSPACE/copyover/'
 
+		// Make all software products available in bin/.
+		sh 'mkdir -p $WORKSPACE/bin/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* $WORKSPACE/bin/'
+		}
+		sh 'chmod +x $WORKSPACE/bin/*'
+
 		// Prepare a working directory based around go-site.
 		dir('./go-site') {
 		    git 'https://github.com/geneontology/go-site.git'
@@ -294,6 +301,11 @@ pipeline {
 		    // in the GO pattern.
 		    sh 'python3 ./scripts/sanity-check-users-and-groups.py --users metadata/users.yaml --groups metadata/groups.yaml > ./users-and-groups-report.txt'
 
+		    // Generate the TTL from users.yaml and groups.yaml.
+		    withEnv(['PATH+EXTRA=../bin']){
+			sh 'bash ./scripts/yaml2turtle.sh metadata/users-groups-context.yaml metadata/users.yaml metadata/users.ttl'
+			sh 'bash ./scripts/yaml2turtle.sh metadata/users-groups-context.yaml metadata/groups.yaml metadata/groups.ttl'
+		    }
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			// Copy all upstream metadata into metadata folder.
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" metadata/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/metadata'
