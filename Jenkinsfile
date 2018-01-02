@@ -381,7 +381,7 @@ pipeline {
 		    script {
 			if( env.BRANCH_NAME == 'master' ){
 			    // Create index for S3 in-place.
-			    sh 'python3 ./scripts/directory-indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt --prefix http://experimental.geneontology.io -x'
+			    sh 'python3 ./scripts/directory-indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/master --prefix http://experimental.geneontology.io -x'
 			}
 		    }
 		}
