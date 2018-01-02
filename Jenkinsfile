@@ -96,7 +96,7 @@ pipeline {
 		    	    sh 'VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v \'\\[\' | sed \'s/-SNAPSHOT//\'`'
 		    	    sh 'BUILD=`git rev-parse --short HEAD`'
 		    	    sh 'mvn versions:set -DnewVersion=$VERSION+$BUILD'
-		    	    sh 'mvn -U clean install'
+			    sh 'mvn -U clean install -DskipTests'
 		    	    // Attempt to rsync produced into bin/.
 		    	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
