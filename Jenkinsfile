@@ -301,10 +301,26 @@ pipeline {
 		    // in the GO pattern.
 		    sh 'python3 ./scripts/sanity-check-users-and-groups.py --users metadata/users.yaml --groups metadata/groups.yaml > ./users-and-groups-report.txt'
 
-		    // Generate the TTL from users.yaml and groups.yaml.
-		    withEnv(['PATH+EXTRA=../bin']){
-			sh 'bash ./scripts/yaml2turtle.sh metadata/users-groups-context.yaml metadata/users.yaml metadata/users.ttl'
-			sh 'bash ./scripts/yaml2turtle.sh metadata/users-groups-context.yaml metadata/groups.yaml metadata/groups.ttl'
+		    // Generate the TTL from users.yaml and
+		    // groups.yaml.  This is meant to be an unwinding
+		    // of the somewhat too hard-coded
+		    // go-site/scripts/yaml2turtle.sh from Jim.
+		    withEnv(['PATH+EXTRA=../bin:node_modules/.bin']){
+			sh 'npm install'
+			sh 'GRPTEMP=`mktemp --tmpdir=. --suffix=.jsonld`'
+			sh 'USRTEMP=`mktemp --tmpdir=. --suffix=.jsonld`'
+			sh 'echo \'{\"@context\": \' >$GRPTEMP'
+			sh 'echo \'{\"@context\": \' >$USRTEMP'
+			sh 'yaml2json ./metadata/users-groups-context.yaml >>$GRPTEMP'
+			sh 'yaml2json ./metadata/users-groups-context.yaml >>$USRTEMP'
+			sh 'echo \', \"@graph\": \' >>$GRPTEMP'
+			sh 'echo \', \"@graph\": \' >>$USRTEMP'
+			sh 'yaml2json metadata/groups.yaml >>$GRPTEMP'
+			sh 'yaml2json metadata/users.yaml >>$USRTEMP'
+			sh 'echo \'}\' >>$GRPTEMP'
+			sh 'echo \'}\' >>$USRTEMP'
+			sh 'robot convert -i $GRPTEMP -o ./metadata/groups.ttl'
+			sh 'robot convert -i $USRTEMP -o ./metadata/users.ttl'
 		    }
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			// Copy all upstream metadata into metadata folder.
