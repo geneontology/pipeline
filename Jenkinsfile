@@ -9,7 +9,11 @@ pipeline {
 	//cron('0 0 1 * *')
     //}
     environment {
+	// The branch of geneontology/go-site to use.
+	TARGET_GO_SITE_BRANCH = 'master'
+	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 's3://go-data-product-experimental'
+	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
     }
     stages {
@@ -176,7 +180,7 @@ pipeline {
 	    steps {
 		// Legacy: build 'gaf-production'
 		dir('./go-site') {
-		    git 'https://github.com/geneontology/go-site.git'
+		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
 		    // Make all software products available in bin/
 		    // (and lib/).
@@ -290,7 +294,7 @@ pipeline {
 
 		// Prepare a working directory based around go-site.
 		dir('./go-site') {
-		    git 'https://github.com/geneontology/go-site.git'
+		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
 		    // Generate combined annotation report for driving
 		    // annotation download pages and drop it into
@@ -365,7 +369,7 @@ pipeline {
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/reports/* $WORKSPACE/copyover/'
 		// Ready...
 		dir('./go-site') {
-		    git 'https://github.com/geneontology/go-site.git'
+		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
 		    // Run sanity checks.
 		    sh 'python3 ./scripts/sanity-check-ann-report.py -v -d $WORKSPACE/copyover/'
@@ -409,7 +413,8 @@ pipeline {
 		// Prepare a working directory based around go-site to
 		// do the indexing.
 		dir('./go-site') {
-		    git 'https://github.com/geneontology/go-site.git'
+		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+
 		    script {
 			// Create index for S3 in-place.
 			sh 'python3 ./scripts/directory-indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
