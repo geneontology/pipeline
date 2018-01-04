@@ -8,6 +8,10 @@ pipeline {
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
     //}
+    environment {
+	TARGET_BUCKET = 's3://go-data-product-experimental'
+	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+    }
     stages {
 	// Very first: pause for a few minutes to give a chance to
 	// cancel and clean the workspace before use.
@@ -377,8 +381,7 @@ pipeline {
                 }
             }
 	}
-	// Note: this is only for experimentation on master at this
-	// point.
+	//...
 	stage('Produce derivatives') {
 	    steps {
 		parallel(
@@ -391,33 +394,32 @@ pipeline {
 		)
 	    }
 	}
+	//...
 	stage('Sanity II (TODO)') {
 	    steps {
 		echo 'TODO: Sanity II'
 	    }
 	}
 	stage('Pre-publish') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
 		sh 'mkdir -p $WORKSPACE/mnt/ || true'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 		}
-		// Prepare a working directory based around go-site.
+		// Prepare a working directory based around go-site to
+		// do the indexing.
 		dir('./go-site') {
 		    git 'https://github.com/geneontology/go-site.git'
 		    script {
-			if( env.BRANCH_NAME == 'master' ){
-			    // Create index for S3 in-place.
-			    sh 'python3 ./scripts/directory-indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/master --prefix http://experimental.geneontology.io -x'
-			}
+			// Create index for S3 in-place.
+			sh 'python3 ./scripts/directory-indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
 		    }
 		}
 		// Bail on the filesystem.
 		sh 'fusermount -u $WORKSPACE/mnt/'
 	    }
 	}
-	stage('Publish ontology') {
+	stage('Publish') {
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
 		// Legacy: build 'ontology-publish'
@@ -430,110 +432,24 @@ pipeline {
 		}
 		// Copy the product to the right location.
 		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
-		    // Well, we need to do a couple of things
-		    // here in a structured way, so we'll go
-		    // ahead and drop into the scripting mode.
-		    script {
-			if( env.BRANCH_NAME == 'master' ){
-			    // Simple case: master -> experimental.
-			    // Note no CloudFront invalidate.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml sync mnt/master/ontology/ s3://go-data-product-experimental/ontology/'
-			}
-			if( env.BRANCH_NAME == 'snapshot' ){
-			    // Simple case: snapshot -> snapshot.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/snapshot/ontology/ s3://go-data-product-snapshot/ontology/'
-			}
-			if( env.BRANCH_NAME == 'release' ){
-			    // Simple case: release -> current.
-			    // Same as above.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-current/ontology/'
-			    // Hard case case: release -> dated path.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
-			}
-		    }
-		}
-		// Bail on the filesystem.
-		sh 'fusermount -u $WORKSPACE/mnt/'
-	    }
-	}
-	// Publish metadata next--less likely to fail than
-	// GAF, less important than ontologies.
-	stage('Publish metadata and reports') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
-	    steps {
-		// Setup fuse for transfer.
-		sh 'mkdir -p $WORKSPACE/mnt/ || true'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-		}
-		// Copy the product to the right location.
-		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
-		    // Well, we need to do a couple of things
-		    // here in a structured way, so we'll go
-		    // ahead and drop into the scripting mode.
-		    script {
-			if( env.BRANCH_NAME == 'master' ){
-			    // Simple case: master -> experimental.
-			    // Note no CloudFront invalidate.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain sync mnt/master/metadata/ s3://go-data-product-experimental/metadata/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain sync mnt/master/reports/ s3://go-data-product-experimental/reports/'
-			}
-			if( env.BRANCH_NAME == 'snapshot' ){
-			    // Simple case: snapshot -> snapshot.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/snapshot/metadata/ s3://go-data-product-snapshot/metadata/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/snapshot/reports/ s3://go-data-product-snapshot/reports/'
-			}
-			if( env.BRANCH_NAME == 'release' ){
-			    // Simple case: release -> current.
-			    // Same as above.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-current/metadata/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/reports/ s3://go-data-product-current/reports/'
-			    // Hard case case: release -> dated path.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-release/metadata/`date +%Y-%m-%d`/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/reports/ s3://go-data-product-release/reports/`date +%Y-%m-%d`/'
-			}
-		    }
-		}
-		// Bail on the filesystem.
-		sh 'fusermount -u $WORKSPACE/mnt/'
-	    }
-	}
-	// Get the GAF/annotation data out separately--at
-	// least we got the ontologies out.
-	// TODO: Make a function to capture the repetition
-	// between this and the ontology publishing.
-	stage('Publish GAFs, TTLs, and Journal') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
-	    steps {
-		// Legacy: build 'gaf-publish'
-		// Setup fuse for transfer.
-		sh 'mkdir -p $WORKSPACE/mnt/ || true'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-		}
-		// Copy the product to the right location.
-		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
 		    // Well, we need to do a couple of things here in
 		    // a structured way, so we'll go ahead and drop
 		    // into the scripting mode.
 		    script {
-			if( env.BRANCH_NAME == 'master' ){
-			    // Simple case: master -> experimental.
-			    // Note no CloudFront invalidate.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain sync mnt/master/annotations/ s3://go-data-product-experimental/annotations/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain sync mnt/master/products/ s3://go-data-product-experimental/products/'
-			}
-			if( env.BRANCH_NAME == 'snapshot' ){
-			    // Simple case: snapshot -> snapshot.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/snapshot/annotations/ s3://go-data-product-snapshot/annotations/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/snapshot/products/ s3://go-data-product-snapshot/products/'
-			}
+			// Simple case: copy tree directly over.
+			sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/ s3://$TARGET_BUCKET/'
+			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/ontology/ s3://$TARGET_BUCKET/ontology/'
+			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/metadata/ s3://$TARGET_BUCKET/metadata/'
+			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/reports/ s3://$TARGET_BUCKET/reports/'
+			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/annotations/ s3://$TARGET_BUCKET/annotations/'
+			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/products/ s3://$TARGET_BUCKET/products/'
+			// Hard case case: "release" -> dated path, in
+			// addition to the "current" variables used in
+			// the environment.
 			if( env.BRANCH_NAME == 'release' ){
-			    // Simple case: release -> current.
-			    // Same as above.
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-current/annotations/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/products/ s3://go-data-product-current/products/'
-			    // Hard case case: release -> dated path.
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-release/metadata/`date +%Y-%m-%d`/'
+			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/reports/ s3://go-data-product-release/reports/`date +%Y-%m-%d`/'
 			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-release/annotations/`date +%Y-%m-%d`/'
 			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/products/ s3://go-data-product-release/products/`date +%Y-%m-%d`/'
 			}
@@ -569,7 +485,12 @@ pipeline {
     // TODO: Let's make an announcement if things go badly.
     post {
         changed {
-            echo 'There has been a change in the pipeline.'
+            echo 'There has been a change in the $BRANCH_NAME pipeline.'
+	    mail bcc: '', body: 'There has been a pipeline status change in $BRANCH_NAME. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/$BRANCH_NAME', cc: '', from: '', replyTo: '', subject: 'GO Pipeline change for $BRANCH_NAME', to: 'sjcarbon@lbl.gov'
+	}
+	failure {
+            echo 'There has been a failure in the $BRANCH_NAME pipeline.'
+	    mail bcc: '', body: 'There has been a pipeline failure in $BRANCH_NAME. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/$BRANCH_NAME', cc: '', from: '', replyTo: '', subject: 'GO Pipeline FAIL for $BRANCH_NAME', to: 'sjcarbon@lbl.gov'
         }
     }
 }
