@@ -10,7 +10,7 @@ pipeline {
     //}
     environment {
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'master'
+	TARGET_GO_SITE_BRANCH = 'iteration'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 's3://go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
