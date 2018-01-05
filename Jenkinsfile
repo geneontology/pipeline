@@ -442,13 +442,14 @@ pipeline {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 		}
 		// Copy the product to the right location.
-		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG')]) {
+		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG'), file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON')]) {
 		    // Well, we need to do a couple of things here in
 		    // a structured way, so we'll go ahead and drop
 		    // into the scripting mode.
 		    script {
 			// Simple case: copy tree directly over.
-			sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/ s3://$TARGET_BUCKET/'
+			//sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/ s3://$TARGET_BUCKET/'
+			sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
 			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/ontology/ s3://$TARGET_BUCKET/ontology/'
 			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/metadata/ s3://$TARGET_BUCKET/metadata/'
 			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/reports/ s3://$TARGET_BUCKET/reports/'
