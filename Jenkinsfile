@@ -15,7 +15,7 @@ pipeline {
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 's3://go-data-product-experimental'
+	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
     }
