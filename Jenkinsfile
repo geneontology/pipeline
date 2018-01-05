@@ -11,6 +11,9 @@ pipeline {
     environment {
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'iteration'
+	// The people to call when things go bad. It is a comma-space
+	// "separated" string.
+	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 's3://go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
@@ -494,11 +497,11 @@ pipeline {
     post {
         changed {
             echo "There has been a change in the ${env.BRANCH_NAME} pipeline."
-	    mail bcc: '', body: "There has been a pipeline status change in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: 'sjcarbon@lbl.gov'
+	    mail bcc: '', body: "There has been a pipeline status change in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
 	}
 	failure {
             echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
-	    mail bcc: '', body: "There has been a pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}", to: 'sjcarbon@lbl.gov'
+	    mail bcc: '', body: "There has been a pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
         }
     }
 }
