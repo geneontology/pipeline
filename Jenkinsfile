@@ -16,6 +16,9 @@ pipeline {
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
     }
+    options{
+	timestamps()
+    }
     stages {
 	// Very first: pause for a few minutes to give a chance to
 	// cancel and clean the workspace before use.
