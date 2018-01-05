@@ -423,7 +423,7 @@ pipeline {
 
 		    script {
 			// Create index for S3 in-place.
-			sh 'python3 ./scripts/directory-indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
+			//sh 'python3 ./scripts/directory-indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
 		    }
 		}
 		// Bail on the filesystem.
