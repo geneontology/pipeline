@@ -18,6 +18,9 @@ pipeline {
 	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	// Information for the OSF.io archive.
+	OSFIO_USER = 'osf.io@genkisugi.net'
+	OSFIO_PROJECT = '6v3gx'
     }
     options{
 	timestamps()
@@ -433,37 +436,49 @@ pipeline {
 	stage('Publish') {
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
-		// Legacy: build 'ontology-publish'
-		// Experimental stanza to support mounting
-		// the sshfs using the "hidden" skyhook
-		// identity.
+		// Experimental stanza to support mounting the sshfs
+		// using the "hidden" skyhook identity.
 		sh 'mkdir -p $WORKSPACE/mnt/ || true'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 		}
-		// Copy the product to the right location.
-		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG'), file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON')]) {
-		    // Well, we need to do a couple of things here in
-		    // a structured way, so we'll go ahead and drop
-		    // into the scripting mode.
-		    script {
-			// Simple case: copy tree directly over.
-			//sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/ s3://$TARGET_BUCKET/'
-			sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
-			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/ontology/ s3://$TARGET_BUCKET/ontology/'
-			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/metadata/ s3://$TARGET_BUCKET/metadata/'
-			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/reports/ s3://$TARGET_BUCKET/reports/'
-			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/annotations/ s3://$TARGET_BUCKET/annotations/'
-			// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/products/ s3://$TARGET_BUCKET/products/'
-			// Hard case case: "release" -> dated path, in
-			// addition to the "current" variables used in
-			// the environment.
-			if( env.BRANCH_NAME == 'release' ){
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-release/metadata/`date +%Y-%m-%d`/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/reports/ s3://go-data-product-release/reports/`date +%Y-%m-%d`/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-release/annotations/`date +%Y-%m-%d`/'
-			    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/products/ s3://go-data-product-release/products/`date +%Y-%m-%d`/'
+		// Copy the product to the right location. As well,
+		// archive.
+		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG'), file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), string(credentialsId: 'go_osf_io_user_password', variable: 'OSFIO_PASSWORD')]) {
+		    // Ready...
+		    dir('./go-site') {
+			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+
+			// Well, we need to do a couple of things here in
+			// a structured way, so we'll go ahead and drop
+			// into the scripting mode.
+			script {
+			    // Simple case: copy tree directly over.
+			    //sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/ s3://$TARGET_BUCKET/'
+			    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
+			    // sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/ontology/ s3://$TARGET_BUCKET/ontology/'
+			    // sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/metadata/ s3://$TARGET_BUCKET/metadata/'
+			    // sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/reports/ s3://$TARGET_BUCKET/reports/'
+			    // sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/annotations/ s3://$TARGET_BUCKET/annotations/'
+			    // sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/products/ s3://$TARGET_BUCKET/products/'
+			    // Hard case case: "release" -> dated path, in
+			    // addition to the "current" variables used in
+			    // the environment.
+			    if( env.BRANCH_NAME == 'release' ){
+				sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
+				sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-release/metadata/`date +%Y-%m-%d`/'
+				sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/reports/ s3://go-data-product-release/reports/`date +%Y-%m-%d`/'
+				sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-release/annotations/`date +%Y-%m-%d`/'
+				sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/products/ s3://go-data-product-release/products/`date +%Y-%m-%d`/'
+			    }
+			}
+			// Use remote osfclient to archive this run.
+			// WARNING: Caveats and reasons as same
+			// pattern above.
+			sh 'python3 -m venv mypyenv'
+			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin', "OSF_PASSWORD=${OSFIO_PASSWORD}"]){
+			    sh 'python3 ./mypyenv/bin/pip3 install osfclient'
+			    sh 'osf -u $OSFIO_USER -p $OSFIO_PROJECT -r mnt/$BRANCH_NAME/'
 			}
 		    }
 		}
