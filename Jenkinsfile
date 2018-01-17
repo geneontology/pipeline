@@ -491,8 +491,8 @@ pipeline {
 				}
 			    }
 
-			    // Use remote osfclient to archive this run.
-			    sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -r $WORKSPACE/mnt/$BRANCH_NAME/ /'
+			    // // Use remote osfclient to archive this run.
+			    // sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -r $WORKSPACE/mnt/$BRANCH_NAME/ /'
 			}
 		    }
 		}
