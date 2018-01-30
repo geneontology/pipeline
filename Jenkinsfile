@@ -382,6 +382,9 @@ pipeline {
 
 		    // Run sanity checks.
 		    sh 'python3 ./scripts/sanity-check-ann-report.py -v -d $WORKSPACE/copyover/'
+		    // Make sure that the SPARTA report has nothing
+		    // nasty in it.
+		    sh 'cat $WORKSPACE/copyover/sparta-report.json | jq \'.build\' | grep \'fail\''
 		}
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
