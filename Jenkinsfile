@@ -387,7 +387,7 @@ pipeline {
 		    // Note: Used to be pipes (|), but Jenkins Pipeline shell
 		    // commands do not apparently respect that.
 		    sh 'jq \'.build\' $WORKSPACE/copyover/sparta-report.json > $WORKSPACE/build-status.txt'
-		    sh 'grep \'fail\' $WORKSPACE/build-status.txt'
+		    sh 'grep -v \'fail\' $WORKSPACE/build-status.txt'
 		}
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
