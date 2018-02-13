@@ -18,6 +18,9 @@ pipeline {
 	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	// Pin dates to beginning of run.
+	START_DATE = sh '`date +%Y-%m-%d`'
+	START_DAY = sh '`date +%A`'
 	// Information for the OSF.io archive.
 	OSFIO_USER = 'osf.io@genkisugi.net'
 	OSFIO_PROJECT = '6v3gx'
@@ -44,6 +47,8 @@ pipeline {
 			sh 'echo "$BRANCH_NAME"'
 			sh 'cat env.txt'
 			sh 'cat branch.txt'
+			sh 'echo $START_DAY > dow.txt'
+			sh 'echo "$START_DAY"'
 		    },
 		    "Reset base": {
 			// Get a mount point ready
@@ -449,7 +454,7 @@ pipeline {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 		}
 		// Copy the product to the right location. As well,
-		// archive.
+		// archive (TODO).
 		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG'), file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), string(credentialsId: 'go_osf_io_user_password', variable: 'OSFIO_PASSWORD')]) {
 		    // Ready...
 		    dir('./go-site') {
@@ -472,32 +477,30 @@ pipeline {
 			    // Grab osfclient.
 			    sh 'python3 ./mypyenv/bin/pip3 install osfclient'
 
+			    // TODO: Archive.
+
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
 			    // into the scripting mode.
 			    script {
 
-				// Simple case: copy tree directly over.
-				//sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/ s3://$TARGET_BUCKET/'
-				sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
-				// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/ontology/ s3://$TARGET_BUCKET/ontology/'
-				// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/metadata/ s3://$TARGET_BUCKET/metadata/'
-				// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/reports/ s3://$TARGET_BUCKET/reports/'
-				// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/annotations/ s3://$TARGET_BUCKET/annotations/'
-				// sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/$BRANCH_NAME/products/ s3://$TARGET_BUCKET/products/'
-				// Hard case case: "release" -> dated path, in
-				// addition to the "current" variables used in
-				// the environment.
+				// For release, use hard-coded paths
+				// to release buckets..
 				if( env.BRANCH_NAME == 'release' ){
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=application/rdf+xml --cf-invalidate sync mnt/release/ontology/ s3://go-data-product-release/ontology/`date +%Y-%m-%d`/'
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/metadata/ s3://go-data-product-release/metadata/`date +%Y-%m-%d`/'
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/reports/ s3://go-data-product-release/reports/`date +%Y-%m-%d`/'
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/annotations/ s3://go-data-product-release/annotations/`date +%Y-%m-%d`/'
-				    sh 's3cmd -c $S3_PUSH_CONFIG --acl-public --mime-type=text/plain --cf-invalidate sync mnt/release/products/ s3://go-data-product-release/products/`date +%Y-%m-%d`/'
+				    // Hard case case: "release" ->
+				    // dated path.
+				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/`date +%Y-%m-%d` --number $BUILD_ID --pipeline $BRANCH_NAME'
+				    // Also, copy what we have to
+				    // current.
+				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-current --number $BUILD_ID --pipeline $BRANCH_NAME'
+				}else{
+				    // Simple case: copy tree directly
+				    // over.
+				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
 				}
 			    }
 
-			    // // Use remote osfclient to archive this run.
+			    // // TODO: Use remote osfclient to archive this run.
 			    // sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -r $WORKSPACE/mnt/$BRANCH_NAME/ /'
 			}
 		    }
