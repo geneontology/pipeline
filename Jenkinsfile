@@ -11,12 +11,12 @@ pipeline {
     environment {
 	// Pin dates and day to beginning of run.
 	START_DATE = sh (
-	    script: '`date +%Y-%m-%d`'
+	    script: 'date +%Y-%m-%d'
 	    returnStdout: true
 	).trim()
 
 	START_DAY = sh (
-	    script: '`date +%A`'
+	    script: 'date +%A'
 	    returnStdout: true
 	).trim()
 	// The branch of geneontology/go-site to use.
