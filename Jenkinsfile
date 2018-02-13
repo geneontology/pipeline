@@ -9,6 +9,16 @@ pipeline {
 	//cron('0 0 1 * *')
     //}
     environment {
+	// Pin dates and day to beginning of run.
+	START_DATE = sh (
+	    script: '`date +%Y-%m-%d`'
+	    returnStdout: true
+	).trim()
+
+	START_DAY = sh (
+	    script: '`date +%A`'
+	    returnStdout: true
+	).trim()
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'iteration'
 	// The people to call when things go bad. It is a comma-space
@@ -18,9 +28,6 @@ pipeline {
 	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
-	// Pin dates to beginning of run.
-	START_DATE = sh '`date +%Y-%m-%d`'
-	START_DAY = sh '`date +%A`'
 	// Information for the OSF.io archive.
 	OSFIO_USER = 'osf.io@genkisugi.net'
 	OSFIO_PROJECT = '6v3gx'
@@ -498,19 +505,19 @@ pipeline {
 			    // into the scripting mode.
 			    script {
 
-				// For release, use hard-coded paths
-				// to release buckets..
+				// Simple overall case: copy tree
+				// directly over. For "release", this
+				// will be "current". For "snapshot",
+				// this will be "snapshot".
+				sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
+
+				// Also, some runs have special maps
+				// to buckets...
 				if( env.BRANCH_NAME == 'release' ){
-				    // Hard case case: "release" ->
-				    // dated path.
-				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/`date +%Y-%m-%d` --number $BUILD_ID --pipeline $BRANCH_NAME'
-				    // Also, copy what we have to
-				    // current.
-				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-current --number $BUILD_ID --pipeline $BRANCH_NAME'
-				}else{
-				    // Simple case: copy tree directly
-				    // over.
-				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
+				    // "release" -> dated path.
+				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
+				}else if( env.BRANCH_NAME == 'snapshot' ){
+				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
 				}
 			    }
 
