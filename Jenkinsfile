@@ -277,7 +277,7 @@ pipeline {
 			    // products/gaf.
 			    sh 'find ./target/groups -type f -regex "^.*\\(\\-src\\|\\_noiea\\|\\_merged\\).gaf.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaf \\;'
 			    // Flatten all GAFs and GAF-like products
-			    // onto skyhook--get al, then filter the
+			    // onto skyhook--get all, then filter the
 			    // ones from above.
 			    sh 'find ./target/groups -type f -regex "^.*.\\(gaf\\|gpad\\|gpi\\).gz$" -not -regex "^.*\\(\\-src\\|\\_noiea\\|\\_merged\\).gaf.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
 			    // Flatten the TTLs into products/ttl/.
