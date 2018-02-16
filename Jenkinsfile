@@ -547,6 +547,7 @@ pipeline {
 				// Use remote osfclient to archive the
 				// bdbag for this run.
 				sh 'python3 ./mypyenv/bin/osf $OSFIO_USER -p $OSFIO_PROJECT upload go-test-release.tgz /'
+			    }
 			}
 		    }
 		}
