@@ -489,7 +489,7 @@ pipeline {
 		}
 		// Copy the product to the right location. As well,
 		// archive (TODO).
-		withCredentials([file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3_PUSH_CONFIG'), file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), string(credentialsId: 'go_osf_io_user_password', variable: 'OSFIO_PASSWORD')]) {
+		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), string(credentialsId: 'go_osf_io_user_password', variable: 'OSFIO_PASSWORD')]) {
 		    // Ready...
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
