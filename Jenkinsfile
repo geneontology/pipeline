@@ -7,7 +7,7 @@ pipeline {
 	cron('0 0 2-31 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
-    //}
+    }
     environment {
 	// Pin dates and day to beginning of run.
 	START_DATE = sh (
@@ -89,7 +89,7 @@ pipeline {
 			sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
 			// TODO: This should be wrapped in exception
 			// handling. In fact, this whole thing should be.
-			sh 'fusermount -u $WORKSPACE/mnt/'
+			sh 'fusermount -u $WORKSPACE/mnt/ || true'
 		    }
 		)
 	    }
@@ -394,7 +394,7 @@ pipeline {
 	    post {
                 always {
 		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/'
+		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
 		    // Purge the copyover point.
 		    sh 'rm -r -f $WORKSPACE/copyover || true'
                 }
@@ -433,7 +433,7 @@ pipeline {
 	    post {
                 always {
 		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/'
+		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
 		    // Purge the copyover point.
 		    sh 'rm -r -f $WORKSPACE/copyover || true'
                 }
@@ -474,8 +474,13 @@ pipeline {
 		// 	sh 'python3 ./scripts/directory-indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
 		//     }
 		// }
-		// Bail on the filesystem.
-		sh 'fusermount -u $WORKSPACE/mnt/'
+	    }
+	    // WARNING: Extra safety as I expect this to sometimes fail.
+	    post {
+                always {
+		    // Bail on the remote filesystem.
+		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+		}
 	    }
 	}
 	stage('Publish') {
@@ -551,11 +556,17 @@ pipeline {
 			}
 		    }
 		}
-		// Bail on the filesystem.
-		sh 'fusermount -u $WORKSPACE/mnt/'
+	    }
+	    // WARNING: Extra safety as I expect this to sometimes fail.
+	    post {
+                always {
+		    // Bail on the remote filesystem.
+		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+		}
 	    }
 	}
-	stage('Deploy') { // Big things to do on release.
+	// Big things to do on release.
+	stage('Deploy') {
 	    when { anyOf { branch 'release' } }
 	    steps {
 		///
@@ -637,10 +648,9 @@ pipeline {
 	    post {
                 always {
 		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/'
+		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
                 }
             }
-
 	}
 	// stage('TODO: Final status') {
 	//     steps {
