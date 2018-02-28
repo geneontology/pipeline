@@ -459,21 +459,28 @@ pipeline {
 	    }
 	}
 	stage('Pre-publish') {
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
 		sh 'mkdir -p $WORKSPACE/mnt/ || true'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 		}
-		// // Prepare a working directory based around go-site to
-		// // do the indexing.
-		// dir('./go-site') {
-		//     git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+		// Prepare a working directory based around skyhook to
+		// do the indexing.
+		dir('./go-site') {
+		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-		//     script {
-		// 	// Create index for S3 in-place.
-		// 	sh 'python3 ./scripts/directory-indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
-		//     }
-		// }
+		    script {
+		 	// Create index for S3 in-place.
+			if( env.BRANCH_NAME != 'release' ){
+		 	    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
+			}else{
+			    // In the special case of a release, we
+			    // have the top-level point one more up.
+		 	    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x -u'
+			}
+		    }
+		}
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
