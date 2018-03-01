@@ -472,6 +472,7 @@ pipeline {
 
 		    script {
 			// Pass.
+			echo 'pass'
 		    }
 		}
 	    }
