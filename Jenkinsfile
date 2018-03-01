@@ -514,6 +514,9 @@ pipeline {
 			    // as mentioned above.
 			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
 
+			    // Extra package for the uploader.
+			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
+
 			    // Grab BDBag.
 			    sh 'python3 ./mypyenv/bin/pip3 install bdbag'
 
