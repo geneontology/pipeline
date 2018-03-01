@@ -471,13 +471,7 @@ pipeline {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
 		    script {
-		 	// Create index for S3 in-place.
-			if( env.BRANCH_NAME != 'release' ){
-		 	    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
-			}else{
-			    // In the special case of a release, we
-			    // have the top-level point one more up.
-		 	    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x -u'
+			// Pass.
 			}
 		    }
 		}
@@ -533,19 +527,34 @@ pipeline {
 			    // into the scripting mode.
 			    script {
 
-				// Simple overall case: copy tree
-				// directly over. For "release", this
-				// will be "current". For "snapshot",
-				// this will be "snapshot".
+				// Create working index off of
+				// skyhook. For "release", this will
+				// be "current". For "snapshot", this
+				// will be "snapshot".
+		 		sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
+
+				// Push into S3 buckets. Simple
+				// overall case: copy tree directly
+				// over. For "release", this will be
+				// "current". For "snapshot", this
+				// will be "snapshot".
 				sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
 
 				// Also, some runs have special maps
 				// to buckets...
 				if( env.BRANCH_NAME == 'release' ){
-				    // "release" -> dated path.
+				    // "release" -> dated path for
+				    // indexing (clobbering
+				    // "current"'s index.
+		 		    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
+				    // "release" -> dated path for S3.
 				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
 				}else if( env.BRANCH_NAME == 'snapshot' ){
-				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
+				    // Currently, the "daily"
+				    // debugging buckets are intended
+				    // to be RO directly in S3 for
+				    // debugging.
+				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DAY --number $BUILD_ID --pipeline $BRANCH_NAME'
 				}
 			    }
 
