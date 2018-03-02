@@ -510,12 +510,14 @@ pipeline {
 			sh 'python3 -m venv mypyenv'
 			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin', "OSF_PASSWORD=${OSFIO_PASSWORD}"]){
 
+			    // Extra package for the indexer.
+			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
+
 			    // Correct for (possibly) bad boto3,
 			    // as mentioned above.
 			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
 
 			    // Extra package for the uploader.
-			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
 
 			    // Grab BDBag.
