@@ -31,6 +31,12 @@ pipeline {
 	// Information for the OSF.io archive.
 	OSFIO_USER = 'osf.io@genkisugi.net'
 	OSFIO_PROJECT = '6v3gx'
+	// Control make to get through our loads faster if
+	// possible. Assuming we're cpu bound for some of these...
+	// wok has 48 "processors" over 12 "cores", so I have no idea;
+	// let's go with conservative and see if we get an
+	// improvement.
+	MAKECMD = 'make --jobs --max-load 12.0'
     }
     options{
 	timestamps()
@@ -189,8 +195,8 @@ pipeline {
 			// PATH var--O was unable to the "correct"
 			// `pwd` thing, so here we are.
 			withEnv(['PATH+EXTRA=../../bin']){
-			    sh 'make all'
-			    sh 'make prepare_release'
+			    sh '$MAKECMD all'
+			    sh '$MAKECMD prepare_release'
 			}
 		    }
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -241,7 +247,7 @@ pipeline {
 			    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
 			    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 			    // Ready, set...
-			    sh 'make clean'
+			    sh '$MAKECMD clean'
 
 			    // Do this thing.
 			    script {
@@ -251,9 +257,9 @@ pipeline {
 				// // For GAF joy, plus "extras".
 				// sh 'make all'
 				// Shaking the magic beads for "extras".
-                		sh 'make -e extra_files'
+                		sh '$MAKECMD -e extra_files'
 				// Make basic (non-enriched/reasoned) TTLs.
-				sh 'make -e all_targets_ttl'
+				sh '$MAKECMD -e all_targets_ttl'
 
 				// // Make journals with what we have
 				// // on the filesystem, for
@@ -267,7 +273,7 @@ pipeline {
 				// As long as we're here and have
 				// everything handy: this is
 				// SPARTA!
-				sh 'make -e target/sparta-report.json'
+				sh '$MAKECMD -e target/sparta-report.json'
 			    }
 
 			}
