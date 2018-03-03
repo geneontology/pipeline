@@ -36,7 +36,8 @@ pipeline {
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
 	// let's go with conservative and see if we get an
 	// improvement.
-	MAKECMD = 'make --jobs --max-load 12.0'
+	//MAKECMD = 'make --jobs --max-load 12.0'
+	MAKECMD = 'make'
     }
     options{
 	timestamps()
