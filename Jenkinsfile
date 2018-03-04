@@ -572,16 +572,16 @@ pipeline {
 			    }
 
 			    // Generate a BDBag for this run and push
-			    // // to OSF.io.
-			    // script {
-			    // 	sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
-			    // 	sh 'mkdir go-test-release'
-			    // 	sh 'python3 ./mypyenv/bin/bdbag ./go-test-release --remote-file-manifest manifest.json --archive tgz'
+			    // to OSF.io.
+			    script {
+			    	sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+			    	sh 'mkdir go-test-release'
+			    	sh 'python3 ./mypyenv/bin/bdbag ./go-test-release --remote-file-manifest manifest.json --archive tgz'
 
-			    // 	// Use remote osfclient to archive the
-			    // 	// bdbag for this run.
-			    // 	sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
-			    // }
+				// 	// Use remote osfclient to archive the
+				// 	// bdbag for this run.
+				// 	sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
+			    }
 			}
 		    }
 		}
