@@ -3,6 +3,8 @@ pipeline {
     // In additional to manual runs, trigger somewhere at midnight to
     // give us the max time in a day to get things right.
     triggers {
+	// Master never runs--Feb 31st.
+	//cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
 	cron('0 0 2-31 * *')
 	// First of the month @12am, for "release" (also "current").
@@ -562,28 +564,40 @@ pipeline {
 		 		    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
 				    // "release" -> dated path for S3.
 				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
+
+				    // Generate a BDBag for this
+				    // "forever" run and push to...?
+			    	    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
+			    	    sh 'mkdir go-release'
+			    	    sh 'python3 ./mypyenv/bin/bdbag ./go-release --remote-file-manifest manifest.json --archive tgz'
+
+				    // Copy up to the root for inspection.
+				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/bdbag-manifest.json'
+
+				    // 	// Use remote osfclient to archive the
+				    // 	// bdbag for this run.
+				    // 	sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
+
 				}else if( env.BRANCH_NAME == 'snapshot' ){
 				    // Currently, the "daily"
 				    // debugging buckets are intended
 				    // to be RO directly in S3 for
 				    // debugging.
 				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DAY --number $BUILD_ID --pipeline $BRANCH_NAME'
+				}else if( env.BRANCH_NAME == 'master' ){
+				    // Build a testing version of a
+				    // generic BDBag/DOI workflow.
+				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+				    sh 'mkdir go-test-release'
+				    sh 'python3 ./mypyenv/bin/bdbag ./go-test-release --remote-file-manifest manifest.json --archive tgz'
+
+				    // Copy up to the root for inspection.
+				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/bdbag-manifest.json'
+
+				    //      // Use remote osfclient to archive the
+				    //      // bdbag for this run.
+				    //      sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
 				}
-			    }
-
-			    // Generate a BDBag for this run and push
-			    // to OSF.io.
-			    script {
-			    	sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
-			    	sh 'mkdir go-test-release'
-			    	sh 'python3 ./mypyenv/bin/bdbag ./go-test-release --remote-file-manifest manifest.json --archive tgz'
-
-				// Copy up to the root for inspection.
-				sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/bdbag-manifest.json'
-
-				// 	// Use remote osfclient to archive the
-				// 	// bdbag for this run.
-				// 	sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
 			    }
 			}
 		    }
