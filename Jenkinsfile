@@ -31,6 +31,13 @@ pipeline {
 	// Information for the OSF.io archive.
 	OSFIO_USER = 'osf.io@genkisugi.net'
 	OSFIO_PROJECT = '6v3gx'
+	// Control make to get through our loads faster if
+	// possible. Assuming we're cpu bound for some of these...
+	// wok has 48 "processors" over 12 "cores", so I have no idea;
+	// let's go with conservative and see if we get an
+	// improvement.
+	//MAKECMD = 'make --jobs --max-load 12.0'
+	MAKECMD = 'make'
     }
     options{
 	timestamps()
@@ -189,8 +196,8 @@ pipeline {
 			// PATH var--O was unable to the "correct"
 			// `pwd` thing, so here we are.
 			withEnv(['PATH+EXTRA=../../bin']){
-			    sh 'make all'
-			    sh 'make prepare_release'
+			    sh '$MAKECMD all'
+			    sh '$MAKECMD prepare_release'
 			}
 		    }
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -241,7 +248,7 @@ pipeline {
 			    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
 			    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 			    // Ready, set...
-			    sh 'make clean'
+			    sh '$MAKECMD clean'
 
 			    // Do this thing.
 			    script {
@@ -251,9 +258,9 @@ pipeline {
 				// // For GAF joy, plus "extras".
 				// sh 'make all'
 				// Shaking the magic beads for "extras".
-                		sh 'make -e extra_files'
+                		sh '$MAKECMD -e extra_files'
 				// Make basic (non-enriched/reasoned) TTLs.
-				sh 'make -e all_targets_ttl'
+				sh '$MAKECMD -e all_targets_ttl'
 
 				// // Make journals with what we have
 				// // on the filesystem, for
@@ -267,7 +274,7 @@ pipeline {
 				// As long as we're here and have
 				// everything handy: this is
 				// SPARTA!
-				sh 'make -e target/sparta-report.json'
+				sh '$MAKECMD -e target/sparta-report.json'
 			    }
 
 			}
@@ -510,9 +517,15 @@ pipeline {
 			sh 'python3 -m venv mypyenv'
 			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin', "OSF_PASSWORD=${OSFIO_PASSWORD}"]){
 
+			    // Extra package for the indexer.
+			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
+
 			    // Correct for (possibly) bad boto3,
 			    // as mentioned above.
 			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
+
+			    // Extra package for the uploader.
+			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
 
 			    // Grab BDBag.
 			    sh 'python3 ./mypyenv/bin/pip3 install bdbag'
@@ -559,16 +572,19 @@ pipeline {
 			    }
 
 			    // Generate a BDBag for this run and push
-			    // // to OSF.io.
-			    // script {
-			    // 	sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
-			    // 	sh 'mkdir go-test-release'
-			    // 	sh 'python3 ./mypyenv/bin/bdbag ./go-test-release --remote-file-manifest manifest.json --archive tgz'
+			    // to OSF.io.
+			    script {
+			    	sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+			    	sh 'mkdir go-test-release'
+			    	sh 'python3 ./mypyenv/bin/bdbag ./go-test-release --remote-file-manifest manifest.json --archive tgz'
 
-			    // 	// Use remote osfclient to archive the
-			    // 	// bdbag for this run.
-			    // 	sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
-			    // }
+				// Copy up to the root for inspection.
+				sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/bdbag-manifest.json'
+
+				// 	// Use remote osfclient to archive the
+				// 	// bdbag for this run.
+				// 	sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
+			    }
 			}
 		    }
 		}
