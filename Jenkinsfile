@@ -2,12 +2,12 @@ pipeline {
     agent any
     // In additional to manual runs, trigger somewhere at midnight to
     // give us the max time in a day to get things right.
-    //triggers {
+    triggers {
 	// Nightly @12am, for "snapshot", skip "release" night.
 	//cron('0 0 2-31 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
-    //}
+    }
     environment {
 	// Pin dates and day to beginning of run.
 	START_DATE = sh (
