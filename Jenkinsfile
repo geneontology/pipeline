@@ -631,7 +631,7 @@ pipeline {
 			sh 'echo $GO_SVN_IDENTITY > deploy-ident.txt'
 			sh 'echo $SVN_SSH > deploy-svn-ssh.txt'
 			sh 'cat deploy-ident.txt'
-			sh 'cat deplot-svn-ssh.txt'
+			sh 'cat deploy-svn-ssh.txt'
 
 			// Attach sshfs.
 			sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
