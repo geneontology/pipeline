@@ -504,7 +504,7 @@ pipeline {
 		}
 		// Copy the product to the right location. As well,
 		// archive (TODO).
-		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), string(credentialsId: 'go_osf_io_user_password', variable: 'OSFIO_PASSWORD')]) {
+		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'go_osf_io_user_password', variable: 'OSFIO_PASSWORD')]) {
 		    // Ready...
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
@@ -564,6 +564,11 @@ pipeline {
 		 		    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
 				    // "release" -> dated path for S3.
 				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
+
+				    // Build the capper index.html...
+				    sh 'python3 ./scripts/bucket-indexer.py --credentials $S3_PUSH_JSON --bucket go-data-product-release --inject ./scripts/directory-index-template.html --prefix http://release.geneontology.org > top-level-index.html'
+				    // ...and push it up to S3.
+				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
 
 				    // Generate a BDBag for this
 				    // "forever" run and push to...?
@@ -627,6 +632,12 @@ pipeline {
 		    // Setup our svn+ssh to have the right credentials.
 		    withEnv(["SVN_SSH=ssh -l jenkins -i ${GO_SVN_IDENTITY}"]){
 
+			// Try and debug connection issues on next run.
+			sh 'echo $GO_SVN_IDENTITY > deploy-ident.txt'
+			sh 'echo $SVN_SSH > deploy-svn-ssh.txt'
+			sh 'cat deploy-ident.txt'
+			sh 'cat deploy-svn-ssh.txt'
+
 			// Attach sshfs.
 			sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 
@@ -635,6 +646,7 @@ pipeline {
 			sh 'svn --non-interactive --ignore-externals --depth files checkout svn+ssh://ext.geneontology.org/share/go/svn/trunk/gene-associations $WORKSPACE/goannsvn'
 
 			// Copy the files over to the right spot.
+			// 45 items.
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/aspgd.gaf.gz $WORKSPACE/goannsvn/gene_association.aspgd.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/cgd.gaf.gz $WORKSPACE/goannsvn/gene_association.cgd.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/dictybase.gaf.gz $WORKSPACE/goannsvn/gene_association.dictyBase.gz'
@@ -655,7 +667,6 @@ pipeline {
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_lmajor.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_Lmajor.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_pfalciparum.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_Pfalciparum.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_tbrucei.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_Tbrucei.gz'
-			//sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_tsetse.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_tsetse.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/pamgo_atumefaciens.gaf.gz $WORKSPACE/goannsvn/gene_association.PAMGO_Atumefaciens.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/pamgo_ddadantii.gaf.gz $WORKSPACE/goannsvn/gene_association.PAMGO_Ddadantii.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/pamgo_mgrisea.gaf.gz $WORKSPACE/goannsvn/gene_association.PAMGO_Mgrisea.gz'
@@ -676,7 +687,6 @@ pipeline {
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_human.gaf.gz $WORKSPACE/goannsvn/goa_human.gaf.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_human_isoform.gaf.gz $WORKSPACE/goannsvn/goa_human_isoform.gaf.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_human_rna.gaf.gz $WORKSPACE/goannsvn/goa_human_rna.gaf.gz'
-			//sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_pdb.gaf.gz $WORKSPACE/goannsvn/goa_pdb.gaf.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_pig_complex.gaf.gz $WORKSPACE/goannsvn/goa_pig_complex.gaf.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_pig.gaf.gz $WORKSPACE/goannsvn/goa_pig.gaf.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_pig_isoform.gaf.gz $WORKSPACE/goannsvn/goa_pig_isoform.gaf.gz'
