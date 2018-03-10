@@ -193,13 +193,15 @@ pipeline {
 		    // Make ontology products and get them into
 		    // skyhook.
 		    dir('./src/ontology') {
-			// Add owltools to path, required for scripts.
-			// Note weird pipeline syntax to change the
-			// PATH var--O was unable to the "correct"
-			// `pwd` thing, so here we are.
-			withEnv(['PATH+EXTRA=../../bin']){
-			    sh '$MAKECMD all'
-			    sh '$MAKECMD prepare_release'
+			retry(3){
+			    // Add owltools to path, required for scripts.
+			    // Note weird pipeline syntax to change the
+			    // PATH var--O was unable to the "correct"
+			    // `pwd` thing, so here we are.
+			    withEnv(['PATH+EXTRA=../../bin']){
+				sh '$MAKECMD all'
+				sh '$MAKECMD prepare_release'
+			    }
 			}
 		    }
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
