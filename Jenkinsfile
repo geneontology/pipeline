@@ -634,11 +634,11 @@ pipeline {
 		    // Setup our svn+ssh to have the right credentials.
 		    withEnv(["SVN_SSH=ssh -l jenkins -i ${GO_SVN_IDENTITY}"]){
 
-			// Try and debug connection issues on next run.
-			sh 'echo $GO_SVN_IDENTITY > deploy-ident.txt'
-			sh 'echo $SVN_SSH > deploy-svn-ssh.txt'
-			sh 'cat deploy-ident.txt'
-			sh 'cat deploy-svn-ssh.txt'
+			// // Try and debug connection issues on next run.
+			// sh 'echo $GO_SVN_IDENTITY > deploy-ident.txt'
+			// sh 'echo $SVN_SSH > deploy-svn-ssh.txt'
+			// sh 'cat deploy-ident.txt'
+			// sh 'cat deploy-svn-ssh.txt'
 
 			// Attach sshfs.
 			sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
@@ -697,7 +697,7 @@ pipeline {
 
 			// Descend and commit.
 			dir('$WORKSPACE/goannsvn') {
-			    sh 'svn commit -m "Jenkins pipeline backport from $BRANCH_NAME" *.gz'
+			    sh 'svn commit -m "Jenkins pipeline backport from $BRANCH_NAME"'
 			}
 		    }
 		}
