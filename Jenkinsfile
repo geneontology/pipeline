@@ -560,17 +560,6 @@ pipeline {
 				// Also, some runs have special maps
 				// to buckets...
 				if( env.BRANCH_NAME == 'release' ){
-				    // "release" -> dated path for
-				    // indexing (clobbering
-				    // "current"'s index.
-		 		    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
-				    // "release" -> dated path for S3.
-				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
-
-				    // Build the capper index.html...
-				    sh 'python3 ./scripts/bucket-indexer.py --credentials $S3_PUSH_JSON --bucket go-data-product-release --inject ./scripts/directory-index-template.html --prefix http://release.geneontology.org > top-level-index.html'
-				    // ...and push it up to S3.
-				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
 
 				    // Generate a BDBag for this
 				    // "forever" run and push to...?
@@ -584,15 +573,30 @@ pipeline {
 
 				    // 	// Use remote osfclient to archive the
 				    // 	// bdbag for this run.
-				    // 	sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
+				    // 	sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-release.tgz go-release.tgz'
+
+				    // "release" -> dated path for
+				    // indexing (clobbering
+				    // "current"'s index.
+		 		    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
+				    // "release" -> dated path for S3.
+				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
+
+				    // Build the capper index.html...
+				    sh 'python3 ./scripts/bucket-indexer.py --credentials $S3_PUSH_JSON --bucket go-data-product-release --inject ./scripts/directory-index-template.html --prefix http://release.geneontology.org > top-level-index.html'
+				    // ...and push it up to S3.
+				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
 
 				}else if( env.BRANCH_NAME == 'snapshot' ){
+
 				    // Currently, the "daily"
 				    // debugging buckets are intended
 				    // to be RO directly in S3 for
 				    // debugging.
 				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DAY --number $BUILD_ID --pipeline $BRANCH_NAME'
+
 				}else if( env.BRANCH_NAME == 'master' ){
+
 				    // Build a testing version of a
 				    // generic BDBag/DOI workflow.
 				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
@@ -600,11 +604,13 @@ pipeline {
 				    sh 'python3 ./mypyenv/bin/bdbag ./go-test-release --remote-file-manifest manifest.json --archive tgz'
 
 				    // Copy up to the root for inspection.
+				    sh 'cp go-test-release.tgz $WORKSPACE/mnt/$BRANCH_NAME/go-test-release.tgz'
 				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/bdbag-manifest.json'
 
-				    //      // Use remote osfclient to archive the
-				    //      // bdbag for this run.
-				    //      sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
+				    //  // Use remote osfclient to archive the
+				    //  // bdbag for this run.
+				    //  sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
+
 				}
 			    }
 			}
