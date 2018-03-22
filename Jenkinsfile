@@ -94,8 +94,8 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
 			// Tag the top to let the world know I was at least
 			// here.
-			sh 'echo "TODO: Note software versions." > $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
-			sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
+			sh 'echo "TODO: Note software versions." > $WORKSPACE/mnt/$BRANCH_NAME/notes.txt'
+			sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/notes.txt'
 			// TODO: This should be wrapped in exception
 			// handling. In fact, this whole thing should be.
 			sh 'fusermount -u $WORKSPACE/mnt/ || true'
@@ -579,6 +579,7 @@ pipeline {
 			    	    sh 'python3 ./mypyenv/bin/bdbag ./go-release --remote-file-manifest manifest.json --archive tgz'
 
 				    // Copy up to the root for inspection.
+				    sh 'cp go-release.tgz $WORKSPACE/mnt/$BRANCH_NAME/go-release.tgz'
 				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/bdbag-manifest.json'
 
 				    // 	// Use remote osfclient to archive the
