@@ -49,6 +49,26 @@ pipeline {
 	// cancel and clean the workspace before use.
 	stage('Ready and clean') {
 	    steps {
+
+		// Check that we do not affect public targets on
+		// non-mainline runs.
+		script {
+		    if( BRANCH_NAME != 'master' and
+		       TARGET_BUCKET == 'go-data-product-experimental'){
+			echo 'Only master can touch that target.'
+			sh '`exit -1`'
+		    }else if( BRANCH_NAME != 'snapshot' and
+			     TARGET_BUCKET == 'go-data-product-snapshot'){
+			echo 'Only master can touch that target.'
+			sh '`exit -1`'
+		    }else if( BRANCH_NAME != 'release' and
+			     TARGET_BUCKET == 'go-data-product-release'){
+			echo 'Only master can touch that target.'
+			sh '`exit -1`'
+		    }
+		}
+
+		// Give us a minute to cancel if we want.
 		sleep time: 1, unit: 'MINUTES'
 		cleanWs()
 	    }
