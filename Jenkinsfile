@@ -41,12 +41,14 @@ pipeline {
 	//MAKECMD = 'make --jobs --max-load 12.0'
 	MAKECMD = 'make'
 	// GOlr load profile.
-	GOLR_INPUT_ONTOLOGIES = "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	GOLR_INPUT_ONTOLOGIES = [
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	].join(" ")
 	GOLR_INPUT_GAFS = [
-	    "http://www.geneontology.org/gene-associations/submission/paint/pre-submission/gene_association.paint_other.gaf"
+	    "http://www.geneontology.org/gene-associations/submission/paint/pre-submission/gene_association.paint_other.gaf",
 	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken_complex.gaf.gz",
 	    "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz"
 	].join(" ")
     }
     options{
