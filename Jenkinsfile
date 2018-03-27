@@ -40,6 +40,14 @@ pipeline {
 	// improvement.
 	//MAKECMD = 'make --jobs --max-load 12.0'
 	MAKECMD = 'make'
+	// GOlr load profile.
+	GOLR_INPUT_ONTOLOGIES = "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	GOLR_INPUT_GAFS = [
+	    "http://www.geneontology.org/gene-associations/submission/paint/pre-submission/gene_association.paint_other.gaf"
+	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz",
+	].join(" ")
     }
     options{
 	timestamps()
@@ -472,16 +480,30 @@ pipeline {
 	}
 	//...
 	stage('Produce derivatives') {
-	    steps {
-		parallel(
-		    "GOlr index (TODO)": {
-			echo 'TODO: index'
-		    }
-		    // },
-		    // "Blazegraph journal": {
-		    // }
-		)
-	    }
+            agent {
+                docker {
+		    image 'geneontology/golr-autoindex:2018-03-26T144735'
+		    // Reset Jenkins Docker agent default to original
+		    // root.
+		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
+		}
+            }
+            steps {
+                // sh 'ls /srv'
+                // sh 'ls /tmp'
+
+		// Build index into tmpfs.
+		sh 'bash /tmp/run-indexer.sh'
+
+		// Copy tmpfs Solr contents onto skyhook.
+		sh 'tar -zcvf /tmp/golr-index-contents.tar.gz -C /srv/solr/data/index .'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // Copy over index.
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tar.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    // Copy over log.
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		}
+            }
 	}
 	//...
 	stage('Sanity II (TODO)') {
