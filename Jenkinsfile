@@ -41,6 +41,8 @@ pipeline {
 	//MAKECMD = 'make --jobs --max-load 12.0'
 	MAKECMD = 'make'
 	// GOlr load profile.
+	GOLR_SOLR_MEMORY = "5G"
+	GOLR_LOADER_MEMORY = "33G"
 	GOLR_INPUT_ONTOLOGIES = [
 	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
 	].join(" ")
@@ -484,7 +486,7 @@ pipeline {
 	stage('Produce derivatives') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:2018-03-26T144735'
+		    image 'geneontology/golr-autoindex:2018-03-27T165605'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
