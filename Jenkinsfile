@@ -41,10 +41,10 @@ pipeline {
 	//MAKECMD = 'make --jobs --max-load 12.0'
 	MAKECMD = 'make'
 	// GOlr load profile.
-	GOLR_SOLR_MEMORY = "5G"
-	GOLR_LOADER_MEMORY = "33G"
+	GOLR_SOLR_MEMORY = "4G"
+	GOLR_LOADER_MEMORY = "8G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
 	    "http://www.geneontology.org/gene-associations/submission/paint/pre-submission/gene_association.paint_other.gaf",
