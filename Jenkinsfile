@@ -638,7 +638,7 @@ pipeline {
 				    // Build a testing version of a
 				    // generic BDBag/DOI workflow.
 				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
-				    sh 'mkdir go-test-release'
+				    sh 'mkdir go-release-reference'
 				    sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
 
 				    // Copy up to the root for inspection.
