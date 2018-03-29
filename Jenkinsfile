@@ -653,7 +653,6 @@ pipeline {
 				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-doi.json s3://go-data-product-master/metadata/release-doi.json'
 				    // TODO: tarball and archive the
 				    // whole thing.
-
 				}
 			    }
 			}
@@ -668,7 +667,7 @@ pipeline {
 		}
 	    }
 	}
-a	// Big things to do on release.
+	// Big things to do on release.
 	// TODO: Rename "Archive".
 	stage('Deploy') {
 	    when { anyOf { branch 'release' } }
