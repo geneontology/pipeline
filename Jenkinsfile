@@ -646,14 +646,21 @@ pipeline {
 				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
 				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
 
-				    // TODO: Move to appropriate spot.
 				    // Archive the holey bdbag for this run.
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json'
+
 				    // While odd timing, push the
 				    // created DOI out to S3/CF.
 				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-reference-doi.json s3://go-data-product-master/metadata/release-reference-doi.json'
-				    // TODO: tarball and archive the
-				    // whole thing.
+
+				    // Tarball and archive the whole
+				    // thing.
+				    sh 'tar --use-compress-program=pigz -zcvf go-release-archive.tar.gz -C $WORKSPACE/mnt/$BRANCH_NAME .'
+				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json'
+
+				    // Again, push the created DOI out
+				    // to S3/CF.
+				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-archive-doi.json s3://go-data-product-master/metadata/release-archive-doi.json'
 				}
 			    }
 			}
