@@ -552,7 +552,7 @@ pipeline {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 		}
 		// Copy the product to the right location. As well,
-		// archive (TODO).
+		// archive.
 		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'zenodo_go_sandbox_token', variable: 'ZENODO_TOKEN')]) {
 		    // Ready...
 		    dir('./go-site') {
@@ -649,19 +649,17 @@ pipeline {
 
 				    // Archive the holey bdbag for this run.
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json'
-
 				    // While odd timing, push the
 				    // created DOI out to S3/CF.
-				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-reference-doi.json s3://go-data-product-master/metadata/release-reference-doi.json'
+				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-reference-doi.json s3://go-data-product-experimental/metadata/release-reference-doi.json'
 
 				    // Tarball and archive the whole
 				    // thing.
 				    sh 'tar --use-compress-program=pigz -zcvf go-release-archive.tar.gz -C $WORKSPACE/mnt/$BRANCH_NAME .'
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json'
-
 				    // Again, push the created DOI out
 				    // to S3/CF.
-				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-archive-doi.json s3://go-data-product-master/metadata/release-archive-doi.json'
+				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-archive-doi.json s3://go-data-product-experimental/metadata/release-archive-doi.json'
 				}
 			    }
 			}
