@@ -30,9 +30,9 @@ pipeline {
 	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
-	// Information for the OSF.io archive.
-	OSFIO_USER = 'osf.io@genkisugi.net'
-	OSFIO_PROJECT = '6v3gx'
+	// The Zenodo concept ID to use for releases (and occasionally
+	// master testing).
+	ZENODO_CONCEPT = '199441'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
@@ -552,20 +552,21 @@ pipeline {
 		}
 		// Copy the product to the right location. As well,
 		// archive (TODO).
-		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'go_osf_io_user_password', variable: 'OSFIO_PASSWORD')]) {
+		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'zenodo_go_sandbox_token', variable: 'ZENODO_TOKEN')]) {
 		    // Ready...
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
+			// TODO: Special handling still needed w/o OSF.io?
 			// WARNING: Caveats and reasons as same
-			// pattern above. We need this as 'osfclient'
-			// is not standard and it turns out there are
+			// pattern above. We need this as some clients
+			// are not standard and it turns out there are
 			// some subtle incompatibilities with urllib3
 			// and boto in some versions, so we will use a
-			// virtual env to paper that over.
-			// See: https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
+			// virtual env to paper that over.  See:
+			// https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
 			sh 'python3 -m venv mypyenv'
-			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin', "OSF_PASSWORD=${OSFIO_PASSWORD}"]){
+			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
 			    // Extra package for the indexer.
 			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
@@ -579,11 +580,6 @@ pipeline {
 
 			    // Grab BDBag.
 			    sh 'python3 ./mypyenv/bin/pip3 install bdbag'
-
-			    // // Grab osfclient.
-			    // sh 'python3 ./mypyenv/bin/pip3 install osfclient'
-
-			    // TODO: Archive.
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
@@ -610,16 +606,12 @@ pipeline {
 				    // Generate a BDBag for this
 				    // "forever" run and push to...?
 			    	    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
-			    	    sh 'mkdir go-release'
-			    	    sh 'python3 ./mypyenv/bin/bdbag ./go-release --remote-file-manifest manifest.json --archive tgz'
+			    	    sh 'mkdir go-release-reference'
+			    	    sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
 
 				    // Copy up to the root for inspection.
-				    sh 'cp go-release.tgz $WORKSPACE/mnt/$BRANCH_NAME/go-release.tgz'
+				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/go-release-reference.tgz'
 				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/bdbag-manifest.json'
-
-				    // 	// Use remote osfclient to archive the
-				    // 	// bdbag for this run.
-				    // 	sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-release.tgz go-release.tgz'
 
 				    // "release" -> dated path for
 				    // indexing (clobbering
@@ -647,15 +639,20 @@ pipeline {
 				    // generic BDBag/DOI workflow.
 				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
 				    sh 'mkdir go-test-release'
-				    sh 'python3 ./mypyenv/bin/bdbag ./go-test-release --remote-file-manifest manifest.json --archive tgz'
+				    sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
 
 				    // Copy up to the root for inspection.
-				    sh 'cp go-test-release.tgz $WORKSPACE/mnt/$BRANCH_NAME/go-test-release.tgz'
+				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/go-release-reference.tgz'
 				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/bdbag-manifest.json'
 
-				    //  // Use remote osfclient to archive the
-				    //  // bdbag for this run.
-				    //  sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
+				    // TODO: Move to appropriate spot.
+				    // Archive the holey bdbag for this run.
+				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_CONCEPT --file go-release-reference.tgz --output ./release-doi.json'
+				    // While odd timing, push the
+				    // created DOI out to S3/CF.
+				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-doi.json s3://go-data-product-master/metadata/release-doi.json'
+				    // TODO: tarball and archive the
+				    // whole thing.
 
 				}
 			    }
@@ -671,7 +668,8 @@ pipeline {
 		}
 	    }
 	}
-	// Big things to do on release.
+a	// Big things to do on release.
+	// TODO: Rename "Archive".
 	stage('Deploy') {
 	    when { anyOf { branch 'release' } }
 	    steps {
