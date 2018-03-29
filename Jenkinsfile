@@ -647,7 +647,8 @@ pipeline {
 				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
 				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
 
-				    // Archive the holey bdbag for this run.
+				    // Archive the holey bdbag for
+				    // this run.
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json'
 				    // While odd timing, push the
 				    // created DOI out to S3/CF.
