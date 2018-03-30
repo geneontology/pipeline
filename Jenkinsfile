@@ -487,7 +487,7 @@ pipeline {
 	stage('Produce derivatives') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:2018-03-27T165605'
+		    image 'geneontology/golr-autoindex:2018-03-30T145420'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
@@ -501,10 +501,10 @@ pipeline {
 		sh 'bash /tmp/run-indexer.sh'
 
 		// Copy tmpfs Solr contents onto skyhook.
-		sh 'tar -zcvf /tmp/golr-index-contents.tar.gz -C /srv/solr/data/index .'
+		sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    // Copy over index.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tar.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		    // Copy over log.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		}
@@ -651,16 +651,19 @@ pipeline {
 				    // this run.
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json'
 				    // While odd timing, push the
-				    // created DOI out to S3/CF.
+				    // created DOI out to S3/CF and
+				    // skyhook.
 				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-reference-doi.json s3://go-data-product-experimental/metadata/release-reference-doi.json'
+				    sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
 
 				    // Tarball and archive the whole
 				    // thing.
-				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tar.gz -C $WORKSPACE/mnt/$BRANCH_NAME .'
+				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/mnt/$BRANCH_NAME .'
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json'
 				    // Again, push the created DOI out
-				    // to S3/CF.
+				    // to S3/CF and skyhook.
 				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-archive-doi.json s3://go-data-product-experimental/metadata/release-archive-doi.json'
+				    sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
 				}
 			    }
 			}
