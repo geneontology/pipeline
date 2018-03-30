@@ -656,7 +656,7 @@ pipeline {
 
 				    // Tarball and archive the whole
 				    // thing.
-				    sh 'tar --use-compress-program=pigz -zcvf go-release-archive.tar.gz -C $WORKSPACE/mnt/$BRANCH_NAME .'
+				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tar.gz -C $WORKSPACE/mnt/$BRANCH_NAME .'
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json'
 				    // Again, push the created DOI out
 				    // to S3/CF.
