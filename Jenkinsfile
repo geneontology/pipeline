@@ -582,6 +582,9 @@ pipeline {
 			    // Grab BDBag.
 			    sh 'python3 ./mypyenv/bin/pip3 install bdbag'
 
+			    // Need for large uploads in requests.
+			    sh 'python3 ./mypyenv/bin/pip3 install requests-toolbelt'
+
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
 			    // into the scripting mode.
