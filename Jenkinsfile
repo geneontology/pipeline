@@ -649,7 +649,7 @@ pipeline {
 
 				    // Archive the holey bdbag for
 				    // this run.
-				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json'
+				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
 				    // While odd timing, push the
 				    // created DOI out to S3/CF and
 				    // skyhook.
@@ -659,7 +659,7 @@ pipeline {
 				    // Tarball and archive the whole
 				    // thing.
 				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/mnt/$BRANCH_NAME .'
-				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json'
+				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
 				    // Again, push the created DOI out
 				    // to S3/CF and skyhook.
 				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-archive-doi.json s3://go-data-product-experimental/metadata/release-archive-doi.json'
