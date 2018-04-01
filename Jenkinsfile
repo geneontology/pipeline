@@ -30,9 +30,10 @@ pipeline {
 	TARGET_BUCKET = 'go-data-product-current'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://current.geneontology.org'
-	// Information for the OSF.io archive.
-	OSFIO_USER = 'osf.io@genkisugi.net'
-	OSFIO_PROJECT = '6v3gx'
+	// The Zenodo concept ID to use for releases (and occasionally
+	// master testing).
+	ZENODO_REFERENCE_CONCEPT = '199441'
+	ZENODO_ARCHIVE_CONCEPT = '212052'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
@@ -40,6 +41,65 @@ pipeline {
 	// improvement.
 	//MAKECMD = 'make --jobs --max-load 12.0'
 	MAKECMD = 'make'
+	// GOlr load profile.
+	GOLR_SOLR_MEMORY = "4G"
+	GOLR_LOADER_MEMORY = "8G"
+	GOLR_INPUT_ONTOLOGIES = [
+	    "http://skyhook.berkeleybop.org/release/ontology/extensions/go-gaf.owl",
+	    "http://skyhook.berkeleybop.org/release/ontology/extensions/gorel.owl",
+	    "http://skyhook.berkeleybop.org/release/ontology/extensions/go-modules-annotations.owl",
+	    "http://skyhook.berkeleybop.org/release/ontology/extensions/go-taxon-subsets.owl",
+	    "http://purl.obolibrary.org/obo/eco.owl",
+	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
+	    "http://purl.obolibrary.org/obo/cl/cl-basic.owl",
+	    "http://purl.obolibrary.org/obo/pato.owl",
+	    "http://purl.obolibrary.org/obo/po.owl",
+	    "http://purl.obolibrary.org/obo/chebi.owl",
+	    "http://purl.obolibrary.org/obo/uberon/basic.owl",
+	    "http://purl.obolibrary.org/obo/wbbt.owl"
+	].join(" ")
+	GOLR_INPUT_GAFS = [
+	    "http://www.geneontology.org/gene-associations/submission/paint/pre-submission/gene_association.paint_other.gaf",
+	    "http://skyhook.berkeleybop.org/release/annotations/aspgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/cgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/dictybase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/ecocyc.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/fb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/genedb_lmajor.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/genedb_pfalciparum.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/genedb_tbrucei.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_chicken.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_chicken_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_chicken_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_cow.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_cow_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_cow_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_dog.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_dog_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_dog_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_human.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_human_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_human_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_pig.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_pig_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_pig_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/gramene_oryza.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/jcvi.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/mgi.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/pamgo_atumefaciens.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/pamgo_ddadantii.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/pamgo_mgrisea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/pamgo_oomycetes.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/pombase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/pseudocap.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/rgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/sgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/sgn.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/tair.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/wb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/zfin.gaf.gz"
+	].join(" ")
     }
     options{
 	timestamps()
@@ -49,6 +109,23 @@ pipeline {
 	// cancel and clean the workspace before use.
 	stage('Ready and clean') {
 	    steps {
+
+		// Check that we do not affect public targets on
+		// non-mainline runs.
+		script {
+		    if( BRANCH_NAME != 'master' && TARGET_BUCKET == 'go-data-product-experimental'){
+			echo 'Only master can touch that target.'
+			sh '`exit -1`'
+		    }else if( BRANCH_NAME != 'snapshot' && TARGET_BUCKET == 'go-data-product-snapshot'){
+			echo 'Only master can touch that target.'
+			sh '`exit -1`'
+		    }else if( BRANCH_NAME != 'release' && TARGET_BUCKET == 'go-data-product-release'){
+			echo 'Only master can touch that target.'
+			sh '`exit -1`'
+		    }
+		}
+
+		// Give us a minute to cancel if we want.
 		sleep time: 1, unit: 'MINUTES'
 		cleanWs()
 	    }
@@ -94,8 +171,8 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
 			// Tag the top to let the world know I was at least
 			// here.
-			sh 'echo "TODO: Note software versions." > $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
-			sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
+			sh 'echo "TODO: Note software versions." > $WORKSPACE/mnt/$BRANCH_NAME/notes.txt'
+			sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/notes.txt'
 			// TODO: This should be wrapped in exception
 			// handling. In fact, this whole thing should be.
 			sh 'fusermount -u $WORKSPACE/mnt/ || true'
@@ -193,13 +270,15 @@ pipeline {
 		    // Make ontology products and get them into
 		    // skyhook.
 		    dir('./src/ontology') {
-			// Add owltools to path, required for scripts.
-			// Note weird pipeline syntax to change the
-			// PATH var--O was unable to the "correct"
-			// `pwd` thing, so here we are.
-			withEnv(['PATH+EXTRA=../../bin']){
-			    sh '$MAKECMD all'
-			    sh '$MAKECMD prepare_release'
+			retry(3){
+			    // Add owltools to path, required for scripts.
+			    // Note weird pipeline syntax to change the
+			    // PATH var--O was unable to the "correct"
+			    // `pwd` thing, so here we are.
+			    withEnv(['PATH+EXTRA=../../bin']){
+				sh '$MAKECMD all'
+				sh '$MAKECMD prepare_release'
+			    }
 			}
 		    }
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -305,9 +384,12 @@ pipeline {
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa_uniprot_all/goa_uniprot_all_noiea.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			    // Flatten the TTLs into products/ttl/.
 			    sh 'find ./target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
+			    // Compress the journals.
+                	    sh 'pigz target/blazegraph-internal.jnl'
+                	    sh 'pigz target/blazegraph-production.jnl'
 			    // Copy the journals directly to products.
-                	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph-production.jnl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
-                	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph-internal.jnl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+                	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+                	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
 			    // Copy the reports into reports.
                             sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 			    // Plus: flatten product reports in json,
@@ -450,38 +532,122 @@ pipeline {
 	}
 	//...
 	stage('Produce derivatives') {
-	    steps {
-		parallel(
-		    "GOlr index (TODO)": {
-			echo 'TODO: index'
-		    }
-		    // },
-		    // "Blazegraph journal": {
-		    // }
-		)
-	    }
+            agent {
+                docker {
+		    image 'geneontology/golr-autoindex:2018-03-30T145420'
+		    // Reset Jenkins Docker agent default to original
+		    // root.
+		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
+		}
+            }
+            steps {
+                // sh 'ls /srv'
+                // sh 'ls /tmp'
+
+		// Build index into tmpfs.
+		sh 'bash /tmp/run-indexer.sh'
+
+		// Copy tmpfs Solr contents onto skyhook.
+		sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // Copy over index.
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    // Copy over log.
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		}
+            }
 	}
 	//...
-	stage('Sanity II (TODO)') {
+	stage('Sanity II') {
 	    steps {
 		echo 'TODO: Sanity II'
 	    }
 	}
-	stage('Pre-publish') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	stage('Archive') {
+	    when { anyOf { branch 'release'; branch 'master' } }
 	    steps {
+		// Experimental stanza to support mounting the sshfs
+		// using the "hidden" skyhook identity.
 		sh 'mkdir -p $WORKSPACE/mnt/ || true'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 		}
-		// Prepare a working directory based around skyhook to
-		// do the indexing.
-		dir('./go-site') {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+		// Copy the product to the right location. As well,
+		// archive.
+		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'zenodo_go_sandbox_token', variable: 'ZENODO_TOKEN')]) {
+		    // Ready...
+		    dir('./go-site') {
+			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-		    script {
-			// Pass.
-			echo 'pass'
+			// TODO: Special handling still needed w/o OSF.io?
+			// WARNING: Caveats and reasons as same
+			// pattern above. We need this as some clients
+			// are not standard and it turns out there are
+			// some subtle incompatibilities with urllib3
+			// and boto in some versions, so we will use a
+			// virtual env to paper that over.  See:
+			// https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
+			sh 'python3 -m venv mypyenv'
+			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+
+			    // Extra package for the indexer.
+			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
+
+			    // Correct for (possibly) bad boto3,
+			    // as mentioned above.
+			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
+
+			    // Extra package for the uploader.
+			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
+
+			    // Grab BDBag.
+			    sh 'python3 ./mypyenv/bin/pip3 install bdbag'
+
+			    // Need for large uploads in requests.
+			    sh 'python3 ./mypyenv/bin/pip3 install requests-toolbelt'
+
+			    // Well, we need to do a couple of things here in
+			    // a structured way, so we'll go ahead and drop
+			    // into the scripting mode.
+			    script {
+
+				// Build a testing version of a
+				// generic BDBag/DOI workflow, keeping
+				// special bucket mappings in mind.
+				if( env.BRANCH_NAME == 'release' ){
+				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
+				}else if( env.BRANCH_NAME == 'master' ){
+				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+				}
+
+				// Make holey BDBag in fixed directory.
+				sh 'mkdir go-release-reference'
+				sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
+
+				// TODO: Archive the holey bdbag for
+				// this run.
+				//sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
+
+				// Tarball the whole directory
+				// structure.
+				sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/mnt/$BRANCH_NAME .'
+
+				// TODO: Archive it too.
+				//sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
+
+				// NOTE: Due to size and weirdness of
+				// putting an archive in itself, we do
+				// not copy the archive off of the
+				// local filesystem.
+
+				// Copy the files and DOIs to skyhook
+				// metadata/ for easy inspection.
+				sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
+				sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
+				sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
+				sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
+			    }
+			}
 		    }
 		}
 	    }
@@ -503,21 +669,22 @@ pipeline {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 		}
 		// Copy the product to the right location. As well,
-		// archive (TODO).
-		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'go_osf_io_user_password', variable: 'OSFIO_PASSWORD')]) {
+		// archive.
+		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON')]) {
 		    // Ready...
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
+			// TODO: Special handling still needed w/o OSF.io?
 			// WARNING: Caveats and reasons as same
-			// pattern above. We need this as 'osfclient'
-			// is not standard and it turns out there are
+			// pattern above. We need this as some clients
+			// are not standard and it turns out there are
 			// some subtle incompatibilities with urllib3
 			// and boto in some versions, so we will use a
-			// virtual env to paper that over.
-			// See: https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
+			// virtual env to paper that over.  See:
+			// https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
 			sh 'python3 -m venv mypyenv'
-			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin', "OSF_PASSWORD=${OSFIO_PASSWORD}"]){
+			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
 			    // Extra package for the indexer.
 			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
@@ -528,14 +695,6 @@ pipeline {
 
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
-
-			    // Grab BDBag.
-			    sh 'python3 ./mypyenv/bin/pip3 install bdbag'
-
-			    // // Grab osfclient.
-			    // sh 'python3 ./mypyenv/bin/pip3 install osfclient'
-
-			    // TODO: Archive.
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
@@ -558,6 +717,7 @@ pipeline {
 				// Also, some runs have special maps
 				// to buckets...
 				if( env.BRANCH_NAME == 'release' ){
+
 				    // "release" -> dated path for
 				    // indexing (clobbering
 				    // "current"'s index.
@@ -570,38 +730,16 @@ pipeline {
 				    // ...and push it up to S3.
 				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
 
-				    // Generate a BDBag for this
-				    // "forever" run and push to...?
-			    	    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
-			    	    sh 'mkdir go-release'
-			    	    sh 'python3 ./mypyenv/bin/bdbag ./go-release --remote-file-manifest manifest.json --archive tgz'
-
-				    // Copy up to the root for inspection.
-				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/bdbag-manifest.json'
-
-				    // 	// Use remote osfclient to archive the
-				    // 	// bdbag for this run.
-				    // 	sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
-
 				}else if( env.BRANCH_NAME == 'snapshot' ){
+
 				    // Currently, the "daily"
 				    // debugging buckets are intended
 				    // to be RO directly in S3 for
 				    // debugging.
 				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DAY --number $BUILD_ID --pipeline $BRANCH_NAME'
+
 				}else if( env.BRANCH_NAME == 'master' ){
-				    // Build a testing version of a
-				    // generic BDBag/DOI workflow.
-				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
-				    sh 'mkdir go-test-release'
-				    sh 'python3 ./mypyenv/bin/bdbag ./go-test-release --remote-file-manifest manifest.json --archive tgz'
-
-				    // Copy up to the root for inspection.
-				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/bdbag-manifest.json'
-
-				    //      // Use remote osfclient to archive the
-				    //      // bdbag for this run.
-				    //      sh 'python3 ./mypyenv/bin/osf -u $OSFIO_USER -p $OSFIO_PROJECT upload -f go-test-release.tgz go-test-release.tgz'
+				    // Pass.
 				}
 			    }
 			}
@@ -632,11 +770,11 @@ pipeline {
 		    // Setup our svn+ssh to have the right credentials.
 		    withEnv(["SVN_SSH=ssh -l jenkins -i ${GO_SVN_IDENTITY}"]){
 
-			// Try and debug connection issues on next run.
-			sh 'echo $GO_SVN_IDENTITY > deploy-ident.txt'
-			sh 'echo $SVN_SSH > deploy-svn-ssh.txt'
-			sh 'cat deploy-ident.txt'
-			sh 'cat deploy-svn-ssh.txt'
+			// // Try and debug connection issues on next run.
+			// sh 'echo $GO_SVN_IDENTITY > deploy-ident.txt'
+			// sh 'echo $SVN_SSH > deploy-svn-ssh.txt'
+			// sh 'cat deploy-ident.txt'
+			// sh 'cat deploy-svn-ssh.txt'
 
 			// Attach sshfs.
 			sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
@@ -693,9 +831,9 @@ pipeline {
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_pig_rna.gaf.gz $WORKSPACE/goannsvn/goa_pig_rna.gaf.gz'
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gaf.gz $WORKSPACE/goannsvn/goa_uniprot_all_noiea.gaf.gz'
 
-			// Descend and commit.
+			// Descend and commit (all files).
 			dir('$WORKSPACE/goannsvn') {
-			    sh 'svn commit -m "Jenkins pipeline backport from $BRANCH_NAME" *.gz'
+			    sh 'svn commit -m "Jenkins pipeline backport from $BRANCH_NAME"'
 			}
 		    }
 		}
