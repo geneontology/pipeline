@@ -511,39 +511,13 @@ pipeline {
             }
 	}
 	//...
-	stage('Sanity II (TODO)') {
+	stage('Sanity II') {
 	    steps {
 		echo 'TODO: Sanity II'
 	    }
 	}
-	stage('Pre-publish') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
-	    steps {
-		sh 'mkdir -p $WORKSPACE/mnt/ || true'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-		}
-		// Prepare a working directory based around skyhook to
-		// do the indexing.
-		dir('./go-site') {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
-
-		    script {
-			// Pass.
-			echo 'pass'
-		    }
-		}
-	    }
-	    // WARNING: Extra safety as I expect this to sometimes fail.
-	    post {
-                always {
-		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-		}
-	    }
-	}
-	stage('Publish') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	stage('Archive') {
+	    when { anyOf { branch 'release'; branch 'master' } }
 	    steps {
 		// Experimental stanza to support mounting the sshfs
 		// using the "hidden" skyhook identity.
@@ -590,6 +564,106 @@ pipeline {
 			    // into the scripting mode.
 			    script {
 
+				// Build a testing version of a
+				// generic BDBag/DOI workflow, keeping
+				// special bucket mappings in mind.
+				if( env.BRANCH_NAME == 'release' ){
+				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
+				}else if( env.BRANCH_NAME == 'master' ){
+				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+				}
+
+				// Make holey BDBag in fixed directory.
+				sh 'mkdir go-release-reference'
+				sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
+
+				// Archive the holey bdbag for
+				// this run.
+				sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
+
+				// Tarball the whole directory
+				// structure.
+				sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/mnt/$BRANCH_NAME .'
+
+				// Archive it too.
+				sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
+
+				// NOTE: Due to size and weirdness of
+				// putting an archive in itself, we do
+				// not copy the archive off of the
+				// local filesystem.
+
+				// // Push the created DOI out to S3/CF
+				// // for public use in metadata/.
+				// if( env.BRANCH_NAME == 'release' ){
+				//     sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-reference-doi.json s3://go-data-product-release/$START_DATE/metadata/release-reference-doi.json'
+				//     sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-archive-doi.json s3://go-data-product-release/$START_DATE/metadata/release-archive-doi.json'
+				// }else if( env.BRANCH_NAME == 'master' ){
+				//     sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-reference-doi.json s3://go-data-product-experimental/metadata/release-reference-doi.json'
+				//     sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-archive-doi.json s3://go-data-product-experimental/metadata/release-archive-doi.json'
+				// }
+
+				// Copy the files and DOIs to skyhook
+				// metadata/ for easy inspection.
+				sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
+				sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
+				sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
+				sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
+			    }
+			}
+		    }
+		}
+	    }
+	    // WARNING: Extra safety as I expect this to sometimes fail.
+	    post {
+                always {
+		    // Bail on the remote filesystem.
+		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+		}
+	    }
+	}
+	stage('Publish') {
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    steps {
+		// Experimental stanza to support mounting the sshfs
+		// using the "hidden" skyhook identity.
+		sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		}
+		// Copy the product to the right location. As well,
+		// archive.
+		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON')]) {
+		    // Ready...
+		    dir('./go-site') {
+			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+
+			// TODO: Special handling still needed w/o OSF.io?
+			// WARNING: Caveats and reasons as same
+			// pattern above. We need this as some clients
+			// are not standard and it turns out there are
+			// some subtle incompatibilities with urllib3
+			// and boto in some versions, so we will use a
+			// virtual env to paper that over.  See:
+			// https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
+			sh 'python3 -m venv mypyenv'
+			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+
+			    // Extra package for the indexer.
+			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
+
+			    // Correct for (possibly) bad boto3,
+			    // as mentioned above.
+			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
+
+			    // Extra package for the uploader.
+			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
+
+			    // Well, we need to do a couple of things here in
+			    // a structured way, so we'll go ahead and drop
+			    // into the scripting mode.
+			    script {
+
 				// Create working index off of
 				// skyhook. For "release", this will
 				// be "current". For "snapshot", this
@@ -606,16 +680,6 @@ pipeline {
 				// Also, some runs have special maps
 				// to buckets...
 				if( env.BRANCH_NAME == 'release' ){
-
-				    // Generate a BDBag for this
-				    // "forever" run and push to...?
-			    	    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
-			    	    sh 'mkdir go-release-reference'
-			    	    sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
-
-				    // Copy up to the root for inspection.
-				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/go-release-reference.tgz'
-				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/bdbag-manifest.json'
 
 				    // "release" -> dated path for
 				    // indexing (clobbering
@@ -638,35 +702,7 @@ pipeline {
 				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DAY --number $BUILD_ID --pipeline $BRANCH_NAME'
 
 				}else if( env.BRANCH_NAME == 'master' ){
-
-				    // Build a testing version of a
-				    // generic BDBag/DOI workflow.
-				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
-				    sh 'mkdir go-release-reference'
-				    sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
-
-				    // Copy the files to metadata/ for
-				    // inspection.
-				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
-				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
-
-				    // Archive the holey bdbag for
-				    // this run.
-				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
-				    // While odd timing, push the
-				    // created DOI out to S3/CF and
-				    // skyhook.
-				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-reference-doi.json s3://go-data-product-experimental/metadata/release-reference-doi.json'
-				    sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
-
-				    // Tarball and archive the whole
-				    // thing.
-				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/mnt/$BRANCH_NAME .'
-				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
-				    // Again, push the created DOI out
-				    // to S3/CF and skyhook.
-				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put release-archive-doi.json s3://go-data-product-experimental/metadata/release-archive-doi.json'
-				    sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
+				    // Pass.
 				}
 			    }
 			}
@@ -682,7 +718,6 @@ pipeline {
 	    }
 	}
 	// Big things to do on release.
-	// TODO: Rename "Archive".
 	stage('Deploy') {
 	    when { anyOf { branch 'release' } }
 	    steps {
