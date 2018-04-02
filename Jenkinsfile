@@ -43,7 +43,7 @@ pipeline {
 	MAKECMD = 'make'
 	// GOlr load profile.
 	GOLR_SOLR_MEMORY = "64G"
-	GOLR_LOADER_MEMORY = "128G"
+	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-gaf.owl",
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/gorel.owl",
