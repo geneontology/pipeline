@@ -785,7 +785,7 @@ pipeline {
 			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gaf.gz $WORKSPACE/goannsvn/goa_uniprot_all_noiea.gaf.gz'
 
 			// Descend and commit (all files).
-			dir('$WORKSPACE/goannsvn') {
+			dir('./goannsvn') {
 			    sh 'svn commit -m "Jenkins pipeline backport from $BRANCH_NAME"'
 			}
 		    }
