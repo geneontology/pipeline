@@ -188,13 +188,13 @@ pipeline {
 		    },
 		    "Ready blazegraph-runner": {
     			dir('./blazegraph-runner') {
-    	                    sh 'wget -N https://github.com/balhoff/blazegraph-runner/releases/download/v1.2.3/blazegraph-runner-1.2.3.tgz'
-    	                    sh 'tar -xvf blazegraph-runner-1.2.3.tgz'
+    	                    sh 'wget -N https://github.com/balhoff/blazegraph-runner/releases/download/v1.3/blazegraph-runner-1.3.tgz'
+    	                    sh 'tar -xvf blazegraph-runner-1.3.tgz'
     	                    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    		// Attempt to rsync bin into bin/.
-    	                        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.2.3/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+    	                        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.3/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 				// Attempt to rsync libs into lib/.
-    	    		    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.2.3/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
+    	    		    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.3/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
     	                    }
     	                }
 		    }
