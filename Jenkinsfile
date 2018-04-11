@@ -22,14 +22,14 @@ pipeline {
 	    returnStdout: true
 	).trim()
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'iteration'
+	TARGET_GO_SITE_BRANCH = 'iteration-on-bg-delete'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-experimental'
+	TARGET_BUCKET = 'garbage'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	TARGET_INDEXER_PREFIX = 'http://garbage.geneontology.io'
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '199441'
