@@ -293,9 +293,9 @@ pipeline {
 				    // // For GAF joy, plus "extras".
 				    // sh 'make all'
 				    // Shaking the magic beads for "extras".
-                		    sh '$MAKECMD -e extra_files'
+                		    // sh '$MAKECMD -e extra_files'
 				    // Make basic (non-enriched/reasoned) TTLs.
-				    sh '$MAKECMD -e all_targets_ttl'
+				    //sh '$MAKECMD -e all_targets_ttl'
 
 				    // // Make journals with what we have
 				    // // on the filesystem, for
@@ -314,7 +314,7 @@ pipeline {
 			    }
 			}
 			// Copy products over to skyhook.
-            withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+                        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			    // All non-core GAFs to the side in
 			    // products/gaf. Basically:
 			    //  - all irregular gaffy files + anything paint-y
@@ -337,7 +337,7 @@ pipeline {
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gpi.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			    // Flatten the TTLs into products/ttl/.
-			    sh 'find ./target/groups/ -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
+			    sh 'find ./target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
 			    // Compress the journals.
                 	    sh 'pigz target/blazegraph-internal.jnl'
                 	    sh 'pigz target/blazegraph-production.jnl'
