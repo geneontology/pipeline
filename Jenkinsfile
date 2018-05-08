@@ -39,8 +39,8 @@ pipeline {
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
 	// let's go with conservative and see if we get an
 	// improvement.
-	//MAKECMD = 'make --jobs --max-load 12.0'
-	MAKECMD = 'make'
+	MAKECMD = 'make --jobs --max-load 12.0'
+	//MAKECMD = 'make'
 	// GOlr load profile.
 	GOLR_SOLR_MEMORY = "4G"
 	GOLR_LOADER_MEMORY = "8G"
