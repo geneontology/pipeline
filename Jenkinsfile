@@ -6,7 +6,7 @@ pipeline {
 	// Master never runs--Feb 31st.
 	//cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
-	cron('0 0 2-31/2 * *')
+	cron('0 0 2-31 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
     }
@@ -331,8 +331,9 @@ pipeline {
 			    // Ready, set...
 			    sh '$MAKECMD clean'
 
-			    // Do this thing.
-			    //timeout(time: 20, unit: 'HOURS') {
+			    // Do this thing, but the watchdog sits
+			    // waiting.
+			    timeout(time: 20, unit: 'HOURS') {
 				script {
 				    /// All branches now try to produce all
 				    /// targets in the go-site Makefile.
@@ -358,7 +359,7 @@ pipeline {
 				    // SPARTA!
 				    sh '$MAKECMD -e target/sparta-report.json'
 				}
-			    //}
+			    }
 			}
 			// Copy products over to skyhook.
                         withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
