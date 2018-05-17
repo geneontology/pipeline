@@ -284,7 +284,8 @@ pipeline {
 			    // Ready, set...
 			    sh '$MAKECMD clean'
 
-			    // Do this thing.
+			    // Do this thing, but the watchdog sits
+			    // waiting.
 			    timeout(time: 20, unit: 'HOURS') {
 				script {
 				    /// All branches now try to produce all
