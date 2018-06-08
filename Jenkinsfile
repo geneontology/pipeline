@@ -393,7 +393,7 @@ pipeline {
 
 		    // Generate the static download page directly from
 		    // the metadata.
-		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --inject ./scripts/downloads-page-template.html > ./downloads.html'
+		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --date $START_DATE --inject ./scripts/downloads-page-template.html > ./downloads.html'
 
 		    // Generate the a users.yaml report for missing data
 		    // in the GO pattern.
