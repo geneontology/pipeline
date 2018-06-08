@@ -436,6 +436,10 @@ pipeline {
 			// Copy generated pages over to page output.
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./downloads.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/pages'
 		    }
+
+		    // Produce the slightly improved combined reports
+		    // inplace on remote.
+		    sh 'python3 ./scripts/merge-all-reports.py --verbose --directory $WORKSPACE/mnt/$BRANCH_NAME/reports'
 		}
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
