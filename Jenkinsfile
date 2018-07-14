@@ -486,6 +486,16 @@ pipeline {
 		    // inplace on remote.
 		    sh 'python3 ./scripts/merge-all-reports.py --verbose --directory $WORKSPACE/mnt/$BRANCH_NAME/reports'
 		}
+		// Run and report shared annotation check.
+		dir('./shared-annotation-check') {
+		    git url: 'https://github.com/geneontology/shared-annotation-check.git'
+		    // Setup.
+		    withEnv(['PATH+EXTRA=../bin:node_modules/.bin']){
+			sh 'npm install'
+			// Run annotation checks.
+			sh 'node ./check-runner.js -i ./rules.txt -o $WORKSPACE/mnt/$BRANCH_NAME/reports/shared-annotation-check.html'
+		    }
+		}
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
