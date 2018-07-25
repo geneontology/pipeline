@@ -551,7 +551,6 @@ pipeline {
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-			// TODO: Special handling still needed w/o OSF.io?
 			// WARNING: Caveats and reasons as same
 			// pattern above. We need this as some clients
 			// are not standard and it turns out there are
@@ -599,20 +598,28 @@ pipeline {
 				    // this run.
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
 
-				    // Tarball the whole directory
-				    // structure into a "full" BDBag.
+				    // Make full BDBag (unarchived, as
+				    // we want to leave it to pigz) in
+				    // place in the shared filesystem
+				    // directory--copying may be
+				    // rather expensive at this point.
+				    sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/mnt/$BRANCH_NAME'
+
+				    // Tarball the whole directory for
+				    // "deep" archive (handmade BDBag).
 				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/mnt/$BRANCH_NAME .'
 
 				    // Archive it too.
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
 
-				    // NOTE: Due to size and weirdness of
-				    // putting an archive in itself, we do
-				    // not copy the archive off of the
-				    // local filesystem.
-
-				    // Copy the files and DOIs to skyhook
-				    // metadata/ for easy inspection.
+				    // Copy the referential metadata
+				    // files and DOIs to skyhook
+				    // metadata/ for easy inspection,
+				    // now that we have done the full
+				    // BDBag in place (and we will not
+				    // have to worry about having
+				    // archive references in our
+				    // archive).
 				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
 				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
 				    sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
