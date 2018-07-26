@@ -598,16 +598,20 @@ pipeline {
 				    // this run.
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
 
-				    // Make full BDBag (unarchived, as
-				    // we want to leave it to pigz) in
-				    // place in the shared filesystem
-				    // directory--copying may be
-				    // rather expensive at this point.
-				    sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/mnt/$BRANCH_NAME'
+				    // To make a full BDBag, we first
+				    // need a copy of the data as
+				    // BDBags change directory layout
+				    // (e.g. data/).
+				    sh 'mkdir -p $WORKSPACE/copyover/ || true'
+				    sh 'cp -r $WORKSPACE/mnt/$BRANCH_NAME/* $WORKSPACE/copyover/'
+				    // Make the BDBag in the copyover/
+				    // (unarchived, as we want to
+				    // leave it to pigz).
+				    sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/copyover'
 
 				    // Tarball the whole directory for
 				    // "deep" archive (handmade BDBag).
-				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/mnt/$BRANCH_NAME .'
+				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/copyover .'
 
 				    // Archive it too.
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
@@ -635,6 +639,8 @@ pipeline {
                 always {
 		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+		    // Purge the copyover point.
+		    sh 'rm -r -f $WORKSPACE/copyover || true'
 		}
 	    }
 	}
