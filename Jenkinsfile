@@ -32,8 +32,8 @@ pipeline {
 	TARGET_INDEXER_PREFIX = 'http://current.geneontology.org'
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = '199441'
-	ZENODO_ARCHIVE_CONCEPT = '212052'
+	ZENODO_REFERENCE_CONCEPT = '1205160'
+	ZENODO_ARCHIVE_CONCEPT = '1205167'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
