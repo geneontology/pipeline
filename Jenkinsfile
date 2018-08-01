@@ -596,7 +596,6 @@ pipeline {
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-			// TODO: Special handling still needed w/o OSF.io?
 			// WARNING: Caveats and reasons as same
 			// pattern above. We need this as some clients
 			// are not standard and it turns out there are
@@ -628,41 +627,57 @@ pipeline {
 			    // into the scripting mode.
 			    script {
 
-				// Build a testing version of a
-				// generic BDBag/DOI workflow, keeping
-				// special bucket mappings in mind.
-				if( env.BRANCH_NAME == 'release' ){
-				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
-				}else if( env.BRANCH_NAME == 'master' ){
-				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+				// Build either a release or testing
+				// version of a generic BDBag/DOI
+				// workflow, keeping special bucket
+				// mappings in mind.
+				if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'master' ){
+
+				    if( env.BRANCH_NAME == 'release' ){
+					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
+				    }else if( env.BRANCH_NAME == 'master' ){
+					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+				    }
+
+				    // Make holey BDBag in fixed directory.
+				    sh 'mkdir go-release-reference'
+				    sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
+
+				    // Archive the holey bdbag for
+				    // this run.
+				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
+
+				    // To make a full BDBag, we first
+				    // need a copy of the data as
+				    // BDBags change directory layout
+				    // (e.g. data/).
+				    sh 'mkdir -p $WORKSPACE/copyover/ || true'
+				    sh 'cp -r $WORKSPACE/mnt/$BRANCH_NAME/* $WORKSPACE/copyover/'
+				    // Make the BDBag in the copyover/
+				    // (unarchived, as we want to
+				    // leave it to pigz).
+				    sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/copyover'
+
+				    // Tarball the whole directory for
+				    // "deep" archive (handmade BDBag).
+				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/copyover .'
+
+				    // Archive it too.
+				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
+
+				    // Copy the referential metadata
+				    // files and DOIs to skyhook
+				    // metadata/ for easy inspection,
+				    // now that we have done the full
+				    // BDBag in place (and we will not
+				    // have to worry about having
+				    // archive references in our
+				    // archive).
+				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
+				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
+				    sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
+				    sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
 				}
-
-				// Make holey BDBag in fixed directory.
-				sh 'mkdir go-release-reference'
-				sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
-
-				// TODO: Archive the holey bdbag for
-				// this run.
-				//sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
-
-				// Tarball the whole directory
-				// structure.
-				sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/mnt/$BRANCH_NAME .'
-
-				// TODO: Archive it too.
-				//sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
-
-				// NOTE: Due to size and weirdness of
-				// putting an archive in itself, we do
-				// not copy the archive off of the
-				// local filesystem.
-
-				// Copy the files and DOIs to skyhook
-				// metadata/ for easy inspection.
-				sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
-				sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
-				// sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
-				// sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
 			    }
 			}
 		    }
@@ -673,6 +688,8 @@ pipeline {
                 always {
 		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+		    // Purge the copyover point.
+		    sh 'rm -r -f $WORKSPACE/copyover || true'
 		}
 	    }
 	}
