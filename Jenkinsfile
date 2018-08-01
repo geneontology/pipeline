@@ -236,8 +236,15 @@ pipeline {
 			    }
 			}
 		    }
+		    // Make sure that we copy any files there,
+		    // including the core dump of produced.
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
+		    }
+		    // Now that the files are safely away onto skyhook
+		    // for debugging, test for the core dump.
+		    if( fileExists './src/ontology/target/core_dump.owl' ){
+			error 'ROBOT core dump detected--bailing out.'
 		    }
 		}
 	    }
