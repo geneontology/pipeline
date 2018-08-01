@@ -243,7 +243,7 @@ pipeline {
 		    }
 		    // Now that the files are safely away onto skyhook
 		    // for debugging, test for the core dump.
-		    if( fileExists './src/ontology/target/core_dump.owl' ){
+		    if( fileExists './target/core_dump.owl' ){
 			error 'ROBOT core dump detected--bailing out.'
 		    }
 		}
