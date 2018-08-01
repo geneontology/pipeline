@@ -243,7 +243,8 @@ pipeline {
 		    }
 		    // Now that the files are safely away onto skyhook
 		    // for debugging, test for the core dump.
-		    if( fileExists './target/core_dump.owl' ){
+		    def found_core_dump_p = fileExists './target/core_dump.owl'
+		    if( found_core_dump_p ){
 			error 'ROBOT core dump detected--bailing out.'
 		    }
 		}
