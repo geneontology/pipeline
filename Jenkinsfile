@@ -637,13 +637,17 @@ pipeline {
 			    // into the scripting mode.
 			    script {
 
-				// Build a testing version of a
-				// generic BDBag/DOI workflow, keeping
-				// special bucket mappings in mind.
-				if( env.BRANCH_NAME == 'release' ){
-				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
-				}else if( env.BRANCH_NAME == 'master' ){
-				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+				// Build either a release or testing
+				// version of a generic BDBag/DOI
+				// workflow, keeping special bucket
+				// mappings in mind.
+				if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'master' ){
+
+				    if( env.BRANCH_NAME == 'release' ){
+					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
+				    }else if( env.BRANCH_NAME == 'master' ){
+					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+				    }
 
 				    // Make holey BDBag in fixed directory.
 				    sh 'mkdir go-release-reference'
