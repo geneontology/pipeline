@@ -30,6 +30,11 @@ pipeline {
 	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	// This variable should typically be 'TRUE', which will cause
+	// some additional basic checks to be made. There are some
+	// very exotic cases where these check may need to be skipped
+	// for a run, in that case this variable is set to 'FALSE'.
+	WE_ARE_BEING_SAFE_P = 'TRUE'
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '199441'
@@ -244,9 +249,12 @@ pipeline {
 		    // Now that the files are safely away onto skyhook
 		    // for debugging, test for the core dump.
 		    script {
-			def found_core_dump_p = fileExists './target/core_dump.owl'
-			if( found_core_dump_p ){
-			    error 'ROBOT core dump detected--bailing out.'
+			if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
+
+			    def found_core_dump_p = fileExists './target/core_dump.owl'
+			    if( found_core_dump_p ){
+				error 'ROBOT core dump detected--bailing out.'
+			    }
 			}
 		    }
 		}
