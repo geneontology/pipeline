@@ -30,10 +30,15 @@ pipeline {
 	TARGET_BUCKET = 'go-data-product-current'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://current.geneontology.org'
+	// This variable should typically be 'TRUE', which will cause
+	// some additional basic checks to be made. There are some
+	// very exotic cases where these check may need to be skipped
+	// for a run, in that case this variable is set to 'FALSE'.
+	WE_ARE_BEING_SAFE_P = 'TRUE'
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = '1205160'
-	ZENODO_ARCHIVE_CONCEPT = '1205167'
+	ZENODO_REFERENCE_CONCEPT = '1205159'
+	ZENODO_ARCHIVE_CONCEPT = '1205166'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
@@ -281,8 +286,21 @@ pipeline {
 			    }
 			}
 		    }
+		    // Make sure that we copy any files there,
+		    // including the core dump of produced.
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
+		    }
+		    // Now that the files are safely away onto skyhook
+		    // for debugging, test for the core dump.
+		    script {
+			if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
+
+			    def found_core_dump_p = fileExists './target/core_dump.owl'
+			    if( found_core_dump_p ){
+				error 'ROBOT core dump detected--bailing out.'
+			    }
+			}
 		    }
 		}
 	    }
