@@ -34,7 +34,7 @@ pipeline {
 	// some additional basic checks to be made. There are some
 	// very exotic cases where these check may need to be skipped
 	// for a run, in that case this variable is set to 'FALSE'.
-	WE_ARE_BEING_SAFE_P = 'FALSE'
+	WE_ARE_BEING_SAFE_P = 'TRUE'
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '199441'
