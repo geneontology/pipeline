@@ -663,7 +663,7 @@ pipeline {
 
 				    // Archive the holey bdbag for
 				    // this run.
-				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
+				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
 
 				    // To make a full BDBag, we first
 				    // need a copy of the data as
@@ -681,7 +681,7 @@ pipeline {
 				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/copyover .'
 
 				    // Archive it too.
-				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
+				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
 
 				    // Copy the referential metadata
 				    // files and DOIs to skyhook
