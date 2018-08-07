@@ -553,6 +553,101 @@ pipeline {
 		echo 'TODO: Sanity II'
 	    }
 	}
+	stage('Publish') {
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    steps {
+		// Experimental stanza to support mounting the sshfs
+		// using the "hidden" skyhook identity.
+		sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		}
+		// Copy the product to the right location. As well,
+		// archive.
+		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON')]) {
+		    // Ready...
+		    dir('./go-site') {
+			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+
+			// TODO: Special handling still needed w/o OSF.io?
+			// WARNING: Caveats and reasons as same
+			// pattern above. We need this as some clients
+			// are not standard and it turns out there are
+			// some subtle incompatibilities with urllib3
+			// and boto in some versions, so we will use a
+			// virtual env to paper that over.  See:
+			// https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
+			sh 'python3 -m venv mypyenv'
+			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+
+			    // Extra package for the indexer.
+			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
+
+			    // Correct for (possibly) bad boto3,
+			    // as mentioned above.
+			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
+
+			    // Extra package for the uploader.
+			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
+
+			    // Well, we need to do a couple of things here in
+			    // a structured way, so we'll go ahead and drop
+			    // into the scripting mode.
+			    script {
+
+				// Create working index off of
+				// skyhook. For "release", this will
+				// be "current". For "snapshot", this
+				// will be "snapshot".
+		 		sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
+
+				// Push into S3 buckets. Simple
+				// overall case: copy tree directly
+				// over. For "release", this will be
+				// "current". For "snapshot", this
+				// will be "snapshot".
+				sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
+
+				// Also, some runs have special maps
+				// to buckets...
+				if( env.BRANCH_NAME == 'release' ){
+
+				    // "release" -> dated path for
+				    // indexing (clobbering
+				    // "current"'s index.
+		 		    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
+				    // "release" -> dated path for S3.
+				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
+
+				    // Build the capper index.html...
+				    sh 'python3 ./scripts/bucket-indexer.py --credentials $S3_PUSH_JSON --bucket go-data-product-release --inject ./scripts/directory-index-template.html --prefix http://release.geneontology.org > top-level-index.html'
+				    // ...and push it up to S3.
+				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
+
+				}else if( env.BRANCH_NAME == 'snapshot' ){
+
+				    // Currently, the "daily"
+				    // debugging buckets are intended
+				    // to be RO directly in S3 for
+				    // debugging.
+				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DAY --number $BUILD_ID --pipeline $BRANCH_NAME'
+
+				}else if( env.BRANCH_NAME == 'master' ){
+				    // Pass.
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	    // WARNING: Extra safety as I expect this to sometimes fail.
+	    post {
+                always {
+		    // Bail on the remote filesystem.
+		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+		}
+	    }
+	}
 	stage('Archive') {
 	    when { anyOf { branch 'release'; branch 'master' } }
 	    steps {
@@ -663,101 +758,6 @@ pipeline {
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
 		    // Purge the copyover point.
 		    sh 'rm -r -f $WORKSPACE/copyover || true'
-		}
-	    }
-	}
-	stage('Publish') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
-	    steps {
-		// Experimental stanza to support mounting the sshfs
-		// using the "hidden" skyhook identity.
-		sh 'mkdir -p $WORKSPACE/mnt/ || true'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-		}
-		// Copy the product to the right location. As well,
-		// archive.
-		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON')]) {
-		    // Ready...
-		    dir('./go-site') {
-			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
-
-			// TODO: Special handling still needed w/o OSF.io?
-			// WARNING: Caveats and reasons as same
-			// pattern above. We need this as some clients
-			// are not standard and it turns out there are
-			// some subtle incompatibilities with urllib3
-			// and boto in some versions, so we will use a
-			// virtual env to paper that over.  See:
-			// https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
-			sh 'python3 -m venv mypyenv'
-			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
-
-			    // Extra package for the indexer.
-			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
-
-			    // Correct for (possibly) bad boto3,
-			    // as mentioned above.
-			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
-
-			    // Extra package for the uploader.
-			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
-
-			    // Well, we need to do a couple of things here in
-			    // a structured way, so we'll go ahead and drop
-			    // into the scripting mode.
-			    script {
-
-				// Create working index off of
-				// skyhook. For "release", this will
-				// be "current". For "snapshot", this
-				// will be "snapshot".
-		 		sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
-
-				// Push into S3 buckets. Simple
-				// overall case: copy tree directly
-				// over. For "release", this will be
-				// "current". For "snapshot", this
-				// will be "snapshot".
-				sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
-
-				// Also, some runs have special maps
-				// to buckets...
-				if( env.BRANCH_NAME == 'release' ){
-
-				    // "release" -> dated path for
-				    // indexing (clobbering
-				    // "current"'s index.
-		 		    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
-				    // "release" -> dated path for S3.
-				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
-
-				    // Build the capper index.html...
-				    sh 'python3 ./scripts/bucket-indexer.py --credentials $S3_PUSH_JSON --bucket go-data-product-release --inject ./scripts/directory-index-template.html --prefix http://release.geneontology.org > top-level-index.html'
-				    // ...and push it up to S3.
-				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
-
-				}else if( env.BRANCH_NAME == 'snapshot' ){
-
-				    // Currently, the "daily"
-				    // debugging buckets are intended
-				    // to be RO directly in S3 for
-				    // debugging.
-				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DAY --number $BUILD_ID --pipeline $BRANCH_NAME'
-
-				}else if( env.BRANCH_NAME == 'master' ){
-				    // Pass.
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	    // WARNING: Extra safety as I expect this to sometimes fail.
-	    post {
-                always {
-		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
 		}
 	    }
 	}
