@@ -666,6 +666,7 @@ pipeline {
 					// Zenodo archive upload.
 					echo "There has been a failure in the archive upload to Zenodo."
 					mail bcc: '', body: "There has been a failure in the archive upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo archive upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
+				    }
 				}
 			    }
 			}
