@@ -64,7 +64,7 @@ pipeline {
 	    "http://purl.obolibrary.org/obo/wbbt.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
-	    "http://skyhook.berkeleybop.org/snapshot/products/annotations/paint_other.gaf.gz"
+	    "http://skyhook.berkeleybop.org/snapshot/products/annotations/paint_other.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/aspgd.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/cgd.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/dictybase.gaf.gz",
