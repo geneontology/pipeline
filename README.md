@@ -13,7 +13,7 @@ pipeline.
     2.  discard if anything is open
     3.  start a new version
     4.  note new entity id (example as E123)
-    5.  delete current tarball
+    5.  delete current tarball in UI
     6.  get bucket for new entity
 	    (example token T890)
 		`curl -H "Accept: application/json" -H "Authorization: Bearer T890" "https://www.zenodo.org/api/deposit/depositions/E123"`
