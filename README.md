@@ -37,4 +37,4 @@ pipeline.
 	    NOTE that the index.html will not contain this!
     13. invalidate metadata/release-archive-doi.json
     14. celebrate, as this is close enough for the moment until fixing underlying issue
-    15. on to rolling out amigo/golr
+    15. on to deployment: `update-golr` is the only one needed
