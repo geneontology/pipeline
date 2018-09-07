@@ -35,4 +35,6 @@ pipeline.
 	    go-data-product-current/metadata
 	    go-data-product-release/2018-08-09/metadata
 	    NOTE that the index.html will not contain this!
-    13. celebrate, as this is close enough for the moment until fixing underlying issue
+    13. invalidate metadata/release-archive-doi.json
+    14. celebrate, as this is close enough for the moment until fixing underlying issue
+    15. on to rolling out amigo/golr
