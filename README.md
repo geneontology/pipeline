@@ -32,7 +32,7 @@ pipeline.
 		copy to local and update with E123
 		`mg /tmp/release-archive-doi.json`
     12. upload created file to:
-	    go-data-product-current
-	    go-data-product-release/2018-08-09
+	    go-data-product-current/metadata
+	    go-data-product-release/2018-08-09/metadata
 	    NOTE that the index.html will not contain this!
     13. celebrate, as this is close enough for the moment until fixing underlying issue
