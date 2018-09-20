@@ -415,7 +415,7 @@ pipeline {
 		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --date $START_DATE --inject ./scripts/downloads-page-template.html > ./downloads.html'
 
 			// Generate the static overall gorule report page
-			sh 'python ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html > gorule-report.html'
+			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html > gorule-report.html'
 
 		    // Generate the a users.yaml report for missing data
 		    // in the GO pattern.
