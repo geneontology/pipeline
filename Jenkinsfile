@@ -459,6 +459,9 @@ pipeline {
 		    // the metadata.
 		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --date $START_DATE --inject ./scripts/downloads-page-template.html > ./downloads.html'
 
+			// Generate the static overall gorule report page
+			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html > gorule-report.html'
+
 		    // Generate the a users.yaml report for missing data
 		    // in the GO pattern.
 		    sh 'python3 ./scripts/sanity-check-users-and-groups.py --users metadata/users.yaml --groups metadata/groups.yaml > ./users-and-groups-report.txt'
@@ -499,6 +502,8 @@ pipeline {
 
 			// Copy generated pages over to page output.
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./downloads.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/pages'
+			// Copy gorule report page to the reports directory
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./gorule-report.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 		    }
 
 		    // Produce the slightly improved combined reports
