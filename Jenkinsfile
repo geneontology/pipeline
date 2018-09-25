@@ -40,6 +40,8 @@ pipeline {
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '199441'
 	ZENODO_ARCHIVE_CONCEPT = '212052'
+	// The current version of upstream PANTHER that we're using.
+	PANTHER_VERSION = '13.1'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
@@ -126,6 +128,7 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/pages || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/solr || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/panther || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
@@ -405,6 +408,13 @@ pipeline {
 		// Prepare a working directory based around go-site.
 		dir('./go-site') {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+
+		    // Generate interesting PANTHER information
+		    // (.arbre files) based on upstream source.
+		    sh 'wget -N http://data.pantherdb.org/PANTHER$PANTHER_VERSION/globals/tree_files.tar.gz'
+		    sh 'wget -N http://data.pantherdb.org/PANTHER$PANTHER_VERSION/globals/names.tab'
+		    sh 'tar -zxvf tree_files.tar.gz'
+		    sh 'python3 ./scripts/prepare-panther-arbre-directory.py -v --names names.tab --trees tree_files --output $WORKSPACE/mnt/$BRANCH_NAME/products/panther/arbre'
 
 		    // Generate combined annotation report for driving
 		    // annotation download pages and drop it into
