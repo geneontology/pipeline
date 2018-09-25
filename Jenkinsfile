@@ -63,6 +63,9 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
 	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz"
 	].join(" ")
+	GOLR_INPUT_PANTHER_TREES = [
+	    "http://skyhook.berkeleybop.org/master/products/panther/arbre"
+	].join(" ")
     }
     options{
 	timestamps()
