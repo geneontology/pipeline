@@ -62,7 +62,7 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
-	    "http://skyhook.berkeleybop.org/master/products/panther/arbre"
+	    "http://skyhook.berkeleybop.org/master/products/panther/arbre.tgz"
 	].join(" ")
     }
     options{
@@ -544,7 +544,7 @@ pipeline {
 	stage('Produce derivatives') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:e9bfef53d1783b1d55da6896918aea5960b28615_2018-05-25T123817'
+		    image 'geneontology/golr-autoindex:18e7e72c379f0c44d835f37ff69e0aad39405bad_2018-09-26T145414'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
