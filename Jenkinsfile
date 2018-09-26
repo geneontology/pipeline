@@ -415,7 +415,9 @@ pipeline {
 		    sh 'wget -N http://data.pantherdb.org/current/globals/tree_files.tar.gz'
 		    sh 'wget -N http://data.pantherdb.org/current/globals/names.tab'
 		    sh 'tar -zxvf tree_files.tar.gz'
-		    sh 'python3 ./scripts/prepare-panther-arbre-directory.py -v --names names.tab --trees tree_files --output $WORKSPACE/mnt/$BRANCH_NAME/products/panther/arbre'
+		    sh 'python3 ./scripts/prepare-panther-arbre-directory.py -v --names names.tab --trees tree_files --output arbre'
+		    sh 'tar --use-compress-program=pigz -cvf arbre.tgz -C arbre .'
+		    sh 'mv arbre.tgz $WORKSPACE/mnt/$BRANCH_NAME/products/panther'
 
 		    // Generate combined annotation report for driving
 		    // annotation download pages and drop it into
