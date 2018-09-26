@@ -54,7 +54,7 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
-	    "http://skyhook.berkeleybop.org/master/products/annotations/paint_other.gaf.gz",
+	    //"http://skyhook.berkeleybop.org/master/products/annotations/paint_other.gaf.gz",
 	    "http://skyhook.berkeleybop.org/master/annotations/aspgd.gaf.gz",
 	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken.gaf.gz",
 	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken_complex.gaf.gz",
