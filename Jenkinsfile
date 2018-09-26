@@ -40,8 +40,6 @@ pipeline {
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '199441'
 	ZENODO_ARCHIVE_CONCEPT = '212052'
-	// The current version of upstream PANTHER that we're using.
-	PANTHER_VERSION = '13.1'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
@@ -414,8 +412,8 @@ pipeline {
 
 		    // Generate interesting PANTHER information
 		    // (.arbre files) based on upstream source.
-		    sh 'wget -N http://data.pantherdb.org/PANTHER$PANTHER_VERSION/globals/tree_files.tar.gz'
-		    sh 'wget -N http://data.pantherdb.org/PANTHER$PANTHER_VERSION/globals/names.tab'
+		    sh 'wget -N http://data.pantherdb.org/current/globals/tree_files.tar.gz'
+		    sh 'wget -N http://data.pantherdb.org/current/globals/names.tab'
 		    sh 'tar -zxvf tree_files.tar.gz'
 		    sh 'python3 ./scripts/prepare-panther-arbre-directory.py -v --names names.tab --trees tree_files --output $WORKSPACE/mnt/$BRANCH_NAME/products/panther/arbre'
 
