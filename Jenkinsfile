@@ -106,6 +106,9 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/wb.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/zfin.gaf.gz"
 	].join(" ")
+	GOLR_INPUT_PANTHER_TREES = [
+	    "http://skyhook.berkeleybop.org/snapshot/products/panther/arbre.tgz"
+	].join(" ")
     }
     options{
 	timestamps()
@@ -171,6 +174,7 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/pages || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/solr || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/panther || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
@@ -438,6 +442,7 @@ pipeline {
 		// earlier).
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/reports/* $WORKSPACE/copyover/'
+		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/paint_* $WORKSPACE/copyover/'
 
 		// Make all software products available in bin/.
 		sh 'mkdir -p $WORKSPACE/bin/ || true'
@@ -450,6 +455,15 @@ pipeline {
 		dir('./go-site') {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
+		    // Generate interesting PANTHER information
+		    // (.arbre files) based on upstream source.
+		    sh 'wget -N http://data.pantherdb.org/current/globals/tree_files.tar.gz'
+		    sh 'wget -N http://data.pantherdb.org/current/globals/names.tab'
+		    sh 'tar -zxvf tree_files.tar.gz'
+		    sh 'python3 ./scripts/prepare-panther-arbre-directory.py -v --names names.tab --trees tree_files --output arbre'
+		    sh 'tar --use-compress-program=pigz -cvf arbre.tgz -C arbre .'
+		    sh 'mv arbre.tgz $WORKSPACE/mnt/$BRANCH_NAME/products/panther'
+
 		    // Generate combined annotation report for driving
 		    // annotation download pages and drop it into
 		    // reports/ for copyover.
@@ -460,7 +474,7 @@ pipeline {
 		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --date $START_DATE --inject ./scripts/downloads-page-template.html > ./downloads.html'
 
 			// Generate the static overall gorule report page
-			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html > gorule-report.html'
+			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
 
 		    // Generate the a users.yaml report for missing data
 		    // in the GO pattern.
@@ -575,7 +589,7 @@ pipeline {
 	stage('Produce derivatives') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:e9bfef53d1783b1d55da6896918aea5960b28615_2018-05-25T123817'
+		    image 'geneontology/golr-autoindex:18e7e72c379f0c44d835f37ff69e0aad39405bad_2018-09-26T145414'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
