@@ -410,40 +410,42 @@ pipeline {
 		dir('./go-site') {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
+		    // Generate interesting PANTHER information
+		    // (.arbre files) based on upstream source.
+		    sh 'wget -N http://data.pantherdb.org/current/globals/tree_files.tar.gz'
+		    sh 'wget -N http://data.pantherdb.org/current/globals/names.tab'
+		    sh 'tar -zxvf tree_files.tar.gz'
+		    sh 'python3 ./scripts/prepare-panther-arbre-directory.py -v --names names.tab --trees tree_files --output arbre'
+		    sh 'tar --use-compress-program=pigz -cvf arbre.tgz -C arbre .'
+		    sh 'mv arbre.tgz $WORKSPACE/mnt/$BRANCH_NAME/products/panther'
+
+		    // Generate combined annotation report for driving
+		    // annotation download pages and drop it into
+		    // reports/ for copyover.
+		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./combined.report.json'
+
+		    // Generate the static download page directly from
+		    // the metadata.
+		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --date $START_DATE --inject ./scripts/downloads-page-template.html > ./downloads.html'
+
+		    // Generate the a users.yaml report for missing
+		    // data in the GO pattern.
+		    sh 'python3 ./scripts/sanity-check-users-and-groups.py --users metadata/users.yaml --groups metadata/groups.yaml > ./users-and-groups-report.txt'
 		    // WARNING: Caveats and reasons as above. Started
 		    // as be need* to process frontmatter using our
 		    // in-house "yamldown" parser.
 		    sh 'python3 -m venv mypyenv'
 		    withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
-			// Extra package for the indexer.
+			// "External" packages required to run this
+			// single, isolated, script.
+			sh 'python3 ./mypyenv/bin/pip3 install click'
+			sh 'python3 ./mypyenv/bin/pip3 install pystache'
 			sh 'python3 ./mypyenv/bin/pip3 install yamldown'
-
-			// Generate interesting PANTHER information
-			// (.arbre files) based on upstream source.
-			sh 'wget -N http://data.pantherdb.org/current/globals/tree_files.tar.gz'
-			sh 'wget -N http://data.pantherdb.org/current/globals/names.tab'
-			sh 'tar -zxvf tree_files.tar.gz'
-			sh 'python3 ./scripts/prepare-panther-arbre-directory.py -v --names names.tab --trees tree_files --output arbre'
-			sh 'tar --use-compress-program=pigz -cvf arbre.tgz -C arbre .'
-			sh 'mv arbre.tgz $WORKSPACE/mnt/$BRANCH_NAME/products/panther'
-
-			// Generate combined annotation report for
-			// driving annotation download pages and drop
-			// it into reports/ for copyover.
-			sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./combined.report.json'
-
-			// Generate the static download page directly
-			// from the metadata.
-			sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --date $START_DATE --inject ./scripts/downloads-page-template.html > ./downloads.html'
 
 			// Generate the static overall gorule report
 			// page
 			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
-
-			// Generate the a users.yaml report for
-			// missing data in the GO pattern.
-			sh 'python3 ./scripts/sanity-check-users-and-groups.py --users metadata/users.yaml --groups metadata/groups.yaml > ./users-and-groups-report.txt'
 		    }
 
 		    // Generate the TTL from users.yaml and
