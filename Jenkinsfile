@@ -448,6 +448,12 @@ pipeline {
 			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
 		    }
 
+		    // Get the date into the metadata, in a similar format
+		    // to what is produced by the Zenodo sections.
+		    sh 'echo \'{\' > ./metadata/release-date.json'
+		    sh 'echo \'    "date": "$START_DATE"\' >> ./metadata/release-date.json'
+		    sh 'echo \'}\' >> ./metadata/release-date.json'
+
 		    // Generate the TTL from users.yaml and
 		    // groups.yaml.  This is meant to be an unwinding
 		    // of the somewhat too hard-coded
