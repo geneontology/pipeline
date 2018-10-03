@@ -473,12 +473,25 @@ pipeline {
 		    // the metadata.
 		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --date $START_DATE --inject ./scripts/downloads-page-template.html > ./downloads.html'
 
-			// Generate the static overall gorule report page
-			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
-
-		    // Generate the a users.yaml report for missing data
-		    // in the GO pattern.
+		    // Generate the a users.yaml report for missing
+		    // data in the GO pattern.
 		    sh 'python3 ./scripts/sanity-check-users-and-groups.py --users metadata/users.yaml --groups metadata/groups.yaml > ./users-and-groups-report.txt'
+		    // WARNING: Caveats and reasons as above. Started
+		    // as be need* to process frontmatter using our
+		    // in-house "yamldown" parser.
+		    sh 'python3 -m venv mypyenv'
+		    withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+
+			// "External" packages required to run this
+			// single, isolated, script.
+			sh 'python3 ./mypyenv/bin/pip3 install click'
+			sh 'python3 ./mypyenv/bin/pip3 install pystache'
+			sh 'python3 ./mypyenv/bin/pip3 install yamldown'
+
+			// Generate the static overall gorule report
+			// page
+			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
+		    }
 
 		    // Generate the TTL from users.yaml and
 		    // groups.yaml.  This is meant to be an unwinding
@@ -589,7 +602,7 @@ pipeline {
 	stage('Produce derivatives') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:18e7e72c379f0c44d835f37ff69e0aad39405bad_2018-09-26T145414'
+		    image 'geneontology/golr-autoindex:3f2da5ce495b53bc01e23619ee5ddb1cb7637130_2018-10-02T154913'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
