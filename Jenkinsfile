@@ -493,6 +493,12 @@ pipeline {
 			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
 		    }
 
+		    // Get the date into the metadata, in a similar format
+		    // to what is produced by the Zenodo sections.
+		    sh 'echo \'{\' > ./metadata/release-date.json'
+		    sh 'echo \'    "date": "$START_DATE"\' >> ./metadata/release-date.json'
+		    sh 'echo \'}\' >> ./metadata/release-date.json'
+
 		    // Generate the TTL from users.yaml and
 		    // groups.yaml.  This is meant to be an unwinding
 		    // of the somewhat too hard-coded
@@ -602,7 +608,7 @@ pipeline {
 	stage('Produce derivatives') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:3f2da5ce495b53bc01e23619ee5ddb1cb7637130_2018-10-02T154913'
+		    image 'geneontology/golr-autoindex:da64c3224c4f7dbf495977f77fda23c0e84c3b90_2018-10-04T122653'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
