@@ -451,7 +451,9 @@ pipeline {
 		    // Get the date into the metadata, in a similar format
 		    // to what is produced by the Zenodo sections.
 		    sh 'echo \'{\' > ./metadata/release-date.json'
-		    sh 'echo \'    "date": "$START_DATE"\' >> ./metadata/release-date.json'
+		    sh 'echo -n \'    "date": "\' >> ./metadata/release-date.json'
+		    sh 'echo -n "$START_DATE" >> ./metadata/release-date.json'
+		    sh 'echo \'"\' >> ./metadata/release-date.json'
 		    sh 'echo \'}\' >> ./metadata/release-date.json'
 
 		    // Generate the TTL from users.yaml and
