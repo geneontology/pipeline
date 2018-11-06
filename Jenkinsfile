@@ -647,6 +647,9 @@ pipeline {
 			    // Need for large uploads in requests.
 			    sh 'python3 ./mypyenv/bin/pip3 install requests-toolbelt'
 
+			    // Need as replacement for awful requests lib.
+			    sh 'python3 ./mypyenv/bin/pip3 install pycurl'
+
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
 			    // into the scripting mode.
