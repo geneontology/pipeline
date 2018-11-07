@@ -181,8 +181,19 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
 			// Tag the top to let the world know I was at least
 			// here.
-			sh 'echo "TODO: Note software versions." > $WORKSPACE/mnt/$BRANCH_NAME/notes.txt'
-			sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/notes.txt'
+			sh 'echo "Runtime summary." > $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+			sh 'echo "" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+			sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+			sh 'echo "" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+			sh 'echo "Release notes: https://github.com/geneontology/go-site/tree/master/releases" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+			sh 'echo "Branch: $BRANCH_NAME" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+			sh 'echo "Start day: $START_DAY" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+			sh 'echo "Start date: $START_DATE" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+
+			sh 'echo "Official release date: metadata/release-date.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+			sh 'echo "Official Zenodo archive DOI: metadata/release-archive-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+			sh 'echo "Official Zenodo archive DOI: metadata/release-reference-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+			sh 'echo "TODO: Note software versions." >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
 			// TODO: This should be wrapped in exception
 			// handling. In fact, this whole thing should be.
 			sh 'fusermount -u $WORKSPACE/mnt/ || true'
@@ -680,6 +691,9 @@ pipeline {
 
 			    // Need for large uploads in requests.
 			    sh 'python3 ./mypyenv/bin/pip3 install requests-toolbelt'
+
+			    // Need as replacement for awful requests lib.
+			    sh 'python3 ./mypyenv/bin/pip3 install pycurl'
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
