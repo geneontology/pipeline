@@ -471,12 +471,14 @@ pipeline {
 		    sh 'echo \'"\' >> ./metadata/release-date.json'
 		    sh 'echo \'}\' >> ./metadata/release-date.json'
 
-		    // Generate the TTL from users.yaml and
-		    // groups.yaml.  This is meant to be an unwinding
-		    // of the somewhat too hard-coded
-		    // go-site/scripts/yaml2turtle.sh from Jim.
+		    // Some scripts that require NPM.
 		    withEnv(['PATH+EXTRA=../bin:node_modules/.bin']){
 			sh 'npm install'
+
+			// Generate the TTL from users.yaml and
+			// groups.yaml.  This is meant to be an
+			// unwinding of the somewhat too hard-coded
+			// go-site/scripts/yaml2turtle.sh from Jim.
 			//sh 'GRPTEMP=`mktemp --tmpdir=. --suffix=.jsonld`'
 			sh 'echo \'{"@context": \' > ./metadata/groups.tmp.jsonld'
 			sh 'yaml2json ./metadata/users-groups-context.yaml >> ./metadata/groups.tmp.jsonld'
@@ -491,6 +493,12 @@ pipeline {
 			sh 'yaml2json metadata/users.yaml >> ./metadata/users.tmp.jsonld'
 			sh 'echo \'}\' >> ./metadata/users.tmp.jsonld'
 			sh 'robot convert -i ./metadata/users.tmp.jsonld -o ./metadata/users.ttl'
+
+			// Convert db-xrefs into the legacy xrefs
+			// formats.
+			sh 'yaml2json -p ./metadata/db-xrefs.yaml > ./metadata/db-xrefs.json'
+			sh 'node ./scripts/db-xrefs-yaml2legacy.js -i ./metadata/db-xrefs.yaml > ./metadata/db-xrefs.legacy'
+			sh 'cp ./metadata/db-xrefs.legacy ./metadata/GO.xrf_abbs'
 		    }
 
 		    // Carry everything we want to save over to
