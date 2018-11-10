@@ -180,6 +180,17 @@ pipeline {
 			    }
 			}
 		    },
+		    "Ready minerva": {
+			dir('./minerva') {
+			    // Remember that git lays out into CWD.
+			    git 'https://github.com/geneontology/minerva.git'
+			    sh './build-cli.sh'
+			    // Attempt to rsync produced into bin/.
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" minerva-cli/bin/minerva-cli.* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			    }
+			}
+		    },
 		    "Ready robot": {
 		    	// Legacy: build 'robot-build'
 		    	dir('./robot') {
@@ -282,6 +293,39 @@ pipeline {
 	}
 	stage('Produce GAFs, TTLs, and journal (mega-step)') {
 	    steps {
+
+		// May be parallelized in the future, but may need to
+		// serve as input into into mega step.
+		// Currently pinned to master.
+		script {
+		    if( env.BRANCH_NAME == 'master' ){
+
+			dir('./noctua-models') {
+			    git url: 'https://github.com/geneontology/noctua-models.git'
+
+			    // Make all software products available in bin/
+			    // (and lib/).
+			    sh 'mkdir -p bin/'
+			    sh 'mkdir -p lib/'
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+				// WARNING/BUG: needed for blazegraph-runner
+				// to run at this point.
+            			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+			    }
+			    sh 'chmod +x bin/*'
+
+			    // Compile models.
+			    sh 'mkdir legacy/'
+			    withEnv(['MINERVA_CLI_MEMORY=128G']){
+				sh './bin/minerva-cli.sh http://purl.obolibrary.org/obo/go/extensions/go-lego.owl --reasoner elk --lego-to-gpad --group-by-model-organisms -i models --gpad-output legacy/gpad --gaf-output legacy/gaf'
+			    }
+
+			    // TODO: rename and move to skyhook.
+			}
+		    }
+		}
+
 		// Legacy: build 'gaf-production'
 		dir('./go-site') {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
