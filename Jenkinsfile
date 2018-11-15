@@ -323,7 +323,7 @@ pipeline {
 			    sh 'mkdir -p legacy/gpad'
 			    withEnv(['MINERVA_CLI_MEMORY=128G']){
 				// "Import" models.
-				sh './bin/minerva-cli.sh --import-owl-models -f models/models -j blazegraph.jnl'
+				sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
 				// Convert GO-CAM to GPAD.
 				sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i blazegraph.jnl --gpad-output legacy/gpad'
 			    }
