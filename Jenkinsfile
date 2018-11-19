@@ -329,9 +329,12 @@ pipeline {
 			    }
 
 			    // Collation.
-			    sh 'perl ./util/collate-gpads.pl legacy/gpad/*gpad'
+			    sh 'perl ./util/collate-gpads.pl legacy/gpad/*.gpad'
 
-			    // TODO: rename and move to skyhook.
+			    // Rename, compress, and move to skyhook.
+			    sh 'mcp "legacy/*.gpad" "legacy/noctua_#1.gpad"'
+			    sh 'gzip -vk legacy/noctua_*.gpad'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
 			}
 		    }
 		}
