@@ -334,7 +334,9 @@ pipeline {
 			    // Rename, compress, and move to skyhook.
 			    sh 'mcp "legacy/*.gpad" "legacy/noctua_#1.gpad"'
 			    sh 'gzip -vk legacy/noctua_*.gpad'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+			    }
 			}
 		    }
 		}
