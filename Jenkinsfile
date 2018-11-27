@@ -1019,7 +1019,7 @@ pipeline {
 					}else if( env.BRANCH_NAME == 'master' ){
 					    echo 'Push out to experimental AmiGO'
 					    retry(3){
-						sh 'ansible-playbook ./update-golr-w-snap.yaml --inventory=hosts.amigo --private-key="$DEPLOY_REMOTE_IDENTITY" -e target_host=amigo-golr-exp -e target_user=ubuntu'
+						sh 'ansible-playbook ./update-golr-w-exp.yaml --inventory=hosts.amigo --private-key="$DEPLOY_REMOTE_IDENTITY" -e target_host=amigo-golr-exp -e target_user=ubuntu'
 					    }
 					}
 				    }
