@@ -38,8 +38,8 @@ pipeline {
 	WE_ARE_BEING_SAFE_P = 'TRUE'
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = '199441'
-	ZENODO_ARCHIVE_CONCEPT = '212052'
+	ZENODO_REFERENCE_CONCEPT = '252781'
+	ZENODO_ARCHIVE_CONCEPT = '252779'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
@@ -674,7 +674,7 @@ pipeline {
 	    }
 	}
 	stage('Archive') {
-	    when { anyOf { branch 'release'; branch 'master' } }
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
 		// Experimental stanza to support mounting the sshfs
 		// using the "hidden" skyhook identity.
@@ -727,11 +727,11 @@ pipeline {
 				// version of a generic BDBag/DOI
 				// workflow, keeping special bucket
 				// mappings in mind.
-				if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'master' ){
+				if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'master' ){
 
 				    if( env.BRANCH_NAME == 'release' ){
 					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
-				    }else if( env.BRANCH_NAME == 'master' ){
+				    }else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'master' ){
 					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
 				    }
 
