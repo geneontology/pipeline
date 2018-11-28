@@ -684,7 +684,7 @@ pipeline {
 		}
 		// Copy the product to the right location. As well,
 		// archive.
-		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'zenodo_go_sandbox_token', variable: 'ZENODO_TOKEN')]) {
+		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'zenodo_go_production_token', variable: 'ZENODO_PRODUCTION_TOKEN'), string(credentialsId: 'zenodo_go_sandbox_token', variable: 'ZENODO_SANDBOX_TOKEN')]) {
 		    // Ready...
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
@@ -727,69 +727,71 @@ pipeline {
 				// version of a generic BDBag/DOI
 				// workflow, keeping special bucket
 				// mappings in mind.
-				if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'master' ){
+				if( env.BRANCH_NAME == 'release' ){
+				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
+				}else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'master' ){
+				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+				}
 
+				// Make holey BDBag in fixed directory.
+				sh 'mkdir go-release-reference'
+				sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
+
+				// To make a full BDBag, we first need
+				// a copy of the data as BDBags change
+				// directory layout (e.g. data/).
+				sh 'mkdir -p $WORKSPACE/copyover/ || true'
+				sh 'cp -r $WORKSPACE/mnt/$BRANCH_NAME/* $WORKSPACE/copyover/'
+				// Make the BDBag in the copyover/
+				// (unarchived, as we want to leave it
+				// to pigz).
+				sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/copyover'
+				// Tarball the whole directory for
+				// "deep" archive (handmade BDBag).
+				sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/copyover .'
+
+				// We have the archives, now let's try
+				// and get them into position--this is
+				// fail-y, so we are going to try and
+				// buffer failure here for the time
+				// being until we work it all out.
+				try {
+				    // Archive the holey bdbag for
+				    // this run.
 				    if( env.BRANCH_NAME == 'release' ){
-					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
+					sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_PRODUCTION_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
 				    }else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'master' ){
-					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
 				    }
-
-				    // Make holey BDBag in fixed directory.
-				    sh 'mkdir go-release-reference'
-				    sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
-
-				    // To make a full BDBag, we first
-				    // need a copy of the data as
-				    // BDBags change directory layout
-				    // (e.g. data/).
-				    sh 'mkdir -p $WORKSPACE/copyover/ || true'
-				    sh 'cp -r $WORKSPACE/mnt/$BRANCH_NAME/* $WORKSPACE/copyover/'
-				    // Make the BDBag in the copyover/
-				    // (unarchived, as we want to
-				    // leave it to pigz).
-				    sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/copyover'
-				    // Tarball the whole directory for
-				    // "deep" archive (handmade BDBag).
-				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/copyover .'
-
-				    // We have the archives, now let's
-				    // try and get them into
-				    // position--this is fail-y, so we
-				    // are going to try and buffer
-				    // failure here for the time being
-				    // until we work it all out.
-				    try {
-					// Archive the holey bdbag for
-					// this run.
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
-					// Copy the referential metadata
-					// files and DOI to skyhook
-					// metadata/ for easy inspection.
-					sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
-					sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
-					sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
-				    } catch (exception) {
-					// Something went bad with the
-					// Zenodo reference upload.
-					echo "There has been a failure in the reference upload to Zenodo."
-					mail bcc: '', body: "There has been a failure in the reference upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo reference upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
+				    // Copy the referential metadata
+				    // files and DOI to skyhook
+				    // metadata/ for easy inspection.
+				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
+				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
+				    sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
+				} catch (exception) {
+				    // Something went bad with the
+				    // Zenodo reference upload.
+				    echo "There has been a failure in the reference upload to Zenodo."
+				    mail bcc: '', body: "There has been a failure in the reference upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo reference upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
+				}
+				try {
+				    // Archive full archive too.
+				    if( env.BRANCH_NAME == 'release' ){
+					sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_PRODUCTION_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
+				    }else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'master' ){
+					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
 				    }
-				    try {
-					// Archive full archive too.
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
-					// Get the DOI to skyhook for
-					// publishing, but don't
-					// bother with the full
-					// thing--too much space and
-					// already in Zenodo.
-					sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
-				    } catch (exception) {
-					// Something went bad with the
-					// Zenodo archive upload.
-					echo "There has been a failure in the archive upload to Zenodo."
-					mail bcc: '', body: "There has been a failure in the archive upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo archive upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
-				    }
+				    // Get the DOI to skyhook for
+				    // publishing, but don't bother
+				    // with the full thing--too much
+				    // space and already in Zenodo.
+				    sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
+				} catch (exception) {
+				    // Something went bad with the
+				    // Zenodo archive upload.
+				    echo "There has been a failure in the archive upload to Zenodo."
+				    mail bcc: '', body: "There has been a failure in the archive upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo archive upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
 				}
 			    }
 			}
