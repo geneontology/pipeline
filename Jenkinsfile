@@ -1058,14 +1058,39 @@ pipeline {
 				    ///
 				    script {
 					if( env.BRANCH_NAME == 'release' ){
-					    echo 'No current public push on release.'
+
+					    echo 'No current public push on release to Blazegraph.'
+					    // retry(3){
+					    // 	sh 'ansible-playbook update-endpoint.yaml --inventory=hosts.local-rdf-endpoint --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_user=bbop --extra-vars="pipeline=current build=production endpoint=production"'
+					    // }
+
+					    echo 'No current public push on release to GOlr.'
+					    // retry(3){
+					    // 	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-aux -e target_user=bbop'
+					    // }
+					    // retry(3){
+					    // 	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-production -e target_user=bbop'
+					    // }
+
 					}else if( env.BRANCH_NAME == 'snapshot' ){
-					    echo 'No current public push on snapshot.'
-					}else if( env.BRANCH_NAME == 'master' ){
-					    echo 'Push out to experimental AmiGO'
+
+					    echo 'Push snapshot out internal Blazegraph'
+					    retry(3){
+						sh 'ansible-playbook update-endpoint.yaml --inventory=hosts.local-rdf-endpoint --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_user=bbop --extra-vars="pipeline=current build=internal endpoint=internal"'
+					    }
+
+					    echo 'Push snapshot out to experimental AmiGO'
 					    retry(3){
 						sh 'ansible-playbook ./update-golr-w-snap.yaml --inventory=hosts.amigo --private-key="$DEPLOY_REMOTE_IDENTITY" -e target_host=amigo-golr-exp -e target_user=ubuntu'
 					    }
+
+					}else if( env.BRANCH_NAME == 'master' ){
+
+					    echo 'Push master out to experimental AmiGO'
+					    retry(3){
+						sh 'ansible-playbook ./update-golr-w-exp.yaml --inventory=hosts.amigo --private-key="$DEPLOY_REMOTE_IDENTITY" -e target_host=amigo-golr-exp -e target_user=ubuntu'
+					    }
+
 					}
 				    }
 				}
