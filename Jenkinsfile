@@ -805,7 +805,9 @@ pipeline {
 				    // this run.
 				    if( env.BRANCH_NAME == 'release' ){
 					sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_PRODUCTION_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
-				    }else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'master' ){
+				    }else if( env.BRANCH_NAME == 'snapshot' ){
+					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
+				    }else if( env.BRANCH_NAME == 'master' ){
 					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
 				    }
 				    // Copy the referential metadata
@@ -824,7 +826,16 @@ pipeline {
 				    // Archive full archive too.
 				    if( env.BRANCH_NAME == 'release' ){
 					sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_PRODUCTION_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
-				    }else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'master' ){
+				    }else if( env.BRANCH_NAME == 'snapshot' ){
+					// WARNING: to save Zenodo 1TB
+					// a month, for snapshot,
+					// we'll lie about the DOI
+					// that we get (not a big lie
+					// as they don't resolve on
+					// sandbox anyways).
+					//sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
+					sh 'cp ./release-reference-doi.json ./release-archive-doi.json'
+				    }else if( env.BRANCH_NAME == 'master' ){
 					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
 				    }
 				    // Get the DOI to skyhook for
