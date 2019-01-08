@@ -53,7 +53,7 @@ pipeline {
 	].join(" ")
 	// GOlr load profile.
 	GOLR_SOLR_MEMORY = "128G"
-	GOLR_LOADER_MEMORY = "192G"
+	GOLR_LOADER_MEMORY = "256G"
 	GOLR_INPUT_ONTOLOGIES = [
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-gaf.owl",
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/gorel.owl",
@@ -689,7 +689,7 @@ pipeline {
 	stage('Produce derivatives') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:fa51ecbb6b392628a99c22273064c4036d1b6e18_2018-12-24T192811'
+		    image 'geneontology/golr-autoindex:fa51ecbb6b392628a99c22273064c4036d1b6e18_2019-01-07T175050'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
