@@ -115,8 +115,9 @@ pipeline {
 	].join(" ")
 	// Groups to run and tests to avoid running during the current
 	// mega-make.
-	//GROUPS=""
-	//TEST_EXCLUDES=""
+	//RESOURCE_GROUPS=""
+	//DATASET_EXCLUDES=""
+	//GOA_UNIPROT_ALL_URL=""
     }
     options{
 	timestamps()
