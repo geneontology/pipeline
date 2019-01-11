@@ -115,8 +115,9 @@ pipeline {
 	].join(" ")
 	// Groups to run and tests to avoid running during the current
 	// mega-make.
-	//GROUPS=""
-	//TEST_EXCLUDES=""
+	//RESOURCE_GROUPS=""
+	//DATASET_EXCLUDES=""
+	//GOA_UNIPROT_ALL_URL=""
     }
     options{
 	timestamps()
@@ -689,7 +690,7 @@ pipeline {
 	stage('Produce derivatives') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:da64c3224c4f7dbf495977f77fda23c0e84c3b90_2018-10-04T122653'
+		    image 'geneontology/golr-autoindex:b1007d0cfd356f707086a910342ba49b9511ba51_2019-01-09T143943'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
