@@ -28,9 +28,9 @@ pipeline {
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,suzia@stanford.edu'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-experimental'
+	TARGET_BUCKET = 'unknown'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	TARGET_INDEXER_PREFIX = 'http://unknown.geneontology.io'
 	// This variable should typically be 'TRUE', which will cause
 	// some additional basic checks to be made. There are some
 	// very exotic cases where these check may need to be skipped
@@ -247,50 +247,49 @@ pipeline {
 	// See https://github.com/geneontology/go-ontology for details
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
-	// a a release, and deploys to S3
+	// a release, and deploys to S3.
 	stage('Produce ontology') {
+            agent {
+                docker {
+		    image 'obolibrary/odkfull:v1.1.7'
+		    // Reset Jenkins Docker agent default to original
+		    // root.
+		    args '-u root:root'
+		}
+            }
 	    steps {
-		// Legacy: build 'ontology-production'
-		dir('./go-ontology') {
-		    git 'https://github.com/geneontology/go-ontology.git'
-		    // Default namespace
-		    sh 'OBO=http://purl.obolibrary.org/obo'
+		// Create a relative working directory and setup our
+		// data environment.
+		sh 'mkdir -p /tmp/go-ontology/'
+		sh 'cd /tmp/go-ontology/'
+		git 'https://github.com/geneontology/go-ontology.git'
 
-		    // Make all software products available in bin/.
-		    sh 'mkdir -p bin/'
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-		    }
-		    sh 'chmod +x bin/*'
+		// Default namespace.
+		sh 'OBO=http://purl.obolibrary.org/obo'
 
-		    // Make ontology products and get them into
-		    // skyhook.
-		    dir('./src/ontology') {
-			retry(3){
-			    // Add owltools to path, required for scripts.
-			    // Note weird pipeline syntax to change the
-			    // PATH var--O was unable to the "correct"
-			    // `pwd` thing, so here we are.
-			    withEnv(['PATH+EXTRA=../../bin']){
-				sh '$MAKECMD all'
-				sh '$MAKECMD prepare_release'
-			    }
-			}
-		    }
-		    // Make sure that we copy any files there,
-		    // including the core dump of produced.
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
-		    }
-		    // Now that the files are safely away onto skyhook
-		    // for debugging, test for the core dump.
-		    script {
-			if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
+		sh 'cd /tmp/go-ontology/src/ontology'
+		retry(3){
+		    sh '$MAKECMD all'
+		}
+		retry(3){
+		    sh '$MAKECMD prepare_release'
+		}
 
-			    def found_core_dump_p = fileExists './target/core_dump.owl'
-			    if( found_core_dump_p ){
-				error 'ROBOT core dump detected--bailing out.'
-			    }
+		// Make sure that we copy any files there,
+		// including the core dump of produced.
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/go-ontology/target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/go-ontology/target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
+		}
+
+		// Now that the files are safely away onto skyhook for
+		// debugging, test for the core dump.
+		script {
+		    if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
+
+			def found_core_dump_p = fileExists '/tmp/go-ontology/target/core_dump.owl'
+			if( found_core_dump_p ){
+			    error 'ROBOT core dump detected--bailing out.'
 			}
 		    }
 		}
