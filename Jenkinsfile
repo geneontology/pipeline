@@ -276,13 +276,13 @@ pipeline {
 		    },
 		    "Ready blazegraph-runner": {
     			dir('./blazegraph-runner') {
-    	                    sh 'wget -N https://github.com/balhoff/blazegraph-runner/releases/download/v1.3/blazegraph-runner-1.3.tgz'
-    	                    sh 'tar -xvf blazegraph-runner-1.3.tgz'
+    	                    sh 'wget -N https://github.com/balhoff/blazegraph-runner/releases/download/v1.4/blazegraph-runner-1.4.tgz'
+    	                    sh 'tar -xvf blazegraph-runner-1.4.tgz'
     	                    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    		// Attempt to rsync bin into bin/.
-    	                        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.3/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+    	                        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.4/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 				// Attempt to rsync libs into lib/.
-    	    		    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.3/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
+    	    		    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.4/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
     	                    }
     	                }
 		    }
@@ -292,47 +292,47 @@ pipeline {
 	// See https://github.com/geneontology/go-ontology for details
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
-	// a a release, and deploys to S3
+	// a release, and deploys to S3.
 	stage('Produce ontology') {
+            agent {
+                docker {
+		    image 'obolibrary/odkfull:v1.1.7'
+		    // Reset Jenkins Docker agent default to original
+		    // root.
+		    args '-u root:root'
+		}
+            }
 	    steps {
-		// Legacy: build 'ontology-production'
+		// Create a relative working directory and setup our
+		// data environment.
 		dir('./go-ontology') {
 		    git 'https://github.com/geneontology/go-ontology.git'
-		    // Default namespace
+
+		    // Default namespace.
 		    sh 'OBO=http://purl.obolibrary.org/obo'
 
-		    // Make all software products available in bin/.
-		    sh 'mkdir -p bin/'
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-		    }
-		    sh 'chmod +x bin/*'
-
-		    // Make ontology products and get them into
-		    // skyhook.
 		    dir('./src/ontology') {
 			retry(3){
-			    // Add owltools to path, required for scripts.
-			    // Note weird pipeline syntax to change the
-			    // PATH var--O was unable to the "correct"
-			    // `pwd` thing, so here we are.
-			    withEnv(['PATH+EXTRA=../../bin']){
-				sh '$MAKECMD all'
-				sh '$MAKECMD prepare_release'
-			    }
+			    sh 'make all'
+			}
+			retry(3){
+			    sh 'make prepare_release'
 			}
 		    }
+
 		    // Make sure that we copy any files there,
 		    // including the core dump of produced.
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
+			//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
 		    }
-		    // Now that the files are safely away onto skyhook
-		    // for debugging, test for the core dump.
+
+		    // Now that the files are safely away onto skyhook for
+		    // debugging, test for the core dump.
 		    script {
 			if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
 
-			    def found_core_dump_p = fileExists './target/core_dump.owl'
+			    def found_core_dump_p = fileExists 'target/core_dump.owl'
 			    if( found_core_dump_p ){
 				error 'ROBOT core dump detected--bailing out.'
 			    }
