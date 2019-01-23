@@ -260,36 +260,37 @@ pipeline {
 	    steps {
 		// Create a relative working directory and setup our
 		// data environment.
-		sh 'mkdir -p /tmp/go-ontology/'
-		sh 'cd /tmp/go-ontology/'
-		git 'https://github.com/geneontology/go-ontology.git'
+		dir('./go-ontology') {
+		    git 'https://github.com/geneontology/go-ontology.git'
 
-		// Default namespace.
-		sh 'OBO=http://purl.obolibrary.org/obo'
+		    // Default namespace.
+		    sh 'OBO=http://purl.obolibrary.org/obo'
 
-		sh 'cd /tmp/go-ontology/src/ontology'
-		retry(3){
-		    sh '$MAKECMD all'
-		}
-		retry(3){
-		    sh '$MAKECMD prepare_release'
-		}
+		    dir('./src/ontology') {
+			retry(3){
+			    sh 'make all'
+			}
+			retry(3){
+			    sh 'make prepare_release'
+			}
+		    }
 
-		// Make sure that we copy any files there,
-		// including the core dump of produced.
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/go-ontology/target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/go-ontology/target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
-		}
+		    // Make sure that we copy any files there,
+		    // including the core dump of produced.
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
+		    }
 
-		// Now that the files are safely away onto skyhook for
-		// debugging, test for the core dump.
-		script {
-		    if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
+		    // Now that the files are safely away onto skyhook for
+		    // debugging, test for the core dump.
+		    script {
+			if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
 
-			def found_core_dump_p = fileExists '/tmp/go-ontology/target/core_dump.owl'
-			if( found_core_dump_p ){
-			    error 'ROBOT core dump detected--bailing out.'
+			    def found_core_dump_p = fileExists 'target/core_dump.owl'
+			    if( found_core_dump_p ){
+				error 'ROBOT core dump detected--bailing out.'
+			    }
 			}
 		    }
 		}
