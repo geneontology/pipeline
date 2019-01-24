@@ -159,135 +159,62 @@ pipeline {
 	// Build owltools and get it into the shared filesystem.
 	stage('Ready production software') {
 	    steps {
-		parallel(
-		    "Ready owltools": {
-			// Legacy: build 'owltools-build'
-			dir('./owltools') {
-			    // Remember that git lays out into CWD.
-			    git 'https://github.com/owlcollab/owltools.git'
-			    sh 'mvn -f OWLTools-Parent/pom.xml -U clean install -DskipTests -Dmaven.javadoc.skip=true -Dsource.skip=true'
-			    // Attempt to rsync produced into bin/.
-			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Runner/target/owltools skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Oort/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-NCBI/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Oort/reporting/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-				sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Runner/contrib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-			    }
-			}
-		    }//,
-		    // "Ready minerva": {
-		    // 	dir('./minerva') {
-		    // 	    // Remember that git lays out into CWD.
-		    // 	    git 'https://github.com/geneontology/minerva.git'
-		    // 	    sh './build-cli.sh'
-		    // 	    // Attempt to rsync produced into bin/.
-		    // 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" minerva-cli/bin/minerva-cli.* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-		    // 	    }
-		    // 	}
-		    // },
-		    // "Ready robot": {
-		    // 	// Legacy: build 'robot-build'
-		    // 	dir('./robot') {
-		    // 	    git 'https://github.com/ontodev/robot.git'
-		    // 	    // Update the POMs by replacing "SNAPSHOT"
-		    // 	    // with the current Git hash. First make
-		    // 	    // sure maven-help-plugin is installed
-		    // 	    sh 'mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version'
-		    // 	    // Now get and set the version.
-		    // 	    // Originally: sh 'VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | sed 's/-SNAPSHOT//'`'
-		    // 	    sh 'VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v \'\\[\' | sed \'s/-SNAPSHOT//\'`'
-		    // 	    sh 'BUILD=`git rev-parse --short HEAD`'
-		    // 	    sh 'mvn versions:set -DnewVersion=$VERSION+$BUILD'
-		    // 	    sh 'mvn -U clean install -DskipTests'
-		    // 	    // Attempt to rsync produced into bin/.
-		    // 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-		    // 	    }
-		    // 	}
-		    // },
-		    // "Ready arachne": {
-		    // 	dir('./arachne') {
-		    // 	    sh 'wget -N https://github.com/balhoff/arachne/releases/download/v1.0.2/arachne-1.0.2.tgz'
-		    // 	    sh 'tar -xvf arachne-1.0.2.tgz'
-		    // 	    // Attempt to rsync produced into bin/.
-		    // 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-		    // 		// WARNING/BUG: needed for arachne to
-		    // 		// run at this point.
-		    // 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
-		    // 	    }
-		    // 	}
-		    // },
-		    // "Ready blazegraph-runner": {
-    		    // 	dir('./blazegraph-runner') {
-    	            //         sh 'wget -N https://github.com/balhoff/blazegraph-runner/releases/download/v1.4/blazegraph-runner-1.4.tgz'
-    	            //         sh 'tar -xvf blazegraph-runner-1.4.tgz'
-    	            //         withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // 		// Attempt to rsync bin into bin/.
-    	            //             sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.4/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-		    // 		// Attempt to rsync libs into lib/.
-    	    	    // 	    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.4/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
-    	            //         }
-    	            //     }
-		    // }
-		)
+		// Legacy: build 'owltools-build'
+		dir('./owltools') {
+		    // Remember that git lays out into CWD.
+		    git 'https://github.com/owlcollab/owltools.git'
+		    sh 'mvn -f OWLTools-Parent/pom.xml -U clean install -DskipTests -Dmaven.javadoc.skip=true -Dsource.skip=true'
+		    // Attempt to rsync produced into bin/.
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Runner/target/owltools skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-Oort/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" OWLTools-NCBI/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Oort/reporting/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude ".git" OWLTools-Runner/contrib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+		    }
+		}
 	    }
 	}
-	// // See https://github.com/geneontology/go-ontology for details
-	// // on the ontology release pipeline. This ticket runs
-	// // daily(TODO?) and creates all the files normally included in
-	// // a release, and deploys to S3.
-	// stage('Produce ontology') {
-        //     agent {
-        //         docker {
-	// 	    image 'obolibrary/odkfull:v1.1.7'
-	// 	    // Reset Jenkins Docker agent default to original
-	// 	    // root.
-	// 	    args '-u root:root'
-	// 	}
-        //     }
-	//     steps {
-	// 	// Create a relative working directory and setup our
-	// 	// data environment.
-	// 	dir('./go-ontology') {
-	// 	    git 'https://github.com/geneontology/go-ontology.git'
+	// See https://github.com/geneontology/go-ontology for details
+	// on the ontology release pipeline. This ticket runs
+	// daily(TODO?) and creates all the files normally included in
+	// a release, and deploys to S3.
+	stage('Produce ontology') {
+	    steps {
+		// Create a relative working directory and setup our
+		// data environment.
+		dir('./neo') {
+		    git 'https://github.com/geneontology/neo.git'
 
-	// 	    // Default namespace.
-	// 	    sh 'OBO=http://purl.obolibrary.org/obo'
+		    // Default namespace.
+		    sh 'OBO=http://purl.obolibrary.org/obo'
 
-	// 	    dir('./src/ontology') {
-	// 		retry(3){
-	// 		    sh 'make all'
-	// 		}
-	// 		retry(3){
-	// 		    sh 'make prepare_release'
-	// 		}
-	// 	    }
+		    // Make all software products available in bin/.
+		    sh 'mkdir -p bin/'
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+		    }
+		    sh 'chmod +x bin/*'
 
-	// 	    // Make sure that we copy any files there,
-	// 	    // including the core dump of produced.
-	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-	// 		//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
-	// 		sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
-	// 	    }
+		    //
+		    withEnv(['PATH+EXTRA=:bin:./bin']){
+			retry(3){
+			    sh 'make clean all'
+			}
+		    }
 
-	// 	    // Now that the files are safely away onto skyhook for
-	// 	    // debugging, test for the core dump.
-	// 	    script {
-	// 		if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
+		    // Make sure that we copy any files there,
+		    // including the core dump of produced.
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY neo.obo neo.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
+		    }
 
-	// 		    def found_core_dump_p = fileExists 'target/core_dump.owl'
-	// 		    if( found_core_dump_p ){
-	// 			error 'ROBOT core dump detected--bailing out.'
-	// 		    }
-	// 		}
-	// 	    }
-	// 	}
-	//     }
-	// }
-	//...
+		    // TODO: Future deplyment like?
+		    // s3cmd -c ~/.s3cfg.go-push --acl-public --reduced-redundancy --mime-type=application/rdf+xml put neo.obo neo.owl s3://go-build/$JOB_BASE_NAME/latest/
+		}
+	    }
+	}
+	/./..
 	stage('Produce derivatives') {
             agent {
                 docker {
@@ -314,12 +241,12 @@ pipeline {
 		}
             }
 	}
-	//...
-	stage('Sanity II') {
-	    steps {
-		echo 'TODO: Sanity II'
-	    }
-	}
+	// //...
+	// stage('Sanity II') {
+	//     steps {
+	// 	echo 'TODO: Sanity II'
+	//     }
+	// }
 	// stage('TODO: Final status') {
 	//     steps {
 	// 	echo 'TODO: final'
