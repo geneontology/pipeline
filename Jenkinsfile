@@ -214,7 +214,7 @@ pipeline {
 		}
 	    }
 	}
-	/./..
+	//..
 	stage('Produce derivatives') {
             agent {
                 docker {
