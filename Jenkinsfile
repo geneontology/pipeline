@@ -45,8 +45,8 @@ pipeline {
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
 	// let's go with conservative and see if we get an
 	// improvement.
-	//MAKECMD = 'make --jobs --max-load 12.0'
-	MAKECMD = 'make'
+	MAKECMD = 'make --jobs --max-load 6.0'
+	//MAKECMD = 'make'
 	// Miunerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
 	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl"
