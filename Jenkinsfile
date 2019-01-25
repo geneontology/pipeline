@@ -197,7 +197,7 @@ pipeline {
 		    sh 'chmod +x bin/*'
 
 		    //
-		    withEnv(['PATH+EXTRA=:bin:./bin']){
+		    withEnv(['PATH+EXTRA=:bin:./bin', 'JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G']){
 			retry(3){
 			    sh 'make clean all'
 			}
