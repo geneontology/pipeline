@@ -49,7 +49,7 @@ pipeline {
 	//MAKECMD = 'make'
 	// Miunerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl"
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
 	].join(" ")
 	// GOlr load profile.
 	GOLR_SOLR_MEMORY = "128G"
