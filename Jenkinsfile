@@ -121,6 +121,7 @@ pipeline {
     }
     options{
 	timestamps()
+	buildDiscarder(logRotator(numToKeepStr: '14'))
     }
     stages {
 	// Very first: pause for a few minutes to give a chance to
