@@ -511,15 +511,19 @@ pipeline {
 		    sh 'python3 -m venv mypyenv'
 		    withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
-			// "External" packages required to run this
-			// single, isolated, script.
+			// "External" packages required to run these
+			// scripts.
 			sh 'python3 ./mypyenv/bin/pip3 install click'
 			sh 'python3 ./mypyenv/bin/pip3 install pystache'
 			sh 'python3 ./mypyenv/bin/pip3 install yamldown'
+			sh 'python3 ./mypyenv/bin/pip3 install pypandoc'
 
 			// Generate the static overall gorule report
 			// page
 			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
+
+			// Generate the new GO refs data.
+			sh 'python3 ./scripts/aggregate-references.py -v --directory ./metadata/gorefs --json ./metadata/go-refs.json --stanza ./metadata/GO.references'
 		    }
 
 		    // Get the date into the metadata, in a similar format
