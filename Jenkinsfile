@@ -40,6 +40,12 @@ pipeline {
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '252781'
 	ZENODO_ARCHIVE_CONCEPT = '252779'
+	// Distribution ID for the AWS CloudFront for this branch,
+	// used soley for invalidations. Versioned release does not
+	// need this as it is always a new location and the index
+	// upload already has an invalidation on it. For current,
+	// snapshot, and experimental.
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
@@ -725,6 +731,11 @@ pipeline {
 			    // Need as replacement for awful requests lib.
 			    sh 'python3 ./mypyenv/bin/pip3 install pycurl'
 
+			    // Apparently something wrong with default
+			    // version; error like
+			    // https://stackoverflow.com/questions/45821085/awshttpsconnection-object-has-no-attribute-ssl-context
+			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
+
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
 			    // into the scripting mode.
@@ -837,7 +848,7 @@ pipeline {
 		}
 		// Copy the product to the right location. As well,
 		// archive.
-		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON')]) {
+		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
 		    // Ready...
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
@@ -908,6 +919,11 @@ pipeline {
 				}else if( env.BRANCH_NAME == 'master' ){
 				    // Pass.
 				}
+
+				// Invalidate the CDN now that the new
+				// files are up.
+				sh 'echo "[preview]" > ./awscli_config.txt && echo "cloudfront=true" >> ./awscli_config.txt'
+				sh 'AWS_CONFIG_FILE=./awscli_config.txt ./mypyenv/bin/aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION_ID --paths "/*"'
 			    }
 			}
 		    }
@@ -1082,11 +1098,6 @@ pipeline {
 	// stage('TODO: Final status') {
 	//     steps {
 	// 	echo 'TODO: final'
-	//     }
-	// }
-	// stage('Flush') {
-	//     steps {
-	// 	echo 'TODO: Flush/invalidate CDN'
 	//     }
 	// }
     }
