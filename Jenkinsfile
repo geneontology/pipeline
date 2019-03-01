@@ -11,6 +11,10 @@ pipeline {
 	//cron('0 0 1 * *')
     }
     environment {
+	///
+	/// Automatic run variables.
+	///
+
 	// Pin dates and day to beginning of run.
 	START_DATE = sh (
 	    script: 'date +%Y-%m-%d',
@@ -21,6 +25,11 @@ pipeline {
 	    script: 'date +%A',
 	    returnStdout: true
 	).trim()
+
+	///
+	/// Internal run variables.
+	///
+
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
@@ -36,6 +45,18 @@ pipeline {
 	// very exotic cases where these check may need to be skipped
 	// for a run, in that case this variable is set to 'FALSE'.
 	WE_ARE_BEING_SAFE_P = 'TRUE'
+	// Control make to get through our loads faster if
+	// possible. Assuming we're cpu bound for some of these...
+	// wok has 48 "processors" over 12 "cores", so I have no idea;
+	// let's go with conservative and see if we get an
+	// improvement.
+	MAKECMD = 'make --jobs 3 --max-load 10.0'
+	//MAKECMD = 'make'
+
+	///
+	/// Application tokens.
+	///
+
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '252781'
@@ -46,17 +67,20 @@ pipeline {
 	// upload already has an invalidation on it. For current,
 	// snapshot, and experimental.
 	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
-	// Control make to get through our loads faster if
-	// possible. Assuming we're cpu bound for some of these...
-	// wok has 48 "processors" over 12 "cores", so I have no idea;
-	// let's go with conservative and see if we get an
-	// improvement.
-	MAKECMD = 'make --jobs 3 --max-load 10.0'
-	//MAKECMD = 'make'
-	// Miunerva operating profile.
+
+	///
+	/// Minerva input.
+	///
+
+	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
 	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
 	].join(" ")
+
+	///
+	/// GOlr/AmiGO input.
+	///
+
 	// GOlr load profile.
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
@@ -74,17 +98,20 @@ pipeline {
 	GOLR_INPUT_PANTHER_TREES = [
 	    "http://skyhook.berkeleybop.org/master/products/panther/arbre.tgz"
 	].join(" ")
+
+	///
 	/// Groups to run and tests to avoid running during the current
 	/// mega-make.
-	// Groups to run.
+	///
+
+	// Optional. Groups to run.
 	//RESOURCE_GROUPS="aspgd goa wb pseudocap"
 	RESOURCE_GROUPS="wb"
-	// Datasets to skip within the resources that we will run
-	// (defined in the line above).
+	// Optional. Datasets to skip within the resources that we
+	// will run (defined in the line above).
 	DATASET_EXCLUDES="goa_uniprot_gcrp goa_pdb goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human goa_human goa_human_complex goa_human_rna"
-	// This acts as an override, /if/ it's grabbed (as defined
-	// above).
-	//GOA_UNIPROT_ALL_URL=""
+	// Optional. This acts as an override, /if/ it's grabbed (as
+	// defined above).
 	GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
     }
     options{
