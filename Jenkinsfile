@@ -11,6 +11,10 @@ pipeline {
 	//cron('0 0 1 * *')
     }
     environment {
+	///
+	/// Automatic run variables.
+	///
+
 	// Pin dates and day to beginning of run.
 	START_DATE = sh (
 	    script: 'date +%Y-%m-%d',
@@ -21,6 +25,11 @@ pipeline {
 	    script: 'date +%A',
 	    returnStdout: true
 	).trim()
+
+	///
+	/// Internal run variables.
+	///
+
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
@@ -36,10 +45,6 @@ pipeline {
 	// very exotic cases where these check may need to be skipped
 	// for a run, in that case this variable is set to 'FALSE'.
 	WE_ARE_BEING_SAFE_P = 'TRUE'
-	// The Zenodo concept ID to use for releases (and occasionally
-	// master testing).
-	ZENODO_REFERENCE_CONCEPT = '199441'
-	ZENODO_ARCHIVE_CONCEPT = '212052'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
@@ -47,10 +52,35 @@ pipeline {
 	// improvement.
 	MAKECMD = 'make --jobs --max-load 12.0'
 	//MAKECMD = 'make'
-	// Miunerva operating profile.
+
+	///
+	/// Application tokens.
+	///
+
+	// The Zenodo concept ID to use for releases (and occasionally
+	// master testing).
+	ZENODO_REFERENCE_CONCEPT = '199441'
+	ZENODO_ARCHIVE_CONCEPT = '212052'
+	// Distribution ID for the AWS CloudFront for this branch,
+	// used soley for invalidations. Versioned release does not
+	// need this as it is always a new location and the index
+	// upload already has an invalidation on it. For current,
+	// snapshot, and experimental.
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
+
+	///
+	/// Minerva input.
+	///
+
+	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-lego.owl"
 	].join(" ")
+
+	///
+	/// GOlr/AmiGO input.
+	///
+
 	// GOlr load profile.
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
@@ -113,10 +143,19 @@ pipeline {
 	GOLR_INPUT_PANTHER_TREES = [
 	    "http://skyhook.berkeleybop.org/snapshot/products/panther/arbre.tgz"
 	].join(" ")
-	// Groups to run and tests to avoid running during the current
-	// mega-make.
+
+	///
+	/// Groups to run and tests to avoid running during the current
+	/// mega-make.
+	///
+
+	// Optional. Groups to run.
 	//RESOURCE_GROUPS=""
+	// Optional. Datasets to skip within the resources that we
+	// will run (defined in the line above).
 	//DATASET_EXCLUDES=""
+	// Optional. This acts as an override, /if/ it's grabbed (as
+	// defined above).
 	//GOA_UNIPROT_ALL_URL=""
     }
     options{
@@ -465,8 +504,13 @@ pipeline {
 			    //  - but not uniprot_all anything (elsewhere)
 			    //  - and not any of the ttls
 			    sh 'find ./target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*goa_uniprot_all.*$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
-			    // Now copy over the (single) uniprot non-core.
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
+			    // Now copy over the (single) uniprot
+			    // non-core, if it is in our run set.
+			    script {
+				if( env.RESOURCE_GROUPS ==~ /goa/ ){
+				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
+				}
+			    }
 			    // Finally, the non-zipped prediction files.
 			    sh 'find ./target/groups -type f -regex "^.*\\-prediction.gaf$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
 			    // Flatten all GAFs and GAF-like products
@@ -475,11 +519,16 @@ pipeline {
 			    //  - but not uniprot_all anything (elsewhere)
 			    //  - and not anything "irregular"
 			    sh 'find ./target/groups -type f -regex "^.*.\\(gaf\\|gpad\\|gpi\\).gz$" -not -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint_.*\\).gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
-			    // Now copy over the four uniprot core.
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gpi.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+			    // Now copy over the four uniprot core, if
+			    // they are in our run set.
+			    script {
+				if( env.RESOURCE_GROUPS ==~ /goa/ ){
+				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gpi.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+				}
+			    }
 			    // Flatten the TTLs into products/ttl/.
 			    sh 'find ./target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
 			    // Compress the journals.
@@ -769,6 +818,11 @@ pipeline {
 			    // Need as replacement for awful requests lib.
 			    sh 'python3 ./mypyenv/bin/pip3 install pycurl'
 
+			    // Apparently something wrong with default
+			    // version; error like
+			    // https://stackoverflow.com/questions/45821085/awshttpsconnection-object-has-no-attribute-ssl-context
+			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
+
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
 			    // into the scripting mode.
@@ -881,7 +935,7 @@ pipeline {
 		}
 		// Copy the product to the right location. As well,
 		// archive.
-		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON')]) {
+		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
 		    // Ready...
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
@@ -952,6 +1006,11 @@ pipeline {
 				}else if( env.BRANCH_NAME == 'master' ){
 				    // Pass.
 				}
+
+				// Invalidate the CDN now that the new
+				// files are up.
+				sh 'echo "[preview]" > ./awscli_config.txt && echo "cloudfront=true" >> ./awscli_config.txt'
+				sh 'AWS_CONFIG_FILE=./awscli_config.txt python3 ./mypyenv/bin/aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION_ID --paths "/*"'
 			    }
 			}
 		    }
@@ -1126,11 +1185,6 @@ pipeline {
 	// stage('TODO: Final status') {
 	//     steps {
 	// 	echo 'TODO: final'
-	//     }
-	// }
-	// stage('Flush') {
-	//     steps {
-	// 	echo 'TODO: Flush/invalidate CDN'
 	//     }
 	// }
     }
