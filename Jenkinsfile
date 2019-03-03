@@ -66,7 +66,7 @@ pipeline {
 	// need this as it is always a new location and the index
 	// upload already has an invalidation on it. For current,
 	// snapshot, and experimental.
-	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E3Q4YIZHZL7358'
 
 	///
 	/// Minerva input.
