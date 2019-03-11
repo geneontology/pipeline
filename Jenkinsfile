@@ -1129,7 +1129,7 @@ pipeline {
 		    },
 		    "AGR data push": {
 			script {
-			    if( env.BRANCH_NAME == 'release' ){
+			    if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'snapshot' ){
 				sh 'wget -N http://skyhook.berkeleybop.org/$BRANCH_NAME/annotations/fb.gaf.gz'
 				sh 'wget -N http://skyhook.berkeleybop.org/$BRANCH_NAME/annotations/mgi.gaf.gz'
 				sh 'wget -N http://skyhook.berkeleybop.org/$BRANCH_NAME/annotations/rgd.gaf.gz'
