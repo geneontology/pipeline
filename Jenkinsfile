@@ -505,10 +505,13 @@ pipeline {
 			    //  - and not any of the ttls
 			    sh 'find ./target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*goa_uniprot_all.*$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
 			    // Now copy over the (single) uniprot
-			    // non-core, if it is in our run set.
+			    // non-core; may not be there in all runs
+			    // (e.g. speed runs of master).
 			    script {
-				if( env.RESOURCE_GROUPS ==~ /goa/ ){
+				try {
 				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
+				} catch (exception) {
+				    echo "NOTE: No goa_uniprot_all-src.gaf.gz found for this run to copy."
 				}
 			    }
 			    // Finally, the non-zipped prediction files.
@@ -519,14 +522,18 @@ pipeline {
 			    //  - but not uniprot_all anything (elsewhere)
 			    //  - and not anything "irregular"
 			    sh 'find ./target/groups -type f -regex "^.*.\\(gaf\\|gpad\\|gpi\\).gz$" -not -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint_.*\\).gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
-			    // Now copy over the four uniprot core, if
-			    // they are in our run set.
+			    // Now copy over the four uniprot core
+			    // files, if they are in our run set
+			    // (e.g. may not be there on speed runs
+			    // for master).
 			    script {
-				if( env.RESOURCE_GROUPS ==~ /goa/ ){
+				try {
 				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gpi.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+				} catch (exception) {
+				    echo "NOTE: At least on uniprot core file not found for this run to copy."
 				}
 			    }
 			    // Flatten the TTLs into products/ttl/.
@@ -564,8 +571,16 @@ pipeline {
 		// earlier).
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/reports/* $WORKSPACE/copyover/'
-		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/paint_* $WORKSPACE/copyover/'
-
+		script {
+		    try {
+			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/paint_* $WORKSPACE/copyover/'
+		    } catch (exception) {
+			// No PAINT files this run? It could happen if
+			// on a limited run with only non-PAINT
+			// resources involved (e.g. speed run master).
+			echo "NOTE: No PAINT files were found for this run to copy."
+		    }
+		}
 		// Make all software products available in bin/.
 		sh 'mkdir -p $WORKSPACE/bin/ || true'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
