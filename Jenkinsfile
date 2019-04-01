@@ -75,7 +75,18 @@ pipeline {
 
 	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-gaf.owl",
+	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/gorel.owl",
+	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-modules-annotations.owl",
+	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-taxon-subsets.owl",
+	    "http://purl.obolibrary.org/obo/eco.owl",
+	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
+	    "http://purl.obolibrary.org/obo/cl/cl-basic.owl",
+	    "http://purl.obolibrary.org/obo/pato.owl",
+	    "http://purl.obolibrary.org/obo/po.owl",
+	    "http://purl.obolibrary.org/obo/chebi.owl",
+	    "http://purl.obolibrary.org/obo/uberon/basic.owl",
+	    "http://purl.obolibrary.org/obo/wbbt.owl"
 	].join(" ")
 
 	///
