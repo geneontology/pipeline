@@ -4,11 +4,11 @@ pipeline {
     // give us the max time in a day to get things right.
     triggers {
 	// Master never runs--Feb 31st.
-	cron('0 0 31 2 *')
+	//cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
 	//cron('0 0 2-31 * *')
 	// First of the month @12am, for "release" (also "current").
-	//cron('0 0 1 * *')
+	cron('0 0 1 * *')
     }
     environment {
 	///
@@ -90,7 +90,7 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/release/ontology/extensions/gorel.owl",
 	    "http://skyhook.berkeleybop.org/release/ontology/extensions/go-modules-annotations.owl",
 	    "http://skyhook.berkeleybop.org/release/ontology/extensions/go-taxon-subsets.owl",
-	    "http://purl.obolibrary.org/obo/eco.owl",
+	    "http://purl.obolibrary.org/obo/eco/eco-basic.obo",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
 	    "http://purl.obolibrary.org/obo/cl/cl-basic.owl",
 	    "http://purl.obolibrary.org/obo/pato.owl",
