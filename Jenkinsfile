@@ -75,6 +75,17 @@ pipeline {
 
 	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	].join(" ")
+
+	///
+	/// GOlr/AmiGO input.
+	///
+
+	// GOlr load profile.
+	GOLR_SOLR_MEMORY = "128G"
+	GOLR_LOADER_MEMORY = "192G"
+	GOLR_INPUT_ONTOLOGIES = [
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-gaf.owl",
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/gorel.owl",
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-modules-annotations.owl",
@@ -87,17 +98,6 @@ pipeline {
 	    "http://purl.obolibrary.org/obo/chebi.owl",
 	    "http://purl.obolibrary.org/obo/uberon/basic.owl",
 	    "http://purl.obolibrary.org/obo/wbbt.owl"
-	].join(" ")
-
-	///
-	/// GOlr/AmiGO input.
-	///
-
-	// GOlr load profile.
-	GOLR_SOLR_MEMORY = "128G"
-	GOLR_LOADER_MEMORY = "192G"
-	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
 	    //"http://skyhook.berkeleybop.org/master/products/annotations/paint_other.gaf.gz",
