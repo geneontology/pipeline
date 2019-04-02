@@ -90,7 +90,7 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/gorel.owl",
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-modules-annotations.owl",
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-taxon-subsets.owl",
-	    "http://purl.obolibrary.org/obo/eco/eco-basic.obo",
+	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
 	    "http://purl.obolibrary.org/obo/cl/cl-basic.owl",
 	    "http://purl.obolibrary.org/obo/pato.owl",
