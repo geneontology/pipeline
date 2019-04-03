@@ -719,7 +719,7 @@ pipeline {
 		// Copy over the files that we want to work on--both
 		// annotations/ and reports/ (which we separated
 		// earlier).
-	    sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
+		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/* $WORKSPACE/copyover/'
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/reports/* $WORKSPACE/copyover/'
 		// Ready...
@@ -856,7 +856,7 @@ pipeline {
 				// Make the BDBag in the copyover/
 				// (unarchived, as we want to leave it
 				// to pigz).
-			    sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/copyover'
+				sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/copyover'
 				// Tarball the whole directory for
 				// "deep" archive (handmade BDBag).
 				sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/copyover .'
@@ -1155,7 +1155,7 @@ pipeline {
 					    // 	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-aux -e target_user=bbop'
 					    // }
 					    // retry(3){
-						// 	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-production -e target_user=bbop'
+					    // 	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-production -e target_user=bbop'
 					    // }
 
 					}else if( env.BRANCH_NAME == 'snapshot' ){
@@ -1235,10 +1235,10 @@ pipeline {
 	}
 	// stage('TODO: Final status') {
 	//     steps {
-	    // 	echo 'TODO: final'
+	// 	echo 'TODO: final'
 	//     }
 	// }
-}
+    }
     post {
 	// Let's let our people know if things go well.
 	success {
