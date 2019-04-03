@@ -116,6 +116,17 @@ pipeline {
 	/// mega-make.
 	///
 
+	// The gorule tag is used to identify which rules to suppress reports from during
+	// the megastep and during templating the reports after the megastep.
+	// The tags are currently respected at two times in the pipeline. One case,
+	// the gorules report take the flag as a CLI argument, supressing it. As well,
+	// ontobio takes it during the same stage as the JSON generation/parsing step, to
+	// supress the .md output.
+	// At this time, this variable can be either nothing or empty string for
+	// no rule suppression (default behavior everything), or a single value
+	// (pretty much always "silent")
+	//GORULE_TAGS_TO_SUPPRESS="silent"
+
 	// Optional. Groups to run.
 	// RESOURCE_GROUPS="aspgd goa wb pseudocap"
 	RESOURCE_GROUPS="aspgd paint"
@@ -595,12 +606,22 @@ pipeline {
 			sh 'python3 ./mypyenv/bin/pip3 install pypandoc'
 
 			// Generate the static overall gorule report
-			// page
-			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
+			// page.
+
+			// Build either a release or testing
+			// version of a generic BDBag/DOI
+			// workflow, keeping special bucket
+			// mappings in mind.
+			script {
+			if( env.GORULE_TAGS_TO_SUPPRESS && env.GORULE_TAGS_TO_SUPPRESS != "" ){
+				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE --suppress-rule-tag $SUPPRESSING_GORULE_TAG > gorule-report.html'
+			}else {
+				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
+			}
+			}
 
 			// Generate the new GO refs data.
 			sh 'python3 ./scripts/aggregate-references.py -v --directory ./metadata/gorefs --json ./metadata/go-refs.json --stanza ./metadata/GO.references'
-		    }
 
 		    // Get the date into the metadata, in a similar format
 		    // to what is produced by the Zenodo sections.
