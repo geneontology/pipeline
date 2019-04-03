@@ -718,7 +718,7 @@ pipeline {
 		}
 		// Copy over the files that we want to work on--both
 		// annotations/ and reports/ (which we separated
-					      // earlier).
+		// earlier).
 	    sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/* $WORKSPACE/copyover/'
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/reports/* $WORKSPACE/copyover/'
@@ -855,7 +855,7 @@ pipeline {
 				sh 'cp -r $WORKSPACE/mnt/$BRANCH_NAME/* $WORKSPACE/copyover/'
 				// Make the BDBag in the copyover/
 				// (unarchived, as we want to leave it
-				    // to pigz).
+				// to pigz).
 			    sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/copyover'
 				// Tarball the whole directory for
 				// "deep" archive (handmade BDBag).
@@ -991,7 +991,7 @@ pipeline {
 
 				    // "release" -> dated path for
 				    // indexing (clobbering
-						 // "current"'s index.
+				    // "current"'s index.
 		 		    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
 				    // "release" -> dated path for S3.
 				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
@@ -1147,18 +1147,18 @@ pipeline {
 
 					    echo 'No current public push on release to Blazegraph.'
 					    // retry(3){
-						// 	sh 'ansible-playbook update-endpoint.yaml --inventory=hosts.local-rdf-endpoint --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_user=bbop --extra-vars="pipeline=current build=production endpoint=production"'
+					    // 	sh 'ansible-playbook update-endpoint.yaml --inventory=hosts.local-rdf-endpoint --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_user=bbop --extra-vars="pipeline=current build=production endpoint=production"'
 					    // }
 
-					echo 'No current public push on release to GOlr.'
+					    echo 'No current public push on release to GOlr.'
 					    // retry(3){
-						// 	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-aux -e target_user=bbop'
+					    // 	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-aux -e target_user=bbop'
 					    // }
-					// retry(3){
+					    // retry(3){
 						// 	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-production -e target_user=bbop'
 					    // }
 
-				    }else if( env.BRANCH_NAME == 'snapshot' ){
+					}else if( env.BRANCH_NAME == 'snapshot' ){
 
 					    echo 'Push snapshot out internal Blazegraph'
 					    retry(3){
@@ -1234,10 +1234,10 @@ pipeline {
 	    }
 	}
 	// stage('TODO: Final status') {
-	    //     steps {
+	//     steps {
 	    // 	echo 'TODO: final'
 	//     }
-    // }
+	// }
 }
     post {
 	// Let's let our people know if things go well.
