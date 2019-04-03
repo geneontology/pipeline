@@ -90,7 +90,7 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/gorel.owl",
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-modules-annotations.owl",
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-taxon-subsets.owl",
-	    "http://purl.obolibrary.org/obo/eco/eco-basic.obo",
+	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
 	    "http://purl.obolibrary.org/obo/cl/cl-basic.owl",
 	    "http://purl.obolibrary.org/obo/pato.owl",
@@ -149,6 +149,19 @@ pipeline {
 	/// Groups to run and tests to avoid running during the current
 	/// mega-make.
 	///
+
+	// The gorule tag is used to identify which rules to suppress
+	// reports from during the megastep and during templating the
+	// reports after the megastep. The tags are currently
+	// respected at two times in the pipeline: the gorules report
+	// take the flag as a CLI argument, supressing it; ontobio
+	// takes it during the same stage as the JSON
+	// generation/parsing step, to supress the .md output. At this
+	// time, this variable can be either nothing or empty string
+	// for no rule suppression (default behavior everything), or a
+	// single value (practically speaking pretty much always
+	// "silent")
+	GORULE_TAGS_TO_SUPPRESS="silent"
 
 	// Optional. Groups to run.
 	//RESOURCE_GROUPS=""
@@ -628,8 +641,19 @@ pipeline {
 			sh 'python3 ./mypyenv/bin/pip3 install pypandoc'
 
 			// Generate the static overall gorule report
-			// page
-			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
+			// page.
+
+			// Build either a release or testing
+			// version of a generic BDBag/DOI
+			// workflow, keeping special bucket
+			// mappings in mind.
+			script {
+			    if( env.GORULE_TAGS_TO_SUPPRESS && env.GORULE_TAGS_TO_SUPPRESS != "" ){
+				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE --suppress-rule-tag $SUPPRESSING_GORULE_TAG > gorule-report.html'
+			    }else{
+				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
+			    }
+			}
 
 			// Generate the new GO refs data.
 			sh 'python3 ./scripts/aggregate-references.py -v --directory ./metadata/gorefs --json ./metadata/go-refs.json --stanza ./metadata/GO.references'
@@ -714,7 +738,7 @@ pipeline {
 		    // Purge the copyover point.
 		    sh 'rm -r -f $WORKSPACE/copyover || true'
                 }
-            }
+	    }
 	}
 	stage('Sanity I') {
 	    steps {
@@ -754,19 +778,19 @@ pipeline {
 		    // Purge the copyover point.
 		    sh 'rm -r -f $WORKSPACE/copyover || true'
                 }
-            }
+	    }
 	}
 	//...
 	stage('Produce derivatives') {
-            agent {
+	    agent {
                 docker {
 		    image 'geneontology/golr-autoindex:b1007d0cfd356f707086a910342ba49b9511ba51_2019-01-09T143943'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
 		}
-            }
-            steps {
+	    }
+	    steps {
                 // sh 'ls /srv'
                 // sh 'ls /tmp'
 
@@ -781,7 +805,7 @@ pipeline {
 		    // Copy over log.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		}
-            }
+	    }
 	}
 	//...
 	stage('Sanity II') {
@@ -1201,7 +1225,7 @@ pipeline {
 		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
                 }
-            }
+	    }
 	}
 	// stage('TODO: Final status') {
 	//     steps {
@@ -1221,12 +1245,12 @@ pipeline {
 	}
 	// Let's let our internal people know if things change.
         changed {
-            echo "There has been a change in the ${env.BRANCH_NAME} pipeline."
+	    echo "There has been a change in the ${env.BRANCH_NAME} pipeline."
 	    mail bcc: '', body: "There has been a pipeline status change in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
 	}
 	// Let's let our internal people know if things go badly.
 	failure {
-            echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
+	    echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
 	    mail bcc: '', body: "There has been a pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
         }
     }
