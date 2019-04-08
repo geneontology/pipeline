@@ -649,7 +649,7 @@ pipeline {
 			// mappings in mind.
 			script {
 			    if( env.GORULE_TAGS_TO_SUPPRESS && env.GORULE_TAGS_TO_SUPPRESS != "" ){
-				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE --suppress-rule-tag $SUPPRESSING_GORULE_TAG > gorule-report.html'
+				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE --suppress-rule-tag $GORULE_TAGS_TO_SUPPRESS > gorule-report.html'
 			    }else{
 				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
 			    }
