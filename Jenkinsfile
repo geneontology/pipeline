@@ -8,7 +8,7 @@ pipeline {
 	// Nightly @12am, for "snapshot", skip "release" night.
 	//cron('0 0 2-31 * *')
 	// First of the month @12am, for "release" (also "current").
-	cron('0 0 1 * *')
+	//cron('0 0 1 * *')
     }
     environment {
 	///
