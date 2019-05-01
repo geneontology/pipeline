@@ -1201,23 +1201,29 @@ pipeline {
 				sh 'gunzip zfin.gaf.gz'
 				// Push into submission with secret.
 				withCredentials([string(credentialsId: 'agr_submit_system_token', variable: 'AGR_TOKEN')]) {
-				    retry(3){
-					sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_7227=@fb.gaf"'
-				    }
-				    retry(3){
-					sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_10090=@mgi.gaf"'
-				    }
-				    retry(3){
-					sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_10116=@rgd.gaf"'
-				    }
-				    retry(3){
-					sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_4932=@sgd.gaf"'
-				    }
-				    retry(3){
-					sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_6239=@wb.gaf"'
-				    }
-				    retry(3){
-					sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_7955=@zfin.gaf"'
+				    script {
+					try {
+					    retry(3){
+						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_7227=@fb.gaf"'
+					    }
+					    retry(3){
+						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_10090=@mgi.gaf"'
+					    }
+					    retry(3){
+						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_10116=@rgd.gaf"'
+					    }
+					    retry(3){
+						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_4932=@sgd.gaf"'
+					    }
+					    retry(3){
+						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_6239=@wb.gaf"'
+					    }
+					    retry(3){
+						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_7955=@zfin.gaf"'
+					    }
+					} catch (exception) {
+					    echo "WARNING: failure to interact with the Alliance API."
+					}
 				    }
 				}
 			    }
