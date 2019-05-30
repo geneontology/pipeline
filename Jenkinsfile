@@ -38,8 +38,8 @@ pipeline {
 	WE_ARE_BEING_SAFE_P = 'TRUE'
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = '252781'
-	ZENODO_ARCHIVE_CONCEPT = '252779'
+	ZENODO_REFERENCE_CONCEPT = '0'
+	ZENODO_ARCHIVE_CONCEPT = '0'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
