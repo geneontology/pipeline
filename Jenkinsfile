@@ -887,6 +887,10 @@ pipeline {
 				    // Zenodo reference upload.
 				    echo "There has been a failure in the reference upload to Zenodo."
 				    mail bcc: '', body: "There has been a failure in the reference upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo reference upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
+				    // Hard die if this is a release.
+				    if( env.BRANCH_NAME == 'release' ){
+					error 'Zenodo reference upload error on release--no recovery.'
+				    }
 				}
 				try {
 				    // Archive full archive too.
@@ -914,6 +918,10 @@ pipeline {
 				    // Zenodo archive upload.
 				    echo "There has been a failure in the archive upload to Zenodo."
 				    mail bcc: '', body: "There has been a failure in the archive upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo archive upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
+				    // Hard die if this is a release.
+				    if( env.BRANCH_NAME == 'release' ){
+					error 'Zenodo archive upload error on release--no recovery.'
+				    }
 				}
 			    }
 			}
