@@ -330,6 +330,8 @@ pipeline {
 
 		    // Default namespace.
 		    sh 'OBO=http://purl.obolibrary.org/obo'
+		    sh 'RELEASEDATE=$START_DATE'
+		    sh 'env'
 
 		    dir('./src/ontology') {
 			retry(3){
