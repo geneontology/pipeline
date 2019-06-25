@@ -329,6 +329,7 @@ pipeline {
 		    git 'https://github.com/geneontology/go-ontology.git'
 
 		    // Default namespace.
+			sh 'env'
 		    sh 'OBO=http://purl.obolibrary.org/obo'
             sh 'RELEASEDATE=$START_DATE'
 
