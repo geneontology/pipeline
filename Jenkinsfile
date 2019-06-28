@@ -364,6 +364,8 @@ pipeline {
 
 		    // Default namespace.
 		    sh 'OBO=http://purl.obolibrary.org/obo'
+		    sh 'RELEASEDATE=$START_DATE'
+		    sh 'env'
 
 		    dir('./src/ontology') {
 			retry(3){
@@ -809,8 +811,16 @@ pipeline {
 	}
 	//...
 	stage('Sanity II') {
+	    when { anyOf { branch 'release' } }
 	    steps {
-		echo 'TODO: Sanity II'
+		echo 'Sanity II: Awaiting user input before proceeding.'
+		lock(resource: 'release-run', inversePrecedence: true) {
+		    echo "Sanity II: A release run holds the lock."
+		    timeout(time:7, unit:'DAYS') {
+			input message:'Approve release products?'
+		    }
+		}
+		echo 'Sanity II: Positive user input input given.'
 	    }
 	}
 	stage('Archive') {
@@ -1219,52 +1229,6 @@ pipeline {
 						sh 'ansible-playbook ./update-golr-w-exp.yaml --inventory=hosts.amigo --private-key="$DEPLOY_REMOTE_IDENTITY" -e target_host=amigo-golr-exp -e target_user=ubuntu'
 					    }
 
-					}
-				    }
-				}
-			    }
-			}
-		    },
-		    "AGR data push": {
-			script {
-			    if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'snapshot' ){
-				sh 'wget -N http://skyhook.berkeleybop.org/$BRANCH_NAME/annotations/fb.gaf.gz'
-				sh 'wget -N http://skyhook.berkeleybop.org/$BRANCH_NAME/annotations/mgi.gaf.gz'
-				sh 'wget -N http://skyhook.berkeleybop.org/$BRANCH_NAME/annotations/rgd.gaf.gz'
-				sh 'wget -N http://skyhook.berkeleybop.org/$BRANCH_NAME/annotations/sgd.gaf.gz'
-				sh 'wget -N http://skyhook.berkeleybop.org/$BRANCH_NAME/annotations/wb.gaf.gz'
-				sh 'wget -N http://skyhook.berkeleybop.org/$BRANCH_NAME/annotations/zfin.gaf.gz'
-				// Uncompress, as required by AGR.
-				sh 'gunzip fb.gaf.gz'
-				sh 'gunzip mgi.gaf.gz'
-				sh 'gunzip rgd.gaf.gz'
-				sh 'gunzip sgd.gaf.gz'
-				sh 'gunzip wb.gaf.gz'
-				sh 'gunzip zfin.gaf.gz'
-				// Push into submission with secret.
-				withCredentials([string(credentialsId: 'agr_submit_system_token', variable: 'AGR_TOKEN')]) {
-				    script {
-					try {
-					    retry(3){
-						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_7227=@fb.gaf"'
-					    }
-					    retry(3){
-						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_10090=@mgi.gaf"'
-					    }
-					    retry(3){
-						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_10116=@rgd.gaf"'
-					    }
-					    retry(3){
-						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_4932=@sgd.gaf"'
-					    }
-					    retry(3){
-						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_6239=@wb.gaf"'
-					    }
-					    retry(3){
-						sh 'curl -H "api_access_token: $AGR_TOKEN" -X POST "https://www.alliancegenome.org/api/data/submit" -F "1.0.0.8_GAF_7955=@zfin.gaf"'
-					    }
-					} catch (exception) {
-					    echo "WARNING: failure to interact with the Alliance API."
 					}
 				    }
 				}
