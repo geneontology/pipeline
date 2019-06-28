@@ -777,8 +777,16 @@ pipeline {
 	}
 	//...
 	stage('Sanity II') {
+	    when { anyOf { branch 'release' } }
 	    steps {
-		echo 'TODO: Sanity II'
+		echo 'Sanity II: Awaiting user input before proceeding.'
+		lock(resource: 'release-run', inversePrecedence: true) {
+		    echo "Sanity II: A release run holds the lock."
+		    timeout(time:7, unit:'DAYS') {
+			input message:'Approve release products?'
+		    }
+		}
+		echo 'Sanity II: Positive user input input given.'
 	    }
 	}
 	stage('Archive') {
