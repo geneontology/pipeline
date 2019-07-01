@@ -457,6 +457,7 @@ pipeline {
 		    sh 'chmod +x bin/*'
 			
 			sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source ./sources --target ./pipeline/target/groups/"
+			sh 'rm ./sources/*'
 			
 		    // Make minimal GAF products.
 		    dir('./pipeline') {
