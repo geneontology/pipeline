@@ -326,12 +326,12 @@ pipeline {
 		steps {
 			dir("./go-site") {
 				git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
-				
+
 				script {
 					def excluded_datasets_args = DATASET_EXCLUDES.split(" ").collect { "-x ${it}" }.join(" ")
 					sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf --type gpi ${excluded_datasets_args}"
 				}
-				
+
 				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 					// upload to skyhook to the expected location
 					sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
@@ -455,10 +455,10 @@ pipeline {
 
 		    }
 		    sh 'chmod +x bin/*'
-			
+
 			sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source ./sources --target ./pipeline/target/groups/"
 			sh 'rm ./sources/*'
-			
+
 		    // Make minimal GAF products.
 		    dir('./pipeline') {
 			// Technically, a meaningless line as we will
@@ -816,6 +816,14 @@ pipeline {
 	stage('Sanity II') {
 	    when { anyOf { branch 'release' } }
 	    steps {
+
+		//
+		echo 'Push pre-release to http://amigo-staging.geneontology.io for testing.'
+		retry(3){
+		    sh 'ansible-playbook update-golr-w-skyhook-forced.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e skyhook_branch=release -e target_host=amigo-golr-staging'
+		}
+
+		// Pause on user input.
 		echo 'Sanity II: Awaiting user input before proceeding.'
 		lock(resource: 'release-run', inversePrecedence: true) {
 		    echo "Sanity II: A release run holds the lock."
