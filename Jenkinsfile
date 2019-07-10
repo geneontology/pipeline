@@ -329,11 +329,11 @@ pipeline {
 
 		    script {
 			def excluded_datasets_args = ""
-			if (binding.variables.containsKey("DATASET_EXCLUDES")) {
+			if (this.getBinding().getVariables().keySet().contains(("DATASET_EXCLUDES"))) {
 				excluded_datasets_args = DATASET_EXCLUDES.split(" ").collect { "-x ${it}" }.join(" ")
 			}
 			def included_resources = ""
-			if (binding.variables.containsKey("RESOURCE_GROUPS")) {
+			if (this.getBinding().getVariables().keySet().contains(("RESOURCE_GROUPS"))) {
 				included_resources = RESOURCE_GROUPS.split(" ").collect { "-g ${it}" }.join(" ")
 			}
 			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf --type gpi ${excluded_datasets_args} ${included_resources}"
