@@ -339,8 +339,49 @@ pipeline {
     	    		    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.4/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
     	                    }
     	                }
+		    },
+		    "Ready Gaferencer": {
+    			dir('./gaferencer') {
+    	                    sh 'wget -N https://github.com/geneontology/gaferencer/releases/download/v0.4.1/gaferencer-0.4.1.tgz'
+    	                    sh 'tar -xvf gaferencer-0.4.1.tgz'
+    	                    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    		// Attempt to rsync bin into bin/.
+    	                        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.4.1/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				// Attempt to rsync libs into lib/.
+    	    		    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.4.1/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
+    	                    }
+    	                }
 		    }
 		)
+	    }
+	}
+	// Download GAFs from datasets yaml in go-site, and then upload to Skyhook
+	stage("Download Data") {
+	    steps {
+		dir("./go-site") {
+		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+
+		    script {
+			def excluded_datasets_args = ""
+			if ( env.DATASET_EXCLUDES ) {
+			    excluded_datasets_args = DATASET_EXCLUDES.split(" ").collect { "-x ${it}" }.join(" ")
+			}
+			def included_resources = ""
+			if (env.RESOURCE_GROUPS) {
+			    included_resources = RESOURCE_GROUPS.split(" ").collect { "-g ${it}" }.join(" ")
+			}
+			def goa_mapping_url = ""
+			if (env.GOA_UNIPROT_ALL_URL) {
+			    goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
+			}
+			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf --type gpi ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
+		    }
+
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			// upload to skyhook to the expected location
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+		    }
+		}
 	    }
 	}
 	// See https://github.com/geneontology/go-ontology for details
@@ -448,13 +489,20 @@ pipeline {
 		    // (and lib/).
 		    sh 'mkdir -p bin/'
 		    sh 'mkdir -p lib/'
+		    sh 'mkdir -p sources/'
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
 			// WARNING/BUG: needed for blazegraph-runner
 			// to run at this point.
             		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+			// Copy the sources we downloaded earlier to local.
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/* ./sources/'
+
 		    }
 		    sh 'chmod +x bin/*'
+
+		    sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source ./sources --target ./pipeline/target/groups/"
+		    sh 'rm ./sources/*'
 
 		    // Make minimal GAF products.
 		    dir('./pipeline') {
@@ -813,6 +861,14 @@ pipeline {
 	stage('Sanity II') {
 	    when { anyOf { branch 'release' } }
 	    steps {
+
+		//
+		echo 'Push pre-release to http://amigo-staging.geneontology.io for testing.'
+		retry(3){
+		    sh 'ansible-playbook update-golr-w-skyhook-forced.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e skyhook_branch=release -e target_host=amigo-golr-staging'
+		}
+
+		// Pause on user input.
 		echo 'Sanity II: Awaiting user input before proceeding.'
 		lock(resource: 'release-run', inversePrecedence: true) {
 		    echo "Sanity II: A release run holds the lock."
