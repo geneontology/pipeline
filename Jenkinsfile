@@ -309,7 +309,7 @@ pipeline {
 		    "Ready Gaferencer": {
     			dir('./gaferencer') {
     	                    sh 'wget -N https://github.com/geneontology/gaferencer/releases/download/v0.4/gaferencer-0.4.tgz'
-    	                    sh 'tar -xvf gaferencer-0.4.tgz'
+    	                    sh 'tar -xvf gaferencer-0.4.1.tgz'
     	                    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    		// Attempt to rsync bin into bin/.
     	                        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.4/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
