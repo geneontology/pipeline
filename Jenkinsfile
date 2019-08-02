@@ -494,8 +494,8 @@ pipeline {
 			    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
 			    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 			    // WARNING: Temporary patch code to prevent bad pandas/gaferencer situation.
-			    python3 ./mypyenv/bin/pip3 uninstall -y pandas
-			    python3 ./mypyenv/bin/pip3 install pandas==0.24.2
+			    sh 'python3 ./mypyenv/bin/pip3 uninstall -y pandas'
+			    sh 'python3 ./mypyenv/bin/pip3 install pandas==0.24.2'
 			    // Ready, set...
 			    sh '$MAKECMD clean'
 
