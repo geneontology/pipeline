@@ -447,55 +447,48 @@ pipeline {
 		    }
 		}
 
-		// Legacy: build 'gaf-production'
+    // Legacy: build 'gaf-production'
 		dir('./go-site') {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
 		    // Make all software products available in bin/
 		    // (and lib/).
-		    sh 'mkdir -p bin/'
-		    sh 'mkdir -p lib/'
+		    sh 'mkdir -p /opt/pipeline/bin/'
+		    sh 'mkdir -p /opt/pipeline/lib/'
 		    sh 'mkdir -p sources/'
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /opt/pipeline/bin/'
 			// WARNING/BUG: needed for blazegraph-runner
 			// to run at this point.
-            		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+            		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /opt/pipeline/lib/'
 			// Copy the sources we downloaded earlier to local.
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/* ./sources/'
 
 		    }
-		    sh 'chmod +x bin/*'
+		    sh 'chmod +x /opt/pipeline/bin/*'
 
 		    sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source ./sources --target ./pipeline/target/groups/"
 		    sh 'rm ./sources/*'
 
 		    // Make minimal GAF products.
 		    dir('./pipeline') {
-			// Technically, a meaningless line as we will
-			// simulate this with entirely withEnv
-			// anyways.
-			sh 'python3 -m venv mypyenv'
 			// Gunna need some memory.
 			// In addition to the memory, try and simulate
 			// the environment changes for python venv activate.
 			// Note the complex assignment of VIRTUAL_ENV and PATH.
 			// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
-			withEnv(['JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G', "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+      // "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin'
+			withEnv(['JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G', 'FOO=BAR']){
 			    // Note environment for future debugging.
+          // Note: https://issues.jenkins-ci.org/browse/JENKINS-53025 and
+          // https://issues.jenkins-ci.org/browse/JENKINS-49076
+          // Just shell out PATH does not work either
+          // sh 'export PATH=/opt/pipeline/bin:$PATH'
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
-			    // WARNING: Okay, this is our current
-			    // workaround for the shebang line limits
-			    // and long workspace names in Jenkins
-			    // declarative
-			    // (https://github.com/pypa/pip/issues/1773).
-			    // There are other tacks we might take
-			    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
-			    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
-			    // WARNING: Temporary patch code to prevent bad pandas/gaferencer situation.
-			    sh 'python3 ./mypyenv/bin/pip3 uninstall -y pandas'
-			    sh 'python3 ./mypyenv/bin/pip3 install pandas==0.24.2'
+
+			    sh 'pip3 install -r requirements.txt'
+          sh 'pip3 install ../graphstore/rule-runner'
 			    // Ready, set...
 			    sh '$MAKECMD clean'
 
@@ -525,7 +518,8 @@ pipeline {
 				    // As long as we're here and have
 				    // everything handy: this is
 				    // SPARTA!
-				    sh '$MAKECMD -e target/sparta-report.json'
+            // sh 'pwd'
+				    sh 'PATH=/opt/pipeline/bin:$PATH $MAKECMD -e target/sparta-report.json'
 				}
 			    }
 			}
