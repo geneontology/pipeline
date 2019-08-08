@@ -421,25 +421,29 @@ pipeline {
 		    dir('./noctua-models') {
 			git url: 'https://github.com/geneontology/noctua-models.git'
 
-			// Make all software products available in bin/
-			// (and lib/).
-			sh 'mkdir -p bin/'
-			sh 'mkdir -p lib/'
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-			    // WARNING/BUG: needed for blazegraph-runner
-			    // to run at this point.
-            		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
-			}
-			sh 'chmod +x bin/*'
+      // Make all software products available in bin/
+      // (and lib/).
+      sh 'mkdir -p /opt/pipeline/bin/'
+      sh 'mkdir -p /opt/pipeline/lib/'
+      sh 'mkdir -p sources/'
+      withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /opt/pipeline/bin/'
+    // WARNING/BUG: needed for blazegraph-runner
+    // to run at this point.
+              sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /opt/pipeline/lib/'
+    // Copy the sources we downloaded earlier to local.
+    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/* ./sources/'
+
+      }
+      sh 'chmod +x /opt/pipeline/bin/*'
 
 			// Compile models.
 			sh 'mkdir -p legacy/gpad'
 			withEnv(['MINERVA_CLI_MEMORY=128G']){
 			    // "Import" models.
-			    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
+			    sh '/opt/pipeline/bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
 			    // Convert GO-CAM to GPAD.
-			    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i blazegraph.jnl --gpad-output legacy/gpad'
+			    sh '/opt/pipeline/bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i blazegraph.jnl --gpad-output legacy/gpad'
 			}
 
 			// Collation.
@@ -455,24 +459,8 @@ pipeline {
 		}
 
     // Legacy: build 'gaf-production'
-		dir('./go-site') {
+    dir('./go-site') {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
-
-		    // Make all software products available in bin/
-		    // (and lib/).
-		    sh 'mkdir -p /opt/pipeline/bin/'
-		    sh 'mkdir -p /opt/pipeline/lib/'
-		    sh 'mkdir -p sources/'
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /opt/pipeline/bin/'
-			// WARNING/BUG: needed for blazegraph-runner
-			// to run at this point.
-            		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /opt/pipeline/lib/'
-			// Copy the sources we downloaded earlier to local.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/* ./sources/'
-
-		    }
-		    sh 'chmod +x /opt/pipeline/bin/*'
 
 		    sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source ./sources --target ./pipeline/target/groups/"
 		    sh 'rm ./sources/*'
