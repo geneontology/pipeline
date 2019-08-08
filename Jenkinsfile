@@ -405,6 +405,13 @@ pipeline {
 	    }
 	}
 	stage('Produce GAFs, TTLs, and journal (mega-step)') {
+    agent {
+      docker {
+        image 'geneontology/dev-base:11e608b3c766884d4e56fd9e1524f475ff8720b6_2019-07-31T140058'
+        args "-u root:root"
+      }
+    }
+
 	    steps {
 
 		// May be parallelized in the future, but may need to
