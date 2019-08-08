@@ -408,7 +408,7 @@ pipeline {
     agent {
       docker {
         image 'geneontology/dev-base:11e608b3c766884d4e56fd9e1524f475ff8720b6_2019-07-31T140058'
-        args "-u root:root"
+        args "-u root:root --mount type=tmpfs,destination=/opt/pipeline/data/"
       }
     }
 
@@ -426,6 +426,8 @@ pipeline {
       sh 'mkdir -p /opt/pipeline/bin/'
       sh 'mkdir -p /opt/pipeline/lib/'
       sh 'mkdir -p sources/'
+	  
+	  
       withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
     sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /opt/pipeline/bin/'
     // WARNING/BUG: needed for blazegraph-runner
@@ -452,6 +454,8 @@ pipeline {
 			// Rename, compress, and move to skyhook.
 			sh 'mcp "legacy/*.gpad" "legacy/noctua_#1.gpad"'
 			sh 'gzip -vk legacy/noctua_*.gpad'
+			// move to docker mount
+			sh 'cp legacy/noctua_*.gpad /opt/pipeline/data/gpads/'
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
 			}
@@ -483,7 +487,7 @@ pipeline {
 			    sh 'cat env.txt'
 
 			    sh 'pip3 install -r requirements.txt'
-          sh 'pip3 install ../graphstore/rule-runner'
+			    sh 'pip3 install ../graphstore/rule-runner'
 			    // Ready, set...
 			    sh '$MAKECMD clean'
 
@@ -515,6 +519,8 @@ pipeline {
 				    // SPARTA!
             // sh 'pwd'
 				    sh 'PATH=/opt/pipeline/bin:$PATH $MAKECMD -e target/sparta-report.json'
+				    // Copy the entire target directory to the shared mount data directory
+				    sh 'cp target /opt/pipeline/data/megastep/'
 				}
 			    }
 			}
