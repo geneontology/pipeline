@@ -356,34 +356,34 @@ pipeline {
 	    }
 	}
 	// Download GAFs from datasets yaml in go-site, and then upload to Skyhook
-	stage("Download Data") {
-	    steps {
-		dir("./go-site") {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
-
-		    script {
-			def excluded_datasets_args = ""
-			if ( env.DATASET_EXCLUDES ) {
-			    excluded_datasets_args = DATASET_EXCLUDES.split(" ").collect { "-x ${it}" }.join(" ")
-			}
-			def included_resources = ""
-			if (env.RESOURCE_GROUPS) {
-			    included_resources = RESOURCE_GROUPS.split(" ").collect { "-g ${it}" }.join(" ")
-			}
-			def goa_mapping_url = ""
-			if (env.GOA_UNIPROT_ALL_URL) {
-			    goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
-			}
-			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
-		    }
-
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			// upload to skyhook to the expected location
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
-		    }
-		}
-	    }
-	}
+	// stage("Download Data") {
+	//     steps {
+	// 	dir("./go-site") {
+	// 	    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+	// 
+	// 	    script {
+	// 		def excluded_datasets_args = ""
+	// 		if ( env.DATASET_EXCLUDES ) {
+	// 		    excluded_datasets_args = DATASET_EXCLUDES.split(" ").collect { "-x ${it}" }.join(" ")
+	// 		}
+	// 		def included_resources = ""
+	// 		if (env.RESOURCE_GROUPS) {
+	// 		    included_resources = RESOURCE_GROUPS.split(" ").collect { "-g ${it}" }.join(" ")
+	// 		}
+	// 		def goa_mapping_url = ""
+	// 		if (env.GOA_UNIPROT_ALL_URL) {
+	// 		    goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
+	// 		}
+	// 		sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
+	// 	    }
+	// 
+	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 		// upload to skyhook to the expected location
+	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+	// 	    }
+	// 	}
+	//     }
+	// }
 	// See https://github.com/geneontology/go-ontology for details
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
@@ -489,20 +489,20 @@ pipeline {
 		    // (and lib/).
 		    sh 'mkdir -p bin/'
 		    sh 'mkdir -p lib/'
-		    sh 'mkdir -p sources/'
+		    // sh 'mkdir -p sources/'
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
 			// WARNING/BUG: needed for blazegraph-runner
 			// to run at this point.
             		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
-			// Copy the sources we downloaded earlier to local.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/* ./sources/'
+			// // Copy the sources we downloaded earlier to local.
+			// sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/* ./sources/'
 
 		    }
 		    sh 'chmod +x bin/*'
 
-		    sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source ./sources --target ./pipeline/target/groups/"
-		    sh 'rm ./sources/*'
+		    // sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source ./sources --target ./pipeline/target/groups/"
+		    // sh 'rm ./sources/*'
 
 		    // Make minimal GAF products.
 		    dir('./pipeline') {
