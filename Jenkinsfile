@@ -452,7 +452,7 @@ pipeline {
 			sh "perl ./util/collate-gpads.pl ${DATA_OUT}/legacy/gpad/*.gpad"
 
 			// Rename, compress, and move to skyhook.
-			sh "mcp \"${DATA_OUT}/legacy/*.gpad" "${DATA_OUT}/legacy/noctua_#1.gpad\""
+			sh "mcp \"${DATA_OUT}/legacy/*.gpad\" \"${DATA_OUT}/legacy/noctua_#1.gpad\""
 			sh "gzip -vk ${DATA_OUT}/legacy/noctua_*.gpad"
 
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
