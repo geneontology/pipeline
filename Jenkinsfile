@@ -404,13 +404,13 @@ pipeline {
 		}
 	    }
 	}
-	stage('Produce GAFs, TTLs, and journal (mega-step)') {
-    agent {
-      docker {
-        image 'geneontology/dev-base:11e608b3c766884d4e56fd9e1524f475ff8720b6_2019-07-31T140058'
-        args "-u root:root --mount type=tmpfs,destination=/opt/pipeline/data/"
-      }
-    }
+    	stage('Produce GAFs, TTLs, and journal (mega-step)') {
+	    agent {
+	    	docker {
+		    image 'geneontology/dev-base:eb2f253bb0ff780e1b623adde6d5537c55c31224_2019-08-13T163314'
+		    args "-u root:root --mount type=tmpfs,destination=/opt/pipeline/data/"
+		}
+	    }
 
 	    steps {
 
@@ -421,53 +421,52 @@ pipeline {
 		    dir('./noctua-models') {
 			git url: 'https://github.com/geneontology/noctua-models.git'
 
-      // Make all software products available in bin/
-      // (and lib/).
-      sh 'mkdir -p /opt/pipeline/bin/'
-      sh 'mkdir -p /opt/pipeline/lib/'
-      sh 'mkdir -p sources/'
+			// Make all software products available in bin/
+			// (and lib/).
+			DATA_OUT = "/opt/pipeline/data"
+			sh 'mkdir -p /opt/pipeline/bin/'
+			sh 'mkdir -p /opt/pipeline/lib/'
+			sh "mkdir -p ${DATA_OUT}/sources/"
 	  
 	  
-      withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /opt/pipeline/bin/'
-    // WARNING/BUG: needed for blazegraph-runner
-    // to run at this point.
-              sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /opt/pipeline/lib/'
-    // Copy the sources we downloaded earlier to local.
-    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/* ./sources/'
-
-      }
-      sh 'chmod +x /opt/pipeline/bin/*'
+		     	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /opt/pipeline/bin/'
+			    // WARNING/BUG: needed for blazegraph-runner
+			    // to run at this point.
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /opt/pipeline/lib/'
+			    // Copy the sources we downloaded earlier to local.
+			    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/*  ${DATA_OUT}/sources/"
+			}
+			sh 'chmod +x /opt/pipeline/bin/*'
 
 			// Compile models.
-			sh 'mkdir -p legacy/gpad'
+			sh "mkdir -p ${DATA_OUT}/legacy/gpad"
 			withEnv(['MINERVA_CLI_MEMORY=128G']){
 			    // "Import" models.
-			    sh '/opt/pipeline/bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
+			    sh "/opt/pipeline/bin/minerva-cli.sh --import-owl-models -f models -j ${DATA_OUT}/minerva/blazegraph.jnl"
 			    // Convert GO-CAM to GPAD.
-			    sh '/opt/pipeline/bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i blazegraph.jnl --gpad-output legacy/gpad'
+			    sh "/opt/pipeline/bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i ${DATA_OUT}/minerva/blazegraph.jnl --gpad-output ${DATA_OUT}/legacy/gpad"
 			}
 
 			// Collation.
-			sh 'perl ./util/collate-gpads.pl legacy/gpad/*.gpad'
+			sh "perl ./util/collate-gpads.pl ${DATA_OUT}/legacy/gpad/*.gpad"
 
 			// Rename, compress, and move to skyhook.
-			sh 'mcp "legacy/*.gpad" "legacy/noctua_#1.gpad"'
-			sh 'gzip -vk legacy/noctua_*.gpad'
-			// move to docker mount
-			sh 'cp legacy/noctua_*.gpad /opt/pipeline/data/gpads/'
+			sh "mcp \"${DATA_OUT}/legacy/*.gpad" "${DATA_OUT}/legacy/noctua_#1.gpad\""
+			sh "gzip -vk ${DATA_OUT}/legacy/noctua_*.gpad"
+
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+			    sh "scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ${DATA_OUT}/legacy/noctua_*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/"
 			}
 		    }
 		}
 
-    // Legacy: build 'gaf-production'
-    dir('./go-site') {
+		// Legacy: build 'gaf-production'
+		dir("${DATA_OUT}/go-site") {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-		    sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source ./sources --target ./pipeline/target/groups/"
-		    sh 'rm ./sources/*'
+		    sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source ${DATA_OUT}/sources --target ./pipeline/target/groups/"
+		    sh "rm ${DATA_SOURCES}/sources/*"
 
 		    // Make minimal GAF products.
 		    dir('./pipeline') {
@@ -476,13 +475,13 @@ pipeline {
 			// the environment changes for python venv activate.
 			// Note the complex assignment of VIRTUAL_ENV and PATH.
 			// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
-      // "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin'
+			// "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin'
 			withEnv(['JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G', 'FOO=BAR']){
 			    // Note environment for future debugging.
-          // Note: https://issues.jenkins-ci.org/browse/JENKINS-53025 and
-          // https://issues.jenkins-ci.org/browse/JENKINS-49076
-          // Just shell out PATH does not work either
-          // sh 'export PATH=/opt/pipeline/bin:$PATH'
+			    // Note: https://issues.jenkins-ci.org/browse/JENKINS-53025 and
+			    // https://issues.jenkins-ci.org/browse/JENKINS-49076
+			    // Just shell out PATH does not work either
+			    // sh 'export PATH=/opt/pipeline/bin:$PATH'
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
 
@@ -517,10 +516,8 @@ pipeline {
 				    // As long as we're here and have
 				    // everything handy: this is
 				    // SPARTA!
-            // sh 'pwd'
+				    // sh 'pwd'
 				    sh 'PATH=/opt/pipeline/bin:$PATH $MAKECMD -e target/sparta-report.json'
-				    // Copy the entire target directory to the shared mount data directory
-				    sh 'cp target /opt/pipeline/data/megastep/'
 				}
 			    }
 			}
