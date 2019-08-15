@@ -803,7 +803,7 @@ pipeline {
 	stage('Produce derivatives') {
 	    agent {
                 docker {
-		    image 'geneontology/golr-autoindex:b1007d0cfd356f707086a910342ba49b9511ba51_2019-01-09T143943'
+		    image 'geneontology/golr-autoindex:b198087f5cfeecce4f35eb02b81b38d91e50bcaa_2019-08-06T174705'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
@@ -823,6 +823,29 @@ pipeline {
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		    // Copy over log.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		}
+
+		// Solr should still be running in the background here
+		// from indexing--create stats products from running
+		// GOlr.
+		// Prepare a working directory based around go-site.
+		dir('./go-site') {
+		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+
+		    // Not much want or need here--simple
+		    // python3. However, using the information hidden
+		    // in run-indexer.sh to know where the Solr
+		    // instance is hiding.
+		    sh 'mkdir -p /tmp/stats/ || true'
+		    sh 'cp ./scripts/go_stats.py /tmp'
+		    // Needed as extra library.
+		    sh 'pip3 install requests'
+		    //sh 'python3 ./scripts/go_stats.py -g http://localhost:8080/solr/ -o /tmp/stats/'
+		    sh 'bash /tmp/run-command.sh -c "python3 /tmp/go_stats.py -g http://localhost:8080/solr/ -o /tmp/stats/"'
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			// Copy over stats files.
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/stats/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/metadata/'
+		    }
 		}
 	    }
 	}
