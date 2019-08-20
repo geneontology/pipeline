@@ -31,7 +31,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'group_gaferencer_script'
+  TARGET_GO_SITE_BRANCH = 'group_gaferencer_script'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'edouglass@lbl.gov'
@@ -427,8 +427,8 @@ pipeline {
 			sh 'mkdir -p /opt/pipeline/bin/'
 			sh 'mkdir -p /opt/pipeline/lib/'
 			sh "mkdir -p ${DATA_OUT}/sources/"
-	  
-	  
+
+
 		     	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /opt/pipeline/bin/'
 			    // WARNING/BUG: needed for blazegraph-runner
@@ -449,10 +449,13 @@ pipeline {
 			}
 
 			// Collation.
+      // Make sure a local legacy dir exists for the collage gpads script
+      sh 'mkdir ./legacy/'
+      // This puts the gpads collated in above ./legacy/
 			sh "perl ./util/collate-gpads.pl ${DATA_OUT}/legacy/gpad/*.gpad"
 
 			// Rename, compress, and move to skyhook.
-			sh "mcp \"${DATA_OUT}/legacy/*.gpad\" \"${DATA_OUT}/legacy/noctua_#1.gpad\""
+			sh "mcp \"./legacy/*.gpad\" \"${DATA_OUT}/legacy/noctua_#1.gpad\""
 			sh "gzip -vk ${DATA_OUT}/legacy/noctua_*.gpad"
 
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
