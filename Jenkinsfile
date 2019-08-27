@@ -326,7 +326,7 @@ pipeline {
 	//     steps {
 	// 	dir("./go-site") {
 	// 	    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
-	// 
+	//
 	// 	    script {
 	// 		def excluded_datasets_args = ""
 	// 		if ( env.DATASET_EXCLUDES ) {
@@ -342,7 +342,7 @@ pipeline {
 	// 		}
 	// 		sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
 	// 	    }
-	// 
+	//
 	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 	// 		// upload to skyhook to the expected location
 	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
@@ -856,19 +856,35 @@ pipeline {
 
 		//
 		echo 'Push pre-release to http://amigo-staging.geneontology.io for testing.'
-		retry(3){
-		    sh 'ansible-playbook update-golr-w-skyhook-forced.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e skyhook_branch=release -e target_host=amigo-golr-staging'
-		}
 
-		// Pause on user input.
-		echo 'Sanity II: Awaiting user input before proceeding.'
-		lock(resource: 'release-run', inversePrecedence: true) {
-		    echo "Sanity II: A release run holds the lock."
-		    timeout(time:7, unit:'DAYS') {
-			input message:'Approve release products?'
+		// Ninja in our file credentials from Jenkins.
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY'), file(credentialsId: 'go-svn-private-key', variable: 'GO_SVN_IDENTITY'), file(credentialsId: 'ansible-bbop-local-slave', variable: 'DEPLOY_LOCAL_IDENTITY'), file(credentialsId: 'go-aws-ec2-ansible-slave', variable: 'DEPLOY_REMOTE_IDENTITY')]) {
+
+		    // Get our operations code and decend into ansible
+		    // working directory.
+		    dir('./operations') {
+
+			git([branch: 'master',
+			     credentialsId: 'bbop-agent-github-user-pass',
+			     url: 'https://github.com/geneontology/operations.git'])
+			dir('./ansible') {
+
+			    retry(3){
+				sh 'ansible-playbook update-golr-w-skyhook-forced.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e skyhook_branch=release -e target_host=amigo-golr-staging'
+			    }
+
+			    // Pause on user input.
+			    echo 'Sanity II: Awaiting user input before proceeding.'
+			    lock(resource: 'release-run', inversePrecedence: true) {
+				echo "Sanity II: A release run holds the lock."
+				timeout(time:7, unit:'DAYS') {
+				    input message:'Approve release products?'
+				}
+			    }
+			    echo 'Sanity II: Positive user input input given.'
+			}
 		    }
 		}
-		echo 'Sanity II: Positive user input input given.'
 	    }
 	}
 	stage('Archive') {
