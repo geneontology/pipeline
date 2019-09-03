@@ -404,17 +404,9 @@ pipeline {
 		}
 	    }
 	}
-    	stage('Produce GAFs, TTLs, and journal (mega-step)') {
-	    agent {
-	    	docker {
-		    image 'geneontology/dev-base:eb2f253bb0ff780e1b623adde6d5537c55c31224_2019-08-13T163314'
-		    args "-u root:root --mount type=tmpfs,destination=/opt/pipeline/data/"
-		}
-	    }
-
+	stage('Make Noctua GPAD') {
 	    steps {
-
-		// May be parallelized in the future, but may need to
+		    // May be parallelized in the future, but may need to
 		// serve as input into into mega step.
 		script {
 
@@ -423,53 +415,70 @@ pipeline {
 
 			// Make all software products available in bin/
 			// (and lib/).
-			DATA_OUT = "/opt/pipeline/data"
-			sh 'mkdir -p /opt/pipeline/bin/'
-			sh 'mkdir -p /opt/pipeline/lib/'
-			sh "mkdir -p ${DATA_OUT}/sources/"
-	  
-	  
-		     	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /opt/pipeline/bin/'
+			sh 'mkdir -p bin/'
+			sh 'mkdir -p lib/'
+			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
 			    // WARNING/BUG: needed for blazegraph-runner
 			    // to run at this point.
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /opt/pipeline/lib/'
-			    // Copy the sources we downloaded earlier to local.
-			    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/*  ${DATA_OUT}/sources/"
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
 			}
-			sh 'chmod +x /opt/pipeline/bin/*'
+			sh 'chmod +x bin/*'
 
 			// Compile models.
-			sh "mkdir -p ${DATA_OUT}/legacy/gpad"
+			sh 'mkdir -p legacy/gpad'
 			withEnv(['MINERVA_CLI_MEMORY=128G']){
 			    // "Import" models.
-			    sh "/opt/pipeline/bin/minerva-cli.sh --import-owl-models -f models -j ${DATA_OUT}/minerva/blazegraph.jnl"
+			    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
 			    // Convert GO-CAM to GPAD.
-			    sh "/opt/pipeline/bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i ${DATA_OUT}/minerva/blazegraph.jnl --gpad-output ${DATA_OUT}/legacy/gpad"
+			    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i blazegraph.jnl --gpad-output legacy/gpad'
 			}
 
 			// Collation.
-			sh "perl ./util/collate-gpads.pl ${DATA_OUT}/legacy/gpad/*.gpad"
+			sh 'perl ./util/collate-gpads.pl legacy/gpad/*.gpad'
 
 			// Rename, compress, and move to skyhook.
-			sh "mcp \"${DATA_OUT}/legacy/*.gpad\" \"${DATA_OUT}/legacy/noctua_#1.gpad\""
-			sh "gzip -vk ${DATA_OUT}/legacy/noctua_*.gpad"
-
+			sh 'mcp "legacy/*.gpad" "legacy/noctua_#1.gpad"'
+			sh 'gzip -vk legacy/noctua_*.gpad'
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh "scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ${DATA_OUT}/legacy/noctua_*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/"
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
 			}
 		    }
 		}
+	    }
+	}
+	
+	stage('Produce GAFs, TTLs, and journal (mega-step)') {
+	    agent {
+	    	docker {
+		    image 'geneontology/dev-base:eb2f253bb0ff780e1b623adde6d5537c55c31224_2019-08-13T163314'
+		    args "-u root:root --mount type=tmpfs,destination=/opt"
+		}
+	    }
 
-		// Legacy: build 'gaf-production'
-		dir("${DATA_OUT}/go-site") {
+	    steps {
+
+		    // Legacy: build 'gaf-production'
+	    	    sh "mkdir -p /opt/go-site && cd /opt/go-site"
+		    sh "mkdir -p /opt/go-site/bin"
+		    sh "mkdir -p /opt/go-site/lib"
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
-
-		    sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source ${DATA_OUT}/sources --target ./pipeline/target/groups/"
-		    sh "rm ${DATA_SOURCES}/sources/*"
+		    
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /opt/go-site/bin/'
+			// WARNING/BUG: needed for blazegraph-runner
+			// to run at this point.
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /opt/go-site/lib/'
+			// Copy the sources we downloaded earlier to local.
+			sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/*  /opt/go-site/sources/"
+		    }
+		    sh "chmod +x /opt/go-site/bin/*"
+		    
+		    sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source /opt/go-site/sources --target ./pipeline/target/groups/"
+		    sh "rm /opt/go-site/sources/*"
 
 		    // Make minimal GAF products.
-		    dir('./pipeline') {
+		    sh "cd ./pipeline"
 			// Gunna need some memory.
 			// In addition to the memory, try and simulate
 			// the environment changes for python venv activate.
@@ -500,7 +509,7 @@ pipeline {
 				    // // For GAF joy, plus "extras".
 				    // sh 'make all'
 				    // Shaking the magic beads for "extras".
-                		    // sh '$MAKECMD -e extra_files'
+	        		    // sh '$MAKECMD -e extra_files'
 				    // Make basic (non-enriched/reasoned) TTLs.
 				    //sh '$MAKECMD -e all_targets_ttl'
 
@@ -522,7 +531,7 @@ pipeline {
 			    }
 			}
 			// Copy products over to skyhook.
-                        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			    // All non-core GAFs to the side in
 			    // products/gaf. Basically:
 			    //  - all irregular gaffy files + anything paint-y
@@ -564,19 +573,18 @@ pipeline {
 			    // Flatten the TTLs into products/ttl/.
 			    sh 'find ./target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
 			    // Compress the journals.
-                	    sh 'pigz target/blazegraph-internal.jnl'
-                	    sh 'pigz target/blazegraph-production.jnl'
+	        	    sh 'pigz target/blazegraph-internal.jnl'
+	        	    sh 'pigz target/blazegraph-production.jnl'
 			    // Copy the journals directly to products.
-                	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
-                	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+	        	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+	        	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
 			    // Copy the reports into reports.
-                            sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+	                    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 			    // Plus: flatten product reports in json,
 			    // md reports, text files, etc.
 			    sh 'find ./target/groups -type f -regex "^.*\\.\\(json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports \\;'
 			}
-		    }
-		}
+		
 	    }
 	}
 	// A new step to think about. What is our core metadata?
