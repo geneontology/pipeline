@@ -31,7 +31,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'group_gaferencer_script'
+  TARGET_GO_SITE_BRANCH = 'group_gaferencer_script'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'edouglass@lbl.gov'
