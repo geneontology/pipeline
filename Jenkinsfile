@@ -452,7 +452,7 @@ pipeline {
 	    agent {
 	    	docker {
 		    image 'geneontology/dev-base:eb2f253bb0ff780e1b623adde6d5537c55c31224_2019-08-13T163314'
-		    args "-u root:root --mount type=tmpfs,destination=/opt"
+		    args "-u root:root --mount type=tmpfs,destination=/opt -w /opt/"
 		}
 	    }
 
@@ -460,6 +460,7 @@ pipeline {
 
 		    // Legacy: build 'gaf-production'
 	    	    sh "mkdir -p /opt/go-site && cd /opt/go-site"
+		    sh "pwd"
 		    sh "mkdir -p /opt/go-site/bin"
 		    sh "mkdir -p /opt/go-site/lib"
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
@@ -479,6 +480,7 @@ pipeline {
 
 		    // Make minimal GAF products.
 		    sh "cd ./pipeline"
+		    sh "pwd"
 			// Gunna need some memory.
 			// In addition to the memory, try and simulate
 			// the environment changes for python venv activate.
