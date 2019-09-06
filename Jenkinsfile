@@ -79,11 +79,6 @@ pipeline {
 	].join(" ")
 
 	///
-	/// ROBOT
-	///
-	ROBOT_JAVA_ARGS = '-Xmx64G'
-
-	///
 	/// GOlr/AmiGO input.
 	///
 
