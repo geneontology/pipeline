@@ -376,7 +376,8 @@ pipeline {
 
 		    dir('./src/ontology') {
 			retry(3){
-			    sh 'make all'
+			    //sh 'make all'
+			    sh 'make ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
 			}
 			retry(3){
 			    sh 'make prepare_release'
