@@ -477,7 +477,7 @@ pipeline {
 		    }
 		    sh "chmod +x /opt/bin/*"
 		    
-		    sh "python3 ./scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source /opt/go-site/sources --target ./pipeline/target/groups/"
+		    sh "python3 /opt/go-site/scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source /opt/go-site/sources --target ./pipeline/target/groups/"
 		    sh "rm /opt/go-site/sources/*"
 
 		    // Make minimal GAF products.
@@ -498,10 +498,10 @@ pipeline {
 			    sh 'env > env.txt'
 			    sh 'cat env.txt'
 
-			    sh 'cd cd /opt/go-site/pipeline && pip3 install -r requirements.txt'
-			    sh 'cd cd /opt/go-site/pipeline && pip3 install ../graphstore/rule-runner'
+			    sh 'cd /opt/go-site/pipeline && pip3 install -r requirements.txt'
+			    sh 'cd /opt/go-site/pipeline && pip3 install ../graphstore/rule-runner'
 			    // Ready, set...
-			    sh 'cd cd /opt/go-site/pipeline && $MAKECMD clean'
+			    sh 'cd /opt/go-site/pipeline && $MAKECMD clean'
 
 			    // Do this thing, but the watchdog sits
 			    // waiting.
