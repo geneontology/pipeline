@@ -406,6 +406,7 @@ pipeline {
 	}
 	stage('Make Noctua GPAD') {
 	    steps {
+		    sh "echo hello"
 		    // May be parallelized in the future, but may need to
 		// serve as input into into mega step.
 		// script {
