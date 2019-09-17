@@ -534,6 +534,7 @@ pipeline {
 				    // everything handy: this is
 				    // SPARTA!
 				    // sh 'pwd'
+				    sh 'mount'
 				    sh 'cd /opt/go-site/pipeline && PATH=/opt/bin:$PATH $MAKECMD -e target/sparta-report.json'
 				}
 			    }
