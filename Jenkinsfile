@@ -477,7 +477,7 @@ pipeline {
 		    }
 		    sh "chmod +x /opt/bin/*"
 		    
-		    sh "python3 /opt/go-site/scripts/download_source_gafs.py organize --datasets ./metadata/datasets --source /opt/go-site/sources --target ./pipeline/target/groups/"
+		    sh "python3 /opt/go-site/scripts/download_source_gafs.py organize --datasets /opt/go-site/metadata/datasets --source /opt/go-site/sources --target /opt/go-site/pipeline/target/groups/"
 		    sh "rm /opt/go-site/sources/*"
 
 		    // Make minimal GAF products.
