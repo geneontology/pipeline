@@ -364,44 +364,45 @@ pipeline {
 		}
             }
 	    steps {
-		// Create a relative working directory and setup our
-		// data environment.
-		dir('./go-ontology') {
-		    git 'https://github.com/geneontology/go-ontology.git'
-
-		    // Default namespace.
-		    sh 'OBO=http://purl.obolibrary.org/obo'
-		    sh 'RELEASEDATE=$START_DATE'
-		    sh 'env'
-
-		    dir('./src/ontology') {
-			retry(3){\
-			    sh 'make ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
-			}
-			retry(3){
-			    sh 'make prepare_release'
-			}
-		    }
-
-		    // Make sure that we copy any files there,
-		    // including the core dump of produced.
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
-			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
-		    }
-
-		    // Now that the files are safely away onto skyhook for
-		    // debugging, test for the core dump.
-		    script {
-			if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
-
-			    def found_core_dump_p = fileExists 'target/core_dump.owl'
-			    if( found_core_dump_p ){
-				error 'ROBOT core dump detected--bailing out.'
-			    }
-			}
-		    }
-		}
+		sh "echo hello"
+		// // Create a relative working directory and setup our
+		// // data environment.
+		// dir('./go-ontology') {
+		//     git 'https://github.com/geneontology/go-ontology.git'
+	    // 
+		//     // Default namespace.
+		//     sh 'OBO=http://purl.obolibrary.org/obo'
+		//     sh 'RELEASEDATE=$START_DATE'
+		//     sh 'env'
+	    // 
+		//     dir('./src/ontology') {
+		// 	retry(3){\
+		// 	    sh 'make ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
+		// 	}
+		// 	retry(3){
+		// 	    sh 'make prepare_release'
+		// 	}
+		//     }
+	    // 
+		//     // Make sure that we copy any files there,
+		//     // including the core dump of produced.
+		//     withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		// 	//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
+		// 	sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
+		//     }
+	    // 
+		//     // Now that the files are safely away onto skyhook for
+		//     // debugging, test for the core dump.
+		//     script {
+		// 	if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
+	    // 
+		// 	    def found_core_dump_p = fileExists 'target/core_dump.owl'
+		// 	    if( found_core_dump_p ){
+		// 		error 'ROBOT core dump detected--bailing out.'
+		// 	    }
+		// 	}
+		//     }
+		// }
 	    }
 	}
 	stage('Make Noctua GPAD') {
@@ -476,6 +477,7 @@ pipeline {
 			sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/*  /opt/go-site/sources/"
 		    }
 		    sh "chmod +x /opt/bin/*"
+		    sh "ls -l /opt/bin/"
 		    
 		    sh "python3 /opt/go-site/scripts/download_source_gafs.py organize --datasets /opt/go-site/metadata/datasets --source /opt/go-site/sources --target /opt/go-site/pipeline/target/groups/"
 		    sh "rm /opt/go-site/sources/*"
