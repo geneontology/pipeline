@@ -530,7 +530,7 @@ pipeline {
 				    // everything handy: this is
 				    // SPARTA!
 				    // sh 'pwd'
-				    sh 'cd /opt/go-site/pipeline && PATH=/opt/pipeline/bin:$PATH $MAKECMD -e target/sparta-report.json'
+				    sh 'cd /opt/go-site/pipeline && PATH=/opt/bin:$PATH $MAKECMD -e target/sparta-report.json'
 				}
 			    }
 			}
