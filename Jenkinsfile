@@ -461,6 +461,8 @@ pipeline {
 	    steps {
 
 		    // Legacy: build 'gaf-production'
+		    // What user are we?
+		    sh "id -u -n"
 	    	    sh "mkdir -p /opt/go-site"
 		    sh "cd /opt/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
 		    // sh "pwd"
