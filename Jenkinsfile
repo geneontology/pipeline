@@ -454,7 +454,7 @@ pipeline {
 	    agent {
 	    	docker {
 		    image 'geneontology/dev-base:eb2f253bb0ff780e1b623adde6d5537c55c31224_2019-08-13T163314'
-		    args "-u root:root --mount type=tmpfs,destination=/opt,tmpfs-mode=0777 -w /opt/"
+		    args "-u root:root --tmpfs /opt:exec --mount type=tmpfs,destination=/opt -w /opt"
 		}
 	    }
 
