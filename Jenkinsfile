@@ -370,13 +370,11 @@ pipeline {
 		    git 'https://github.com/geneontology/go-ontology.git'
 
 		    // Default namespace.
-		    sh 'OBO=http://purl.obolibrary.org/obo'
-		    sh 'RELEASEDATE=$START_DATE'
 		    sh 'env'
 
 		    dir('./src/ontology') {
 			retry(3){
-			    sh 'make ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
+			    sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
 			}
 			retry(3){
 			    sh 'make prepare_release'
