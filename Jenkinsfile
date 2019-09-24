@@ -31,7 +31,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'master'
+	TARGET_GO_SITE_BRANCH = 'issue-842-add-stats'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
@@ -208,6 +208,7 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/release_stats || true'
 			// Tag the top to let the world know I was at least
 			// here.
 			sh 'echo "Runtime summary." > $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
@@ -835,14 +836,33 @@ pipeline {
 		    // in run-indexer.sh to know where the Solr
 		    // instance is hiding.
 		    sh 'mkdir -p /tmp/stats/ || true'
-		    sh 'cp ./scripts/go_stats.py /tmp'
+		    sh 'cp ./scripts/*.py /tmp'
 		    // Needed as extra library.
 		    sh 'pip3 install requests'
-		    //sh 'python3 ./scripts/go_stats.py -g http://localhost:8080/solr/ -o /tmp/stats/'
-		    sh 'bash /tmp/run-command.sh -c "python3 /tmp/go_stats.py -g http://localhost:8080/solr/ -o /tmp/stats/"'
+		    sh 'pip3 install networkx'
+		    //sh 'bash /tmp/run-command.sh -c "python3 /tmp/go_stats.py -g http://localhost:8080/solr/ -o /tmp/stats/"'
+
+		    // WARNING: Temorary version.
+		    // Final command, sealed into docker work
+		    // environment.
+		    //sh 'bash /tmp/run-command.sh -c "python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats.json -n https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats-no-pb.json -c http://current.geneontology.org/ontology/go.obo -p https://geneontology.s3.amazonaws.com/archive/2019-07-01_go.obo -o /tmp/stats/ -d $START_DATE"'
+		    echo "Check that results have been stored properly"
+		    sh "curl 'http://localhost:8080/solr/select?q=*:*&rows=0'"
+		    echo "End of results"
+		    sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats.json -n https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p https://geneontology.s3.amazonaws.com/archive/2019-07-01_go.obo -o /tmp/stats/ -d $START_DATE'
+		    // WARNING: Temorary version.
+		    // One-time command run up.
+		    sh 'wget -N https://geneontology-test.s3.amazonaws.com/aggregated-go-stats-summaries.json'
+		    // WARNING: Temorary version.
+		    // Roll the stats forward.
+		    sh 'ls .'
+		    sh 'ls /tmp/'
+		    sh 'ls /tmp/stats/'
+		    sh 'python3 /tmp/aggregate-stats.py -a aggregated-go-stats-summaries.json -b /tmp/stats/go-stats.json -o /tmp/stats/aggregated-go-stats-summaries.json'
+
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			// Copy over stats files.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/stats/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/metadata/'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/stats/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/release_stats/'
 		    }
 		}
 	    }
