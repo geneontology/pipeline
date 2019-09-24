@@ -502,8 +502,6 @@ pipeline {
 			    sh 'cd /opt/go-site/pipeline && pip3 install -r requirements.txt'
 			    sh 'cd /opt/go-site/pipeline && pip3 install ../graphstore/rule-runner'
 			    // Ready, set...
-			    sh 'cd /opt/go-site/pipeline && $MAKECMD clean'
-
 			    // Do this thing, but the watchdog sits
 			    // waiting.
 			    timeout(time: 20, unit: 'HOURS') {
