@@ -86,10 +86,10 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-gaf.owl",
-	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/gorel.owl",
-	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-modules-annotations.owl",
-	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-taxon-subsets.owl",
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl",
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/gorel.owl",
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-modules-annotations.owl",
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-taxon-subsets.owl",
 	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
 	    "http://purl.obolibrary.org/obo/cl/cl-basic.owl",
