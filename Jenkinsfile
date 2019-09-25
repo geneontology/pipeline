@@ -52,6 +52,11 @@ pipeline {
 	// improvement.
 	MAKECMD = 'make --jobs 3 --max-load 10.0'
 	//MAKECMD = 'make'
+	
+	// Flag that sets if we should use previously used/built artifacts
+	// in order to speed up this run. For example, if 'TRUE', we would
+	// reuse the previous ontology build instead of building it here.
+	REUSE_PREVIOUS_WORK_P = 'TRUE'
 
 	///
 	/// Application tokens.
@@ -159,6 +164,10 @@ pipeline {
 			sh '`exit -1`'
 		    }else if( BRANCH_NAME != 'release' && TARGET_BUCKET == 'go-data-product-release'){
 			echo 'Only master can touch that target.'
+			sh '`exit -1`'
+		    }
+		    if( REUSE_PREVIOUS_WORK_P == 'TRUE' && (BRANCH_NAME == "release" || BRANCH_NAME == "snapshot") ) {
+			echo 'REUSE_PREVIOUS_WORK_P can only be TRUE if we\'re not on release or snapshot'
 			sh '`exit -1`'
 		    }
 		}
