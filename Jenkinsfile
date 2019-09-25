@@ -32,6 +32,9 @@ pipeline {
 
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'issue-842-add-stats'
+	CURRENT_NOCTUA_MODELS_BRANCH = "master"
+	SMALL_NOCTUA_MODELS_BRANCH = "subset"
+	STANDARD_NOCTUA_MODELS_BRANCH = "master"
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
@@ -169,7 +172,11 @@ pipeline {
 		    if( REUSE_PREVIOUS_WORK_P == 'TRUE' && (BRANCH_NAME == "release" || BRANCH_NAME == "snapshot") ) {
 			echo 'REUSE_PREVIOUS_WORK_P can only be TRUE if we\'re not on release or snapshot'
 			sh '`exit -1`'
+		    } else if( REUSE_PREVIOUS_WORK_P == 'TRUE') {
+			// If we want a faster run, then set noctua models branch to the small subset version
+			CURRENT_NOCTUA_MODELS_BRANCH = SMALL_NOCTUA_MODELS_BRANCH
 		    }
+		    echo "Currently using ${CURRENT_NOCTUA_MODELS_BRANCH} branch of noctua-models"
 		}
 
 		// Give us a minute to cancel if we want.
@@ -420,7 +427,7 @@ pipeline {
 		script {
 
 		    dir('./noctua-models') {
-			git url: 'https://github.com/geneontology/noctua-models.git'
+			git branch: CURRENT_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
 
 			// Make all software products available in bin/
 			// (and lib/).
@@ -430,7 +437,7 @@ pipeline {
 			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
 			    // WARNING/BUG: needed for blazegraph-runner
 			    // to run at this point.
-            		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
 			}
 			sh 'chmod +x bin/*'
 
