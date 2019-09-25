@@ -365,88 +365,88 @@ pipeline {
             }
 	    steps {
 		sh "echo hello"
-		// // Create a relative working directory and setup our
-		// // data environment.
-		// dir('./go-ontology') {
-		//     git 'https://github.com/geneontology/go-ontology.git'
-		// 
-		//     // Default namespace.
-		//     sh 'OBO=http://purl.obolibrary.org/obo'
-		//     sh 'RELEASEDATE=$START_DATE'
-		//     sh 'env'
-		// 
-		//     dir('./src/ontology') {
-		// 	retry(3){\
-		// 	    sh 'make ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
-		// 	}
-		// 	retry(3){
-		// 	    sh 'make prepare_release'
-		// 	}
-		//     }
-		// 
-		//     // Make sure that we copy any files there,
-		//     // including the core dump of produced.
-		//     withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		// 	//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
-		// 	sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
-		//     }
-		// 
-		//     // Now that the files are safely away onto skyhook for
-		//     // debugging, test for the core dump.
-		//     script {
-		// 	if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
-		// 
-		// 	    def found_core_dump_p = fileExists 'target/core_dump.owl'
-		// 	    if( found_core_dump_p ){
-		// 		error 'ROBOT core dump detected--bailing out.'
-		// 	    }
-		// 	}
-		//     }
-		// }
+		// Create a relative working directory and setup our
+		// data environment.
+		dir('./go-ontology') {
+		    git 'https://github.com/geneontology/go-ontology.git'
+		
+		    // Default namespace.
+		    sh 'OBO=http://purl.obolibrary.org/obo'
+		    sh 'RELEASEDATE=$START_DATE'
+		    sh 'env'
+		
+		    dir('./src/ontology') {
+			retry(3){\
+			    sh 'make ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
+			}
+			retry(3){
+			    sh 'make prepare_release'
+			}
+		    }
+		
+		    // Make sure that we copy any files there,
+		    // including the core dump of produced.
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
+		    }
+		
+		    // Now that the files are safely away onto skyhook for
+		    // debugging, test for the core dump.
+		    script {
+			if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
+		
+			    def found_core_dump_p = fileExists 'target/core_dump.owl'
+			    if( found_core_dump_p ){
+				error 'ROBOT core dump detected--bailing out.'
+			    }
+			}
+		    }
+		}
 	    }
 	}
 	stage('Make Noctua GPAD') {
 	    steps {
-		    sh "echo hello"
-		    // May be parallelized in the future, but may need to
+		sh "echo hello"
+		// May be parallelized in the future, but may need to
 		// serve as input into into mega step.
-		// script {
-		// 
-		//     dir('./noctua-models') {
-		// 	git url: 'https://github.com/geneontology/noctua-models.git'
-		// 
-		// 	// Make all software products available in bin/
-		// 	// (and lib/).
-		// 	sh 'mkdir -p bin/'
-		// 	sh 'mkdir -p lib/'
-		// 	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		// 	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-		// 	    // WARNING/BUG: needed for blazegraph-runner
-		// 	    // to run at this point.
-		// 	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
-		// 	}
-		// 	sh 'chmod +x bin/*'
-		// 
-		// 	// Compile models.
-		// 	sh 'mkdir -p legacy/gpad'
-		// 	withEnv(['MINERVA_CLI_MEMORY=128G']){
-		// 	    // "Import" models.
-		// 	    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
-		// 	    // Convert GO-CAM to GPAD.
-		// 	    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i blazegraph.jnl --gpad-output legacy/gpad'
-		// 	}
-		// 
-		// 	// Collation.
-		// 	sh 'perl ./util/collate-gpads.pl legacy/gpad/*.gpad'
-		// 
-		// 	// Rename, compress, and move to skyhook.
-		// 	sh 'mcp "legacy/*.gpad" "legacy/noctua_#1.gpad"'
-		// 	sh 'gzip -vk legacy/noctua_*.gpad'
-		// 	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		// 	    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
-		// 	}
-		//     }
-		// }
+		script {
+		
+		    dir('./noctua-models') {
+			git url: 'https://github.com/geneontology/noctua-models.git'
+		
+			// Make all software products available in bin/
+			// (and lib/).
+			sh 'mkdir -p bin/'
+			sh 'mkdir -p lib/'
+			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+			    // WARNING/BUG: needed for blazegraph-runner
+			    // to run at this point.
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+			}
+			sh 'chmod +x bin/*'
+		
+			// Compile models.
+			sh 'mkdir -p legacy/gpad'
+			withEnv(['MINERVA_CLI_MEMORY=128G']){
+			    // "Import" models.
+			    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
+			    // Convert GO-CAM to GPAD.
+			    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i blazegraph.jnl --gpad-output legacy/gpad'
+			}
+		
+			// Collation.
+			sh 'perl ./util/collate-gpads.pl legacy/gpad/*.gpad'
+		
+			// Rename, compress, and move to skyhook.
+			sh 'mcp "legacy/*.gpad" "legacy/noctua_#1.gpad"'
+			sh 'gzip -vk legacy/noctua_*.gpad'
+			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+			}
+		    }
+		}
 	    }
 	}
 	
