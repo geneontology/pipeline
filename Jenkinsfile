@@ -32,9 +32,7 @@ pipeline {
 
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'issue-842-add-stats'
-	CURRENT_NOCTUA_MODELS_BRANCH = "master"
-	SMALL_NOCTUA_MODELS_BRANCH = "subset"
-	STANDARD_NOCTUA_MODELS_BRANCH = "master"
+	TARGET_NOCTUA_MODELS_BRANCH = "subset"
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
@@ -172,11 +170,8 @@ pipeline {
 		    if( REUSE_PREVIOUS_WORK_P == 'TRUE' && (BRANCH_NAME == "release" || BRANCH_NAME == "snapshot") ) {
 			echo 'REUSE_PREVIOUS_WORK_P can only be TRUE if we\'re not on release or snapshot'
 			sh '`exit -1`'
-		    } else if( REUSE_PREVIOUS_WORK_P == 'TRUE') {
-			// If we want a faster run, then set noctua models branch to the small subset version
-			CURRENT_NOCTUA_MODELS_BRANCH = SMALL_NOCTUA_MODELS_BRANCH
 		    }
-		    echo "Currently using ${CURRENT_NOCTUA_MODELS_BRANCH} branch of noctua-models"
+		    echo "Currently using ${TARGET_NOCTUA_MODELS_BRANCH} branch of noctua-models"
 		}
 
 		// Give us a minute to cancel if we want.
