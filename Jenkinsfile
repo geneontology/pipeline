@@ -32,6 +32,8 @@ pipeline {
 
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'issue-842-add-stats'
+	// The noctua-models branch with a small subset of the files for a faster
+	// Runtime in dev related branches of the pipeline
 	TARGET_NOCTUA_MODELS_BRANCH = "subset"
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
