@@ -858,7 +858,7 @@ pipeline {
 		    sh 'ls .'
 		    sh 'ls /tmp/'
 		    sh 'ls /tmp/stats/'
-		    sh 'python3 /tmp/aggregate-stats.py -a aggregated-go-stats-summaries.json -b /tmp/stats/go-stats.json -o /tmp/stats/aggregated-go-stats-summaries.json'
+		    sh 'python3 /tmp/aggregate-stats.py -a aggregated-go-stats-summaries.json -b /tmp/stats/go-stats-summary.json -o /tmp/stats/aggregated-go-stats-summaries.json'
 
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			// Copy over stats files.
