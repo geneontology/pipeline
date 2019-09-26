@@ -133,7 +133,7 @@ pipeline {
 	RESOURCE_GROUPS="aspgd goa wb pseudocap"
 	// Optional. Datasets to skip within the resources that we
 	// will run (defined in the line above).
-	DATASET_EXCLUDES="goa_uniprot_gcrp goa_pdb goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human goa_human goa_human_complex goa_human_rna"
+	DATASET_EXCLUDES="goa_uniprot_gcrp goa_pdb goa_chicken_isoform goa_chicken_rna_noiea goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna_noiea goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna_noiea goa_human goa_human goa_human_complex goa_human_rna_noiea"
 	// Optional. This acts as an override, /if/ it's grabbed (as
 	// defined above).
 	GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
