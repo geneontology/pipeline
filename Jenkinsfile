@@ -31,7 +31,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'issue-842-add-stats'
+	TARGET_GO_SITE_BRANCH = 'master'
 	// The noctua-models branch with a small subset of the files for a faster
 	// Runtime in dev related branches of the pipeline
 	TARGET_NOCTUA_MODELS_BRANCH = "subset"
