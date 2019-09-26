@@ -386,12 +386,23 @@ pipeline {
 		    // Default namespace.
 		    sh 'env'
 
-		    dir('./src/ontology') {
-			retry(3){
-			    sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
-			}
-			retry(3){
-			    sh 'make prepare_release'
+		    script {
+			// Build the ontology if we are not reusing previous work
+			if( REUSE_PREVIOUS_WORK_P != 'TRUE' ) {
+			    dir('./src/ontology') {
+    				retry(3){
+    				    sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
+    				}
+    				retry(3){
+    				    sh 'make prepare_release'
+    				}
+    			    }
+			} else {
+			    // Otherwise we /are/ reusing, and we just grab the whole ontology directory on the current release,
+			    // and plop it in place, skipping the build.
+			    sh 'wget --recursive --no-parent  -R index.html* -nH  http://current.geneontology.org/ontology/'
+			    sh 'mv ontology/* ./src/ontology/target/'
+			    sh 'rm -r ontology'
 			}
 		    }
 
