@@ -436,7 +436,7 @@ pipeline {
 		script {
 
 		    dir('./noctua-models') {
-			git branch: CURRENT_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
+			git branch: TARGET_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
 
 			// Make all software products available in bin/
 			// (and lib/).
