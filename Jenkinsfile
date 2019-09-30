@@ -55,7 +55,7 @@ pipeline {
 	// improvement.
 	MAKECMD = 'make --jobs 3 --max-load 10.0'
 	//MAKECMD = 'make'
-	
+
 	// Flag that sets if we should use previously used/built artifacts
 	// in order to speed up this run. For example, if 'TRUE', we would
 	// reuse the previous ontology build instead of building it here.
@@ -401,6 +401,7 @@ pipeline {
 			    // Otherwise we /are/ reusing, and we just grab the whole ontology directory on the current release,
 			    // and plop it in place, skipping the build.
 			    sh 'wget --recursive --no-parent  -R index.html* -nH  http://current.geneontology.org/ontology/'
+			    sh 'mkdir -p ./src/ontology/target'
 			    sh 'mv ontology/* ./src/ontology/target/'
 			    sh 'rmdir ontology'
 			}
