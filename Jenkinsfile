@@ -402,8 +402,8 @@ pipeline {
 			    // and plop it in place, skipping the build.
 			    sh 'wget --recursive --no-parent  -R index.html* -nH  http://current.geneontology.org/ontology/'
 			    sh 'mkdir -p ./src/ontology/target'
-			    sh 'mv ontology/* ./src/ontology/target/'
-			    sh 'rmdir ontology'
+			    sh 'cp -r ontology/* ./src/ontology/target/'
+			    sh 'rm -r ontology/*'
 			}
 		    }
 
