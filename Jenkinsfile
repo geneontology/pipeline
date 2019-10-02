@@ -32,10 +32,13 @@ pipeline {
 
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'the_great_merging_branch'
+	// The branch of minerva to use.
+	TARGET_MINERVA_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,suzia@stanford.edu'
+	TARGET_RELEASE_HOLD_EMAILS = 'pascale.gaudet@sib.swiss'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
@@ -254,7 +257,7 @@ pipeline {
 		    "Ready minerva": {
 			dir('./minerva') {
 			    // Remember that git lays out into CWD.
-			    git 'https://github.com/geneontology/minerva.git'
+			    git branch: TARGET_MINERVA_BRANCH, url: 'https://github.com/geneontology/minerva.git'
 			    sh './build-cli.sh'
 			    // Attempt to rsync produced into bin/.
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -894,6 +897,7 @@ pipeline {
 
 			    // Pause on user input.
 			    echo 'Sanity II: Awaiting user input before proceeding.'
+			    mail bcc: '', body: "The ${env.BRANCH_NAME} pipeline is waiting on user input. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline waiting on input for ${env.BRANCH_NAME}", to: "${TARGET_RELEASE_HOLD_EMAILS}"
 			    lock(resource: 'release-run', inversePrecedence: true) {
 				echo "Sanity II: A release run holds the lock."
 				timeout(time:7, unit:'DAYS') {
