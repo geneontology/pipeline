@@ -37,9 +37,9 @@ pipeline {
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,suzia@stanford.edu'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'no'
+	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = ''
+	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
 	// This variable should typically be 'TRUE', which will cause
 	// some additional basic checks to be made. There are some
 	// very exotic cases where these check may need to be skipped
@@ -59,15 +59,15 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = ''
-	ZENODO_ARCHIVE_CONCEPT = ''
+	ZENODO_REFERENCE_CONCEPT = '252781'
+	ZENODO_ARCHIVE_CONCEPT = '252779'
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
 	// need this as it is always a new location and the index
 	// upload already has an invalidation on it. For current,
 	// snapshot, and experimental.
-	AWS_CLOUDFRONT_DISTRIBUTION_ID = ''
-	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = ''
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
+	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
 
 	///
 	/// Minerva input.
@@ -370,13 +370,11 @@ pipeline {
 		    git 'https://github.com/geneontology/go-ontology.git'
 		
 		    // Default namespace.
-		    sh 'OBO=http://purl.obolibrary.org/obo'
-		    sh 'RELEASEDATE=$START_DATE'
 		    sh 'env'
 		
 		    dir('./src/ontology') {
 			retry(3){
-			    sh 'make ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
+			    sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
 			}
 			retry(3){
 			    sh 'make prepare_release'
