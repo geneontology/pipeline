@@ -34,8 +34,8 @@ pipeline {
 	TARGET_GO_SITE_BRANCH = 'the_great_merging_branch'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'edouglass@lbl.gov'
-	TARGET_SUCCESS_EMAILS = 'edouglass@lbl.gov'
+	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
+	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,suzia@stanford.edu'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'no'
 	// The URL prefix to use when creating site indices.
