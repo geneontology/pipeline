@@ -86,10 +86,10 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-gaf.owl",
-	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/gorel.owl",
-	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-modules-annotations.owl",
-	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-taxon-subsets.owl",
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl",
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/gorel.owl",
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-modules-annotations.owl",
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-taxon-subsets.owl",
 	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
 	    "http://purl.obolibrary.org/obo/cl/cl-basic.owl",
@@ -208,6 +208,7 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/release_stats || true'
 			// Tag the top to let the world know I was at least
 			// here.
 			sh 'echo "Runtime summary." > $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
@@ -326,7 +327,7 @@ pipeline {
 	//     steps {
 	// 	dir("./go-site") {
 	// 	    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
-	// 
+	//
 	// 	    script {
 	// 		def excluded_datasets_args = ""
 	// 		if ( env.DATASET_EXCLUDES ) {
@@ -342,7 +343,7 @@ pipeline {
 	// 		}
 	// 		sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
 	// 	    }
-	// 
+	//
 	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 	// 		// upload to skyhook to the expected location
 	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
@@ -355,14 +356,14 @@ pipeline {
 	// daily(TODO?) and creates all the files normally included in
 	// a release, and deploys to S3.
 	stage('Produce ontology') {
-            agent {
-                docker {
+	    agent {
+		docker {
 		    image 'obolibrary/odkfull:v1.1.7'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
 		}
-            }
+	    }
 	    steps {
 		// Create a relative working directory and setup our
 		// data environment.
@@ -802,7 +803,7 @@ pipeline {
 	stage('Produce derivatives') {
 	    agent {
                 docker {
-		    image 'geneontology/golr-autoindex:b1007d0cfd356f707086a910342ba49b9511ba51_2019-01-09T143943'
+		    image 'geneontology/golr-autoindex:3d8d4ed9a33169af1304e359bf6c425e54d52383_2019-08-28T134514'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
@@ -823,6 +824,48 @@ pipeline {
 		    // Copy over log.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		}
+
+		// Solr should still be running in the background here
+		// from indexing--create stats products from running
+		// GOlr.
+		// Prepare a working directory based around go-site.
+		dir('./go-site') {
+		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+
+		    // Not much want or need here--simple
+		    // python3. However, using the information hidden
+		    // in run-indexer.sh to know where the Solr
+		    // instance is hiding.
+		    sh 'mkdir -p /tmp/stats/ || true'
+		    sh 'cp ./scripts/*.py /tmp'
+		    // Needed as extra library.
+		    sh 'pip3 install requests'
+		    sh 'pip3 install networkx'
+		    //sh 'bash /tmp/run-command.sh -c "python3 /tmp/go_stats.py -g http://localhost:8080/solr/ -o /tmp/stats/"'
+
+		    // WARNING: Temorary version.
+		    // Final command, sealed into docker work
+		    // environment.
+		    //sh 'bash /tmp/run-command.sh -c "python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats.json -n https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats-no-pb.json -c http://current.geneontology.org/ontology/go.obo -p https://geneontology.s3.amazonaws.com/archive/2019-07-01_go.obo -o /tmp/stats/ -d $START_DATE"'
+		    echo "Check that results have been stored properly"
+		    sh "curl 'http://localhost:8080/solr/select?q=*:*&rows=0'"
+		    echo "End of results"
+		    sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats.json -n https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p https://geneontology.s3.amazonaws.com/archive/2019-07-01_go.obo -o /tmp/stats/ -d $START_DATE'
+		    // WARNING: Temorary version.
+		    // One-time command run up.
+		    sh 'wget -N https://geneontology-test.s3.amazonaws.com/aggregated-go-stats-summaries.json'
+		    // WARNING: Temorary version.
+		    // Roll the stats forward.
+		    sh 'ls .'
+		    sh 'ls /tmp/'
+		    sh 'ls /tmp/stats/'
+		    sh 'python3 /tmp/aggregate-stats.py -a aggregated-go-stats-summaries.json -b /tmp/stats/go-stats-summary.json -o /tmp/stats/aggregated-go-stats-summaries.json'
+
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			// Copy over stats files.
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/stats/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/release_stats/'
+		    }
+		}
 	    }
 	}
 	//...
@@ -832,19 +875,35 @@ pipeline {
 
 		//
 		echo 'Push pre-release to http://amigo-staging.geneontology.io for testing.'
-		retry(3){
-		    sh 'ansible-playbook update-golr-w-skyhook-forced.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e skyhook_branch=release -e target_host=amigo-golr-staging'
-		}
 
-		// Pause on user input.
-		echo 'Sanity II: Awaiting user input before proceeding.'
-		lock(resource: 'release-run', inversePrecedence: true) {
-		    echo "Sanity II: A release run holds the lock."
-		    timeout(time:7, unit:'DAYS') {
-			input message:'Approve release products?'
+		// Ninja in our file credentials from Jenkins.
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY'), file(credentialsId: 'go-svn-private-key', variable: 'GO_SVN_IDENTITY'), file(credentialsId: 'ansible-bbop-local-slave', variable: 'DEPLOY_LOCAL_IDENTITY'), file(credentialsId: 'go-aws-ec2-ansible-slave', variable: 'DEPLOY_REMOTE_IDENTITY')]) {
+
+		    // Get our operations code and decend into ansible
+		    // working directory.
+		    dir('./operations') {
+
+			git([branch: 'master',
+			     credentialsId: 'bbop-agent-github-user-pass',
+			     url: 'https://github.com/geneontology/operations.git'])
+			dir('./ansible') {
+
+			    retry(3){
+				sh 'ansible-playbook update-golr-w-skyhook-forced.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e skyhook_branch=release -e target_host=amigo-golr-staging'
+			    }
+
+			    // Pause on user input.
+			    echo 'Sanity II: Awaiting user input before proceeding.'
+			    lock(resource: 'release-run', inversePrecedence: true) {
+				echo "Sanity II: A release run holds the lock."
+				timeout(time:7, unit:'DAYS') {
+				    input message:'Approve release products?'
+				}
+			    }
+			    echo 'Sanity II: Positive user input input given.'
+			}
 		    }
 		}
-		echo 'Sanity II: Positive user input input given.'
 	    }
 	}
 	stage('Archive') {
