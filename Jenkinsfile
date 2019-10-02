@@ -526,7 +526,7 @@ pipeline {
 			    // sh 'make target/blazegraph-production.jnl'
 
 			    // As long as we're here and have
-				    // everything handy: this is
+			    // everything handy: this is
 			    // SPARTA!
 			    // sh 'pwd'
 			    sh 'cd /opt/go-site/pipeline && PATH=/opt/bin:$PATH $MAKECMD PY_BIN=/usr/local/bin/ -e target/sparta-report.json'
@@ -562,7 +562,7 @@ pipeline {
 		    // Now copy over the four uniprot core
 		    // files, if they are in our run set
 		    // (e.g. may not be there on speed runs
-			// for master).
+		    // for master).
 		script {
 			try {
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
