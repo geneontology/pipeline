@@ -36,6 +36,7 @@ pipeline {
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,suzia@stanford.edu'
+	TARGET_RELEASE_HOLD_EMAILS = 'pascale.gaudet@sib.swiss'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'go-data-product-snapshot'
 	// The URL prefix to use when creating site indices.
@@ -288,7 +289,7 @@ pipeline {
 		    "Ready minerva": {
 			dir('./minerva') {
 			    // Remember that git lays out into CWD.
-			    git 'https://github.com/geneontology/minerva.git'
+			    git branch: TARGET_MINERVA_BRANCH, url: 'https://github.com/geneontology/minerva.git'
 			    sh './build-cli.sh'
 			    // Attempt to rsync produced into bin/.
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -390,14 +391,14 @@ pipeline {
 	// daily(TODO?) and creates all the files normally included in
 	// a release, and deploys to S3.
 	stage('Produce ontology') {
-            agent {
-                docker {
+	    agent {
+		docker {
 		    image 'obolibrary/odkfull:v1.1.7'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
 		}
-            }
+	    }
 	    steps {
 		// Create a relative working directory and setup our
 		// data environment.
@@ -439,7 +440,6 @@ pipeline {
 	}
 	stage('Produce GAFs, TTLs, and journal (mega-step)') {
 	    steps {
-
 		// May be parallelized in the future, but may need to
 		// serve as input into into mega step.
 		script {
@@ -618,6 +618,7 @@ pipeline {
 			}
 		    }
 		}
+
 	    }
 	}
 	// A new step to think about. What is our core metadata?
@@ -883,10 +884,10 @@ pipeline {
 		    echo "Check that results have been stored properly"
 		    sh "curl 'http://localhost:8080/solr/select?q=*:*&rows=0'"
 		    echo "End of results"
-		    sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats.json -n https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p https://geneontology.s3.amazonaws.com/archive/2019-07-01_go.obo -o /tmp/stats/ -d $START_DATE'
+		    sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s https://geneontology-archive.s3.amazonaws.com/2019-07-01/go-stats.json -n https://geneontology-archive.s3.amazonaws.com/2019-07-01/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p https://geneontology.s3.amazonaws.com/archive/2019-07-01_go.obo -o /tmp/stats/ -d $START_DATE'
 		    // WARNING: Temorary version.
 		    // One-time command run up.
-		    sh 'wget -N https://geneontology-test.s3.amazonaws.com/aggregated-go-stats-summaries.json'
+		    sh 'wget -N https://geneontology-archive.s3.amazonaws.com/aggregated-go-stats-summaries.json'
 		    // WARNING: Temorary version.
 		    // Roll the stats forward.
 		    sh 'ls .'
@@ -927,6 +928,7 @@ pipeline {
 
 			    // Pause on user input.
 			    echo 'Sanity II: Awaiting user input before proceeding.'
+			    mail bcc: '', body: "The ${env.BRANCH_NAME} pipeline is waiting on user input. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline waiting on input for ${env.BRANCH_NAME}", to: "${TARGET_RELEASE_HOLD_EMAILS}"
 			    lock(resource: 'release-run', inversePrecedence: true) {
 				echo "Sanity II: A release run holds the lock."
 				timeout(time:7, unit:'DAYS') {
