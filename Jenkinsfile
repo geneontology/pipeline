@@ -875,8 +875,8 @@ pipeline {
 		    sh 'mkdir -p /tmp/stats/ || true'
 		    sh 'cp ./scripts/*.py /tmp'
 		    // Needed as extra library.
-		    sh 'pip3 install requests'
-		    sh 'pip3 install networkx'
+		    sh 'pip3 install --force-reinstall requests==2.19.1'
+		    sh 'pip3 install --force-reinstall networkx==2.2'
 		    //sh 'bash /tmp/run-command.sh -c "python3 /tmp/go_stats.py -g http://localhost:8080/solr/ -o /tmp/stats/"'
 
 		    // WARNING: Temorary version.
