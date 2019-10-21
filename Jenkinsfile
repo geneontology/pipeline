@@ -13,6 +13,10 @@ pipeline {
 	cron(0 17 * * FRI)
     }
     environment {
+	///
+	/// Automatic run variables.
+	///
+
 	// Pin dates and day to beginning of run.
 	START_DATE = sh (
 	    script: 'date +%Y-%m-%d',
@@ -23,8 +27,15 @@ pipeline {
 	    script: 'date +%A',
 	    returnStdout: true
 	).trim()
+
+	///
+	/// Internal run variables.
+	///
+
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'master'
+	// The branch of minerva to use.
+	TARGET_MINERVA_BRANCH = 'master'
 	// The branch of geneontology/neo to use.
 	TARGET_NEO_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
@@ -95,7 +106,7 @@ pipeline {
 
 		// Give us a minute to cancel if we want.
 		sleep time: 1, unit: 'MINUTES'
-		cleanWs()
+		cleanWs deleteDirs: true, disableDeferredWipeout: true
 	    }
 	}
 	stage('Initialize') {
@@ -138,6 +149,7 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/release_stats || true'
 			// Tag the top to let the world know I was at least
 			// here.
 			sh 'echo "Runtime summary." > $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
@@ -246,20 +258,9 @@ pipeline {
 		}
             }
 	}
-	// //...
-	// stage('Sanity II') {
-	//     steps {
-	// 	echo 'TODO: Sanity II'
-	//     }
-	// }
 	// stage('TODO: Final status') {
 	//     steps {
 	// 	echo 'TODO: final'
-	//     }
-	// }
-	// stage('Flush') {
-	//     steps {
-	// 	echo 'TODO: Flush/invalidate CDN'
 	//     }
 	// }
     }
@@ -275,12 +276,12 @@ pipeline {
 	}
 	// Let's let our internal people know if things change.
         changed {
-            echo "There has been a change in the ${env.BRANCH_NAME} pipeline."
+	    echo "There has been a change in the ${env.BRANCH_NAME} pipeline."
 	    mail bcc: '', body: "There has been a pipeline status change in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
 	}
 	// Let's let our internal people know if things go badly.
 	failure {
-            echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
+	    echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
 	    mail bcc: '', body: "There has been a pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
         }
     }
