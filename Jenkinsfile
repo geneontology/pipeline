@@ -359,12 +359,13 @@ pipeline {
 		)
 	    }
 	}
-	// Download GAFs from datasets yaml in go-site, and then upload to Skyhook
-	stage("Download Data") {
+	// Download GAFs from datasets.yaml in go-site and then upload
+	// to skyhook in their appropriate locations.
+	stage("Download annotation data") {
 	    steps {
 		dir("./go-site") {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
-	
+
 		    script {
 			def excluded_datasets_args = ""
 			if ( env.DATASET_EXCLUDES ) {
@@ -380,9 +381,9 @@ pipeline {
 			}
 			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
 		    }
-	
+
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			// upload to skyhook to the expected location
+			// Upload to skyhook to the expected location.
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
 		    }
 		}
