@@ -844,20 +844,15 @@ pipeline {
 		    // Needed as extra library.
 		    sh 'pip3 install --force-reinstall requests==2.19.1'
 		    sh 'pip3 install --force-reinstall networkx==2.2'
-		    //sh 'bash /tmp/run-command.sh -c "python3 /tmp/go_stats.py -g http://localhost:8080/solr/ -o /tmp/stats/"'
 
-		    // WARNING: Temorary version.
 		    // Final command, sealed into docker work
 		    // environment.
-		    //sh 'bash /tmp/run-command.sh -c "python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats.json -n https://geneontology.s3.amazonaws.com/temporary/2019-july/go-stats-no-pb.json -c http://current.geneontology.org/ontology/go.obo -p https://geneontology.s3.amazonaws.com/archive/2019-07-01_go.obo -o /tmp/stats/ -d $START_DATE"'
 		    echo "Check that results have been stored properly"
 		    sh "curl 'http://localhost:8080/solr/select?q=*:*&rows=0'"
 		    echo "End of results"
-		    sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s https://geneontology-archive.s3.amazonaws.com/2019-07-01/go-stats.json -n https://geneontology-archive.s3.amazonaws.com/2019-07-01/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p https://geneontology.s3.amazonaws.com/archive/2019-07-01_go.obo -o /tmp/stats/ -d $START_DATE'
-		    // WARNING: Temorary version.
-		    // One-time command run up.
-		    sh 'wget -N https://geneontology-archive.s3.amazonaws.com/aggregated-go-stats-summaries.json'
-		    // WARNING: Temorary version.
+		    sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s http://current.geneontology.org/release_stats/go-stats.json -n http://current.geneontology.org/release_stats/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p http://current.geneontology.org/ontology/go.obo -o /tmp/stats/ -d $START_DATE'
+		    sh 'wget -N http://current.geneontology.org/release_stats/aggregated-go-stats-summaries.json'
+
 		    // Roll the stats forward.
 		    sh 'ls .'
 		    sh 'ls /tmp/'
