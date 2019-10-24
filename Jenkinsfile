@@ -31,18 +31,18 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'pipeline-122-download-fix'
+	TARGET_GO_SITE_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'edouglass@lbl.gov'
-	TARGET_SUCCESS_EMAILS = 'edouglass@lbl.gov'
+	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
+	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,suzia@stanford.edu'
 	TARGET_RELEASE_HOLD_EMAILS = 'pascale.gaudet@sib.swiss'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'nope'
+	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = 'nope'
+	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
 	// This variable should typically be 'TRUE', which will cause
 	// some additional basic checks to be made. There are some
 	// very exotic cases where these check may need to be skipped
@@ -62,15 +62,15 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = 'no'
-	ZENODO_ARCHIVE_CONCEPT = 'no'
+	ZENODO_REFERENCE_CONCEPT = '252781'
+	ZENODO_ARCHIVE_CONCEPT = '252779'
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
 	// need this as it is always a new location and the index
 	// upload already has an invalidation on it. For current,
 	// snapshot, and experimental.
-	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'no'
-	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'no'
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
+	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
 
 	///
 	/// Minerva input.
