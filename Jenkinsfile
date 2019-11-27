@@ -31,7 +31,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'issue-1202-gaferencer_runner'
+	TARGET_GO_SITE_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
@@ -62,8 +62,8 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = '275063'
-	ZENODO_ARCHIVE_CONCEPT = '212052'
+	ZENODO_REFERENCE_CONCEPT = '425664'
+	ZENODO_ARCHIVE_CONCEPT = '425666'
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
 	// need this as it is always a new location and the index
