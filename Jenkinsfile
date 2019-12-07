@@ -128,8 +128,6 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/release/annotations/goa_pig_complex.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/goa_pig_rna.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/goa_uniprot_all_noiea.gaf.gz",
-	    "http://skyhook.berkeleybop.org/release/annotations/gramene_oryza.gaf.gz",
-	    "http://skyhook.berkeleybop.org/release/annotations/jcvi.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/mgi.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/pamgo_atumefaciens.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/pamgo_ddadantii.gaf.gz",
