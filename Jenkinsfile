@@ -131,7 +131,6 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/release/annotations/mgi.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/pamgo_atumefaciens.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/pamgo_ddadantii.gaf.gz",
-	    "http://skyhook.berkeleybop.org/release/annotations/pamgo_mgrisea.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/pamgo_oomycetes.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/pombase.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/pseudocap.gaf.gz",
