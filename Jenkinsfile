@@ -36,9 +36,9 @@ pipeline {
 	TARGET_MINERVA_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
-	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,suzia@stanford.edu'
-	TARGET_RELEASE_HOLD_EMAILS = 'pascale.gaudet@sib.swiss'
+	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov'
+	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,suzia@stanford.edu'
+	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,pascale.gaudet@sib.swiss'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'go-data-product-snapshot'
 	// The URL prefix to use when creating site indices.
@@ -48,6 +48,8 @@ pipeline {
 	// very exotic cases where these check may need to be skipped
 	// for a run, in that case this variable is set to 'FALSE'.
 	WE_ARE_BEING_SAFE_P = 'TRUE'
+	// Variable to check if the "hard" ZENODO archive stage was passed.
+	ZENODO_ARCHIVING_SUCCESSFUL = 'FALSE'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
@@ -1023,8 +1025,58 @@ pipeline {
 				// and get them into position--this is
 				// fail-y, so we are going to try and
 				// buffer failure here for the time
-				// being until we work it all out.
+				// being until we work it all out. We
+				// are going to do the "hard"/large
+				// one first, then skip the
+				// "easy"/small one if we fail, so
+				// that we can retry this whole stage
+				// again on failure.
 				try {
+				    // Archive full archive.
+				    if( env.BRANCH_NAME == 'release' ){
+					sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_PRODUCTION_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
+				    }else if( env.BRANCH_NAME == 'snapshot' ){
+					// WARNING: to save Zenodo 1TB
+					// a month, for snapshot,
+					// we'll lie about the DOI
+					// that we get (not a big lie
+					// as they don't resolve on
+					// sandbox anyways).
+					//sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
+					sh 'cp ./release-reference-doi.json ./release-archive-doi.json'
+				    }else if( env.BRANCH_NAME == 'master' ){
+					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
+				    }
+
+				    // Get the DOI to skyhook for
+				    // publishing, but don't bother
+				    // with the full thing--too much
+				    // space and already in Zenodo.
+				    sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
+
+				    // We were successful.
+				    ZENODO_ARCHIVING_SUCCESSFUL = 'TRUE'
+
+				} catch (exception) {
+				    // Something went bad with the
+				    // Zenodo archive upload.
+				    echo "There has been a failure in the archive upload to Zenodo."
+				    mail bcc: '', body: "There has been a failure in the archive upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo archive upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
+				    // Hard die if this is a release.
+				    if( env.BRANCH_NAME == 'release' ){
+					error 'Zenodo archive upload error on release--no recovery.'
+				    }
+				}
+				try {
+
+				    // Do not attempt the "easy" path
+				    // if the hard one failed so we
+				    // can retry later at the stage
+				    // level.
+				    if( ZENODO_ARCHIVING_SUCCESSFUL == 'FALSE' ){
+					error "Pre-failing on reference after a failed archive so we can retry at the stage level."
+				    }
+
 				    // Archive the holey bdbag for
 				    // this run.
 				    if( env.BRANCH_NAME == 'release' ){
@@ -1048,37 +1100,6 @@ pipeline {
 				    // Hard die if this is a release.
 				    if( env.BRANCH_NAME == 'release' ){
 					error 'Zenodo reference upload error on release--no recovery.'
-				    }
-				}
-				try {
-				    // Archive full archive too.
-				    if( env.BRANCH_NAME == 'release' ){
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_PRODUCTION_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
-				    }else if( env.BRANCH_NAME == 'snapshot' ){
-					// WARNING: to save Zenodo 1TB
-					// a month, for snapshot,
-					// we'll lie about the DOI
-					// that we get (not a big lie
-					// as they don't resolve on
-					// sandbox anyways).
-					//sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
-					sh 'cp ./release-reference-doi.json ./release-archive-doi.json'
-				    }else if( env.BRANCH_NAME == 'master' ){
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
-				    }
-				    // Get the DOI to skyhook for
-				    // publishing, but don't bother
-				    // with the full thing--too much
-				    // space and already in Zenodo.
-				    sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
-				} catch (exception) {
-				    // Something went bad with the
-				    // Zenodo archive upload.
-				    echo "There has been a failure in the archive upload to Zenodo."
-				    mail bcc: '', body: "There has been a failure in the archive upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo archive upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
-				    // Hard die if this is a release.
-				    if( env.BRANCH_NAME == 'release' ){
-					error 'Zenodo archive upload error on release--no recovery.'
 				    }
 				}
 			    }
