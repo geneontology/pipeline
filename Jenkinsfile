@@ -1040,7 +1040,10 @@ pipeline {
 					// as they don't resolve on
 					// sandbox anyways).
 					//sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
-					sh 'cp ./release-reference-doi.json ./release-archive-doi.json'
+					sh 'echo \'{\' > ./release-archive-doi.json'
+					sh 'echo \'    "doi": "10.5072/zenodo.000000"\' >> ./release-archive-doi.json'
+					sh 'echo \'}\' >> ./release-archive-doi.json'
+
 				    }else if( env.BRANCH_NAME == 'master' ){
 					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
 				    }
