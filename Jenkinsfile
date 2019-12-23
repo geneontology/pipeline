@@ -131,9 +131,6 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_pig_rna.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_uniprot_all_noiea.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/mgi.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/pamgo_atumefaciens.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/pamgo_ddadantii.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/pamgo_oomycetes.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/pombase.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/pseudocap.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/rgd.gaf.gz",
@@ -1278,10 +1275,6 @@ pipeline {
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_lmajor.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_Lmajor.gz'
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_pfalciparum.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_Pfalciparum.gz'
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_tbrucei.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_Tbrucei.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/pamgo_atumefaciens.gaf.gz $WORKSPACE/goannsvn/gene_association.PAMGO_Atumefaciens.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/pamgo_ddadantii.gaf.gz $WORKSPACE/goannsvn/gene_association.PAMGO_Ddadantii.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/pamgo_mgrisea.gaf.gz $WORKSPACE/goannsvn/gene_association.PAMGO_Mgrisea.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/pamgo_oomycetes.gaf.gz $WORKSPACE/goannsvn/gene_association.PAMGO_Oomycetes.gz'
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_chicken_complex.gaf.gz $WORKSPACE/goannsvn/goa_chicken_complex.gaf.gz'
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_chicken.gaf.gz $WORKSPACE/goannsvn/goa_chicken.gaf.gz'
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_chicken_isoform.gaf.gz $WORKSPACE/goannsvn/goa_chicken_isoform.gaf.gz'
