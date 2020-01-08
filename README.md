@@ -4,6 +4,17 @@
 
 Declarative pipeline for the Gene Ontology.
 
+# QC 
+
+## Manual QC steps
+There is a step in the pipeline that halts the pipeline: https://build.geneontology.org/job/geneontology/job/pipeline/job/release/
+Currently pgaudet is reponsible for checking the release. Notes for the checks are here: https://docs.google.com/document/d/1IMA54ycbHZxkFbIAyjRvzm_ybAaAj2V8q-Q670mE07U/edit#
+
+Products are here: http://skyhook.berkeleybop.org/release/
+AmiGO is here: https://amigo-staging.geneontology.io/amigo
+
+Anomalies are evaluated, reported to the upstream sources and fixed, or ignored if the problem is no worse than the previous release. 
+
 # Troubleshooting
 
 How to manually complete a bum Zenodo archive upload on a production
