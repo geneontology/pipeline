@@ -110,7 +110,7 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken.gaf.gz",
 	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken_complex.gaf.gz",
 	    "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/pombase.gaf.gz"
+	    "http://skyhook.berkeleybop.org/master/annotations/pombase.gaf.gz",
 	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
