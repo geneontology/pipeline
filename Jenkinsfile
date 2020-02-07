@@ -435,6 +435,38 @@ pipeline {
 			}
 		    }
 		}
+
+		// Create a relative working directory and setup our
+		// data environment.
+		// Note:
+		//  pathways2GO: v0.1.0 (not master)
+		//  reactome: current/human
+		dir('./pathways2GO') {
+		    git 'https://github.com/geneontology/pathways2GO.git'
+
+		    // Default namespace.
+		    sh 'env'
+
+		    retry(3){
+			// Get jar.
+			sh 'curl -O -L https://github.com/geneontology/pathways2GO/releases/download/v0.1.0/biopax2go.jar'
+
+			// Biopax files needed
+			sh 'curl -O -L https://reactome.org/download/current/biopax.zip'
+		    }
+
+		    // Ready.
+		    sh 'unzip -o biopax.zip'
+
+		    // The actual command.
+		    sh 'java -jar biopax2go.jar -b Homo_sapiens.owl -reacto ./reacto'
+
+		    // Make sure that we copy any files there,
+		    // including the core dump of produced.
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r ./reacto.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/extensions/reacto.owl'
+		    }
+		}
 	    }
 	}
 	stage('Make Noctua GPAD') {
