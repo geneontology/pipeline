@@ -667,8 +667,8 @@ pipeline {
 
 		    // Generate interesting PANTHER information
 		    // (.arbre files) based on upstream source.
-		    sh 'wget -N http://data.pantherdb.org/current/globals/tree_files.tar.gz'
-		    sh 'wget -N http://data.pantherdb.org/current/globals/names.tab'
+		    sh 'wget -N http://data.pantherdb.org/PANTHER14.1/globals/tree_files.tar.gz'
+		    sh 'wget -N http://data.pantherdb.org/PANTHER14.1/globals/names.tab'
 		    sh 'tar -zxvf tree_files.tar.gz'
 		    sh 'python3 ./scripts/prepare-panther-arbre-directory.py -v --names names.tab --trees tree_files --output arbre'
 		    sh 'tar --use-compress-program=pigz -cvf arbre.tgz -C arbre .'
