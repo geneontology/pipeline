@@ -59,6 +59,15 @@ pipeline {
 	//MAKECMD = 'make'
 
 	///
+	/// PANTHER/PAINT metadata.
+	///
+
+	PANTHER_VERSION = '14.1'
+	// Currently unused, but see:
+	// https://github.com/geneontology/pipeline/issues/86
+	PAINT_RELEASE = 'XXXX-YY-ZZ'
+
+	///
 	/// Application tokens.
 	///
 
@@ -667,8 +676,8 @@ pipeline {
 
 		    // Generate interesting PANTHER information
 		    // (.arbre files) based on upstream source.
-		    sh 'wget -N http://data.pantherdb.org/PANTHER14.1/globals/tree_files.tar.gz'
-		    sh 'wget -N http://data.pantherdb.org/PANTHER14.1/globals/names.tab'
+		    sh 'wget -N http://data.pantherdb.org/PANTHER$PANTHER_VERSION/globals/tree_files.tar.gz'
+		    sh 'wget -N http://data.pantherdb.org/PANTHER$PANTHER_VERSION/globals/names.tab'
 		    sh 'tar -zxvf tree_files.tar.gz'
 		    sh 'python3 ./scripts/prepare-panther-arbre-directory.py -v --names names.tab --trees tree_files --output arbre'
 		    sh 'tar --use-compress-program=pigz -cvf arbre.tgz -C arbre .'
