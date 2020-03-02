@@ -340,10 +340,34 @@ pipeline {
 	}
 	stage('Run ShEx') {
 	    steps {
+		agent {
+                    docker {
+			//image 'geneontology/golr-autoindex-ontology:0aeeb57b6e20a4b41d677a8ae934fdf9ecd4b0cd_2019-01-24T124316'
+			image 'geneontology/amigo-standalone:f2d5b0bc66a557a102a4cd054a03d40b8988a243_2019-06-06T144000'
+			// Reset Jenkins Docker agent default to original
+			// root.
+			args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
+		    }
+		}
 		// May be parallelized in the future, but may need to
 		// serve as input into into mega step.
 		script {
 
+		    // Setup a local solr data instance for the NEO pipeline.
+		    dir('/srv/solr/data') {
+			sh 'pwd'
+			sh 'mkdir -r index'
+		    }
+		    dir('/srv/solr/data/index') {
+			sh 'wget http://skyhook.berkeleybop.org/issue-35-neo-test/products/solr/golr-index-contents.tgz'
+			sh 'tar -zxvf golr-index-contents.tgz'
+			// Run.
+		    }
+
+		    // Run it.
+		    sh 'bash /tmp/run-apache-solr.sh'
+
+		    // Now the models and checks.
 		    dir('./noctua-models') {
 			git url: 'https://github.com/geneontology/noctua-models.git'
 
@@ -363,8 +387,7 @@ pipeline {
 			sh 'mkdir -p legacy/gpad'
 			withEnv(['MINERVA_CLI_MEMORY=128G']){
 			    // "Import" models.
-				// TODO: add: "-golr http://127.0.0.1:8080/solr/" or similar what have local instance.
-			    sh './bin/minerva-cli.sh --validate-go-cams --shex  -i models -r shex.tsv'
+			    sh './bin/minerva-cli.sh --golr http://127.0.0.1:8080/solr/" --validate-go-cams --shex  -i models -r shex.tsv'
 			}
 
 			// Rename, compress, and move to skyhook.
