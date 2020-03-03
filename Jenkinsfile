@@ -357,6 +357,11 @@ pipeline {
 		    //sh 'whoami'
 		    sh 'env'
 		    sh 'pwd'
+		    sh 'ls -AlF /'
+		    sh 'ls -AlF /srv'
+		    sh 'ls -AlF /srv/solr'
+		    sh 'ls -AlF /srv/solr/data'
+		    sh 'ls -AlF /srv/solr/data/index'
 
 		    // Setup a local solr data instance for the NEO pipeline.
 		    dir('/srv/solr/data') {
