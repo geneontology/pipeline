@@ -339,16 +339,16 @@ pipeline {
 	    }
 	}
 	stage('Run ShEx') {
-	    steps {
-		agent {
-                    docker {
-			//image 'geneontology/golr-autoindex-ontology:0aeeb57b6e20a4b41d677a8ae934fdf9ecd4b0cd_2019-01-24T124316'
-			image 'geneontology/amigo-standalone:f2d5b0bc66a557a102a4cd054a03d40b8988a243_2019-06-06T144000'
-			// Reset Jenkins Docker agent default to original
-			// root.
-			args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
-		    }
+	    agent {
+                docker {
+		    //image 'geneontology/golr-autoindex-ontology:0aeeb57b6e20a4b41d677a8ae934fdf9ecd4b0cd_2019-01-24T124316'
+		    image 'geneontology/amigo-standalone:f2d5b0bc66a557a102a4cd054a03d40b8988a243_2019-06-06T144000'
+		    // Reset Jenkins Docker agent default to original
+		    // root.
+		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
 		}
+	    }
+	    steps {
 		// May be parallelized in the future, but may need to
 		// serve as input into into mega step.
 		script {
