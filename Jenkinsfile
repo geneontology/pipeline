@@ -348,7 +348,7 @@ pipeline {
 		    image 'geneontology/golr-autoindex:3d8d4ed9a33169af1304e359bf6c425e54d52383_2019-08-28T134514'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
-		    args '--mount type=tmpfs,destination=/srv/solr/data'
+		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
 		    //args '-u root:root'
 		}
 	    }
@@ -360,8 +360,11 @@ pipeline {
 		    // Probe.
 		    sh 'touch /tmp/foo.txt'
 		    sh 'ls -AlF /tmp/foo.txt'
+		    sh 'id'
 
 		    // Setup a local solr data instance for the NEO pipeline.
+		    // Keep in mind the reason we're being careful is that we're trying
+		    // to preserve the permissions environment in the image.
 		    sh 'env'
 		    sh 'pwd'
 		    sh 'ls -AlF /'
@@ -391,33 +394,41 @@ pipeline {
 		    sh 'env'
 		    sh 'pwd'
 		    sh 'groups'
-		    dir('./noctua-models') {
-			git branch: TARGET_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
+		    //dir('./noctua-models') {
+		    sh 'mkdir /tmp/noctua-models'
+		    sh 'git clone -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/noctua-models.git /tmp/noctua-models'
+		    //
+		    sh 'ls -AlF /tmp'
+		    sh 'ls -AlF /tmp/noctua-models'
+			//sh 'chown jenkins ../noctua-models'
+			//git branch: TARGET_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
+
 
 			// Make all software products available in bin/
 			// (and lib/).
-			sh 'mkdir -p bin/'
-			sh 'mkdir -p lib/'
+			sh 'mkdir -p /tmp/bin/'
+			sh 'mkdir -p /tmp/lib/'
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /tmp/bin/'
 			    // WARNING/BUG: needed for blazegraph-runner
 			    // to run at this point.
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /tmp/lib/'
 			}
-			sh 'chmod +x bin/*'
+			sh 'chmod +x /tmp/bin/*'
 
 			// Compile models.
 			sh 'mkdir -p legacy/gpad'
 			withEnv(['MINERVA_CLI_MEMORY=128G']){
 			    // "Import" models.
-			    sh './bin/minerva-cli.sh --golr http://127.0.0.1:8080/solr/" --validate-go-cams --shex  -i models -r shex.tsv'
+			//sh '/tmp/bin/minerva-cli.sh --golr http://127.0.0.1:8080/solr/" --validate-go-cams --shex  -i models -r shex.tsv'
+			    sh '/tmp/bin/minerva-cli.sh --golr http://127.0.0.1:8080/solr/" --validate-go-cams --shex  -i /tmp/noctua-models -r /tmp/shex.tsv'
 			}
 
 			// Rename, compress, and move to skyhook.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY shex.tsv skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/shex.tsv skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 			}
-		    }
+		    //		    }
 		}
 	    }
 	}
