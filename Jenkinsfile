@@ -344,8 +344,8 @@ pipeline {
 	    agent {
                 docker {
 		    //image 'geneontology/golr-autoindex-ontology:0aeeb57b6e20a4b41d677a8ae934fdf9ecd4b0cd_2019-01-24T124316'
-		    //image 'geneontology/amigo-standalone:f2d5b0bc66a557a102a4cd054a03d40b8988a243_2019-06-06T144000'
-		    image 'geneontology/golr-autoindex:3d8d4ed9a33169af1304e359bf6c425e54d52383_2019-08-28T134514'
+		    image 'geneontology/amigo-standalone:f2d5b0bc66a557a102a4cd054a03d40b8988a243_2019-06-06T144000'
+		    //image 'geneontology/golr-autoindex:3d8d4ed9a33169af1304e359bf6c425e54d52383_2019-08-28T134514'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
@@ -357,87 +357,55 @@ pipeline {
 		// serve as input into into mega step.
 		script {
 
-		    // Probe.
-		    sh 'touch /tmp/foo.txt'
-		    sh 'ls -AlF /tmp/foo.txt'
-		    sh 'id'
+		    // // Probe.
+		    // sh 'id'
+		    // sh 'ls -AlF /tmp'
+		    // sh 'touch /tmp/foo.txt'
+		    // sh 'ls -AlF /tmp/foo.txt'
 
 		    // Setup a local solr data instance for the NEO pipeline.
 		    // Keep in mind the reason we're being careful is that we're trying
 		    // to preserve the permissions environment in the image.
-		    sh 'env'
-		    sh 'pwd'
-		    sh 'ls -AlF /'
-		    sh 'ls -AlF /srv'
-		    sh 'ls -AlF /srv/solr'
-		    sh 'ls -AlF /srv/solr/data'
-
 		    sh 'mkdir -p /srv/solr/data/index'
 		    sh 'chown jetty /srv/solr/data/index'
 		    sh 'chgrp adm /srv/solr/data/index'
-
-		    sh 'ls -AlF /srv/solr/data'
-		    sh 'ls -AlF /srv/solr/data/index'
-
 		    sh 'curl -L -o /srv/solr/data/index/golr-index-contents.tgz http://skyhook.berkeleybop.org/issue-35-neo-test/products/solr/golr-index-contents.tgz'
 		    sh 'tar -zxvf /srv/solr/data/index/golr-index-contents.tgz'
-
 		    sh 'chown -R jetty /srv/solr/data/index'
 		    sh 'chgrp -R adm /srv/solr/data/index'
 
-		    sh 'ls -AlF /srv/solr/data/index'
-
 		    // Run it.
-		    sh 'bash /tmp/run-command.sh'
+		    //sh 'bash /tmp/run-command.sh'
+		    sh 'bash /tmp/run-apache-solr.sh'
 
-		    // Now the models and checks.
-		    sh 'env'
-		    sh 'pwd'
-		    sh 'groups'
-		    //dir('./noctua-models') {
+		    // Setup the directory for the models safely and completely in the image.
 		    sh 'mkdir /tmp/noctua-models'
 		    sh 'git clone -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/noctua-models.git /tmp/noctua-models'
-		    //
-		    sh 'ls -AlF /tmp'
-		    sh 'ls -AlF /tmp/noctua-models'
-		    //sh 'chown jenkins ../noctua-models'
-		    //git branch: TARGET_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
-\
+
 		    // Make all software products available in bin/
 		    // (and lib/).
 		    sh 'mkdir -p /tmp/bin/'
-		    sh 'mkdir -p /tmp/lib/'
+		    //sh 'mkdir -p /tmp/lib/'
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /tmp/bin/'
-			// WARNING/BUG: needed for blazegraph-runner
-			// to run at this point.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /tmp/lib/'
+			// // WARNING/BUG: needed for blazegraph-runner
+			// // to run at this point.
+			// sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /tmp/lib/'
 		    }
 		    sh 'chmod +x /tmp/bin/*'
 
-		    // Compile models.
-		    sh 'mkdir -p /tmp/noctua-models/legacy/gpad'
+		    // Check models.
 		    withEnv(['MINERVA_CLI_MEMORY=128G']){
-			// "Import" models.
-			//sh '/tmp/bin/minerva-cli.sh --golr http://127.0.0.1:8080/solr/" --validate-go-cams --shex  -i models -r shex.tsv'
-			//sh '/tmp/bin/minerva-cli.sh --golr http://127.0.0.1:8080/solr/ --validate-go-cams --shex  -i /tmp/noctua-models/models -r /tmp/noctua-models/shex.tsv'
 			sh '/tmp/bin/minerva-cli.sh --validate-go-cams --shex -i /tmp/noctua-models/models -r /tmp/noctua-models/shex.tsv --golr http://127.0.0.1:8080/solr/ --pipeline-output-file /tmp/noctua-models/minerva-shex-report.json'
 		    }
 
-		    // Rename, compress, and move to skyhook.
+		    // Move results to skyhook.
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/noctua-models/minerva-shex-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 		    }
-		    //}
 		}
 	    }
 	}
-
-	// stage('TODO: Final status') {
-	//     steps {
-	// 	echo 'TODO: final'
-	//     }
-	// }
     }
     post {
 	// Let's let our people know if things go well.
