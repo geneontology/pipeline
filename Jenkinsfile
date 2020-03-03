@@ -357,6 +357,9 @@ pipeline {
 		// serve as input into into mega step.
 		script {
 
+		    // Probe.
+		    sh 'touch /tmp/foo.txt'
+
 		    // Setup a local solr data instance for the NEO pipeline.
 		    sh 'env'
 		    sh 'pwd'
