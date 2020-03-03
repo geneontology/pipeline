@@ -375,6 +375,8 @@ pipeline {
 		    sh 'chown -R jetty /srv/solr/data/index'
 		    sh 'chgrp -R adm /srv/solr/data/index'
 
+		    sh 'ls -AlF /srv/solr/data/index'
+
 		    // Run it.
 		    sh 'bash /tmp/run-apache-solr.sh'
 
