@@ -388,6 +388,8 @@ pipeline {
 		    sh 'chown -R jetty /tmp/noctua-models'
 		    sh 'chgrp -R adm /tmp/noctua-models'
 		    sh 'cd /tmp/noctua-models'
+		    sh 'env'
+		    sh 'pwd'
 		    git branch: TARGET_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
 
 		    // Make all software products available in bin/
