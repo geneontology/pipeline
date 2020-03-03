@@ -345,13 +345,17 @@ pipeline {
 		    image 'geneontology/amigo-standalone:f2d5b0bc66a557a102a4cd054a03d40b8988a243_2019-06-06T144000'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
-		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
+		    //args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
 		}
 	    }
 	    steps {
 		// May be parallelized in the future, but may need to
 		// serve as input into into mega step.
 		script {
+
+		    sh 'whoami'
+		    sh 'env'
+		    sh 'pwd'
 
 		    // Setup a local solr data instance for the NEO pipeline.
 		    dir('/srv/solr/data') {
