@@ -346,6 +346,7 @@ pipeline {
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    //args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
+		    args '-u root:root'
 		}
 	    }
 	    steps {
