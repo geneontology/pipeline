@@ -348,7 +348,7 @@ pipeline {
 		    image 'geneontology/golr-autoindex:3d8d4ed9a33169af1304e359bf6c425e54d52383_2019-08-28T134514'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
-		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
+		    args '--mount type=tmpfs,destination=/srv/solr/data'
 		    //args '-u root:root'
 		}
 	    }
