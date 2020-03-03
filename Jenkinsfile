@@ -348,7 +348,7 @@ pipeline {
 		    image 'geneontology/golr-autoindex:3d8d4ed9a33169af1304e359bf6c425e54d52383_2019-08-28T134514'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
-		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data --mount type=tmpfs,destination=/tmp'
+		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data --mount type=tmpfs,destination=/tmp/noctua-models'
 		    //args '-u root:root'
 		}
 	    }
@@ -384,7 +384,6 @@ pipeline {
 		    sh 'bash /tmp/run-command.sh'
 
 		    // Now the models and checks.
-		    sh 'mkdir -p /tmp/noctua-models'
 		    sh 'cd /tmp/noctua-models'
 		    git branch: TARGET_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
 
