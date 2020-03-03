@@ -343,9 +343,9 @@ pipeline {
 	stage('Run ShEx') {
 	    agent {
                 docker {
+		    //image 'geneontology/golr-autoindex:3d8d4ed9a33169af1304e359bf6c425e54d52383_2019-08-28T134514'
 		    //image 'geneontology/golr-autoindex-ontology:0aeeb57b6e20a4b41d677a8ae934fdf9ecd4b0cd_2019-01-24T124316'
 		    image 'geneontology/amigo-standalone:f2d5b0bc66a557a102a4cd054a03d40b8988a243_2019-06-06T144000'
-		    //image 'geneontology/golr-autoindex:3d8d4ed9a33169af1304e359bf6c425e54d52383_2019-08-28T134514'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
@@ -374,9 +374,12 @@ pipeline {
 		    sh 'chown -R jetty /srv/solr/data/index'
 		    sh 'chgrp -R adm /srv/solr/data/index'
 
-		    // Run it.
+		    // Run it, wait, test.
 		    //sh 'bash /tmp/run-command.sh'
-		    sh 'bash /tmp/run-apache-solr.sh'
+		    //sh 'bash /tmp/run-apache-solr.sh'
+		    sh 'java -Xms$SOLR_MEM -Xmx$SOLR_MEM -DentityExpansionLimit=8172000 -Djava.awt.headless=true -Dsolr.solr.home=/srv/solr -Djava.io.tmpdir=/tmp/jetty9 -Djava.library.path=/usr/lib -Djetty.home=/usr/share/jetty9 -Djetty.logs=/var/log/jetty9 -Djetty.state=/tmp/jetty.state -Djetty.host=0.0.0.0 -Djetty.port=8080 -jar /usr/share/jetty9/start.jar --daemon /etc/jetty9/jetty-started.xml &'
+		    sleep time: 30, unit: 'SECONDS'
+		    sh 'curl "http://localhost:8080/solr/select?q=*:*&rows=0"'
 
 		    // Setup the directory for the models safely and completely in the image.
 		    sh 'mkdir /tmp/noctua-models'
