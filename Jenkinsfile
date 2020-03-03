@@ -369,11 +369,11 @@ pipeline {
 		    sh 'ls -AlF /srv/solr/data'
 		    sh 'ls -AlF /srv/solr/data/index'
 
-		    sh 'sudo curl -L -o /srv/solr/data/index/golr-index-contents.tgz http://skyhook.berkeleybop.org/issue-35-neo-test/products/solr/golr-index-contents.tgz'
-		    sh 'sudo tar -zxvf /srv/solr/data/index/golr-index-contents.tgz'
+		    sh 'curl -L -o /srv/solr/data/index/golr-index-contents.tgz http://skyhook.berkeleybop.org/issue-35-neo-test/products/solr/golr-index-contents.tgz'
+		    sh 'tar -zxvf /srv/solr/data/index/golr-index-contents.tgz'
 
-		    sh 'sudo chown -R jetty /srv/solr/data/index'
-		    sh 'sudo chgrp -R adm /srv/solr/data/index'
+		    sh 'chown -R jetty /srv/solr/data/index'
+		    sh 'chgrp -R adm /srv/solr/data/index'
 
 		    // Run it.
 		    sh 'bash /tmp/run-apache-solr.sh'
