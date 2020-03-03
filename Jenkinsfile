@@ -361,6 +361,10 @@ pipeline {
 		    sh 'ls -AlF /srv'
 		    sh 'ls -AlF /srv/solr'
 		    sh 'ls -AlF /srv/solr/data'
+
+		    sh 'mkdir -p /srv/solr/data/index'
+
+		    sh 'ls -AlF /srv/solr/data'
 		    sh 'ls -AlF /srv/solr/data/index'
 
 		    // Setup a local solr data instance for the NEO pipeline.
