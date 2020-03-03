@@ -363,8 +363,8 @@ pipeline {
 		    sh 'ls -AlF /srv/solr/data'
 
 		    sh 'mkdir -p /srv/solr/data/index'
-		    sh 'sudo chown jetty /srv/solr/data/index'
-		    sh 'sudo chgrp adm /srv/solr/data/index'
+		    sh 'chown jetty /srv/solr/data/index'
+		    sh 'chgrp adm /srv/solr/data/index'
 
 		    sh 'ls -AlF /srv/solr/data'
 		    sh 'ls -AlF /srv/solr/data/index'
