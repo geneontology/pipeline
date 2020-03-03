@@ -354,7 +354,7 @@ pipeline {
 		// serve as input into into mega step.
 		script {
 
-		    //sh 'whoami'
+		    // Setup a local solr data instance for the NEO pipeline.
 		    sh 'env'
 		    sh 'pwd'
 		    sh 'ls -AlF /'
@@ -363,20 +363,17 @@ pipeline {
 		    sh 'ls -AlF /srv/solr/data'
 
 		    sh 'mkdir -p /srv/solr/data/index'
+		    sh 'sudo chown jetty /srv/solr/data/index'
+		    sh 'sudo chgrp adm /srv/solr/data/index'
 
 		    sh 'ls -AlF /srv/solr/data'
 		    sh 'ls -AlF /srv/solr/data/index'
 
-		    // Setup a local solr data instance for the NEO pipeline.
-		    dir('/srv/solr/data') {
-			sh 'pwd'
-			sh 'mkdir -r index'
-		    }
-		    dir('/srv/solr/data/index') {
-			sh 'wget http://skyhook.berkeleybop.org/issue-35-neo-test/products/solr/golr-index-contents.tgz'
-			sh 'tar -zxvf golr-index-contents.tgz'
-			// Run.
-		    }
+		    sh 'sudo curl -L -o /srv/solr/data/index/golr-index-contents.tgz http://skyhook.berkeleybop.org/issue-35-neo-test/products/solr/golr-index-contents.tgz'
+		    sh 'sudo tar -zxvf /srv/solr/data/index/golr-index-contents.tgz'
+
+		    sh 'sudo chown -R jetty /srv/solr/data/index'
+		    sh 'sudo chgrp -R adm /srv/solr/data/index'
 
 		    // Run it.
 		    sh 'bash /tmp/run-apache-solr.sh'
