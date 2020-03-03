@@ -385,6 +385,8 @@ pipeline {
 
 		    // Now the models and checks.
 		    sh 'mkdir -p /tmp/noctua-models'
+		    sh 'chown -R jetty /tmp/noctua-models'
+		    sh 'chgrp -R adm /tmp/noctua-models'
 		    sh 'cd /tmp/noctua-models'
 		    git branch: TARGET_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
 
