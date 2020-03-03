@@ -417,16 +417,16 @@ pipeline {
 			sh 'chmod +x /tmp/bin/*'
 
 			// Compile models.
-			sh 'mkdir -p legacy/gpad'
+			sh 'mkdir -p /tmp/noctua-models/legacy/gpad'
 			withEnv(['MINERVA_CLI_MEMORY=128G']){
 			    // "Import" models.
 			//sh '/tmp/bin/minerva-cli.sh --golr http://127.0.0.1:8080/solr/" --validate-go-cams --shex  -i models -r shex.tsv'
-			    sh '/tmp/bin/minerva-cli.sh --golr http://127.0.0.1:8080/solr/" --validate-go-cams --shex  -i /tmp/noctua-models -r /tmp/shex.tsv'
+			    sh '/tmp/bin/minerva-cli.sh --golr http://127.0.0.1:8080/solr/" --validate-go-cams --shex  -i /tmp/noctua-models/models -r /tmp/noctua-models/shex.tsv'
 			}
 
 			// Rename, compress, and move to skyhook.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/shex.tsv skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/noctua-models/shex.tsv skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 			}
 		    //		    }
 		}
