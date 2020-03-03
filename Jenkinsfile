@@ -377,7 +377,7 @@ pipeline {
 		    // Run it, wait, test.
 		    //sh 'bash /tmp/run-command.sh'
 		    //sh 'bash /tmp/run-apache-solr.sh'
-		    sh 'java -Xms$SOLR_MEM -Xmx$SOLR_MEM -DentityExpansionLimit=8172000 -Djava.awt.headless=true -Dsolr.solr.home=/srv/solr -Djava.io.tmpdir=/tmp/jetty9 -Djava.library.path=/usr/lib -Djetty.home=/usr/share/jetty9 -Djetty.logs=/var/log/jetty9 -Djetty.state=/tmp/jetty.state -Djetty.host=0.0.0.0 -Djetty.port=8080 -jar /usr/share/jetty9/start.jar --daemon /etc/jetty9/jetty-started.xml &'
+		    sh 'java -Xms$SOLR_MEM -Xmx$GOLR_SOLR_MEMORY -DentityExpansionLimit=8172000 -Djava.awt.headless=true -Dsolr.solr.home=/srv/solr -Djava.io.tmpdir=/tmp/jetty9 -Djava.library.path=/usr/lib -Djetty.home=/usr/share/jetty9 -Djetty.logs=/var/log/jetty9 -Djetty.state=/tmp/jetty.state -Djetty.host=0.0.0.0 -Djetty.port=8080 -jar /usr/share/jetty9/start.jar --daemon /etc/jetty9/jetty-started.xml &'
 		    sleep time: 30, unit: 'SECONDS'
 		    sh 'curl "http://localhost:8080/solr/select?q=*:*&rows=0"'
 
