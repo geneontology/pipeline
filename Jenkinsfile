@@ -359,6 +359,7 @@ pipeline {
 
 		    // Probe.
 		    sh 'touch /tmp/foo.txt'
+		    sh 'ls -AlF /tmp/foo.txt'
 
 		    // Setup a local solr data instance for the NEO pipeline.
 		    sh 'env'
