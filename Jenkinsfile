@@ -353,7 +353,7 @@ pipeline {
 		// serve as input into into mega step.
 		script {
 
-		    sh 'whoami'
+		    //sh 'whoami'
 		    sh 'env'
 		    sh 'pwd'
 
