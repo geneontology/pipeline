@@ -640,8 +640,6 @@ pipeline {
 			} catch (exception) {
 			    echo "NOTE: paint directory does not exist, so no reports to copy"
 			}
-
-
 		    }
 		}
 
