@@ -401,7 +401,7 @@ pipeline {
 	stage('Produce ontology') {
 	    agent {
 		docker {
-		    image 'obolibrary/odkfull:v1.1.7'
+		    image 'obolibrary/odkfull:v1.2.22'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
@@ -658,9 +658,15 @@ pipeline {
 		    // Plus: flatten product reports in json,
 		    // md reports, text files, etc.
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\.\\(json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports \\;'
-		    // WARNING: This is a hacky fix for https://github.com/geneontology/go-site/issues/1253 .
-		    // It can (should) be removed with an overall flow change in https://github.com/geneontology/go-site/issues/1384 .
-		    sh 'find /opt/go-site/pipeline/target/groups/paint -type f -regex "^.*\\.\\(json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports \\;'
+		    script {
+			try {
+			    // WARNING: This is a hacky fix for https://github.com/geneontology/go-site/issues/1253 .
+			    // It can (should) be removed with an overall flow change in https://github.com/geneontology/go-site/issues/1384 .
+			    sh 'find /opt/go-site/pipeline/target/groups/paint -type f -regex "^.*\\.\\(json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports \\;'
+			} catch (exception) {
+			    echo "NOTE: paint directory does not exist, so no reports to copy"
+			}
+		    }
 		}
 
 	    }
