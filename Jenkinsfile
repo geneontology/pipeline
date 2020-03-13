@@ -63,7 +63,8 @@ pipeline {
 	    //"http://purl.obolibrary.org/obo/wbbt.owl",
 	    //"http://purl.obolibrary.org/obo/go/extensions/go-modules-annotations.owl",
 	    //"http://purl.obolibrary.org/obo/go/extensions/go-taxon-subsets.owl"
-            "http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/neo.owl"
+            //"http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/neo.owl"
+            "http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/extensions/go-lego.owl"
 	].join(" ")
     }
     options{
@@ -180,7 +181,7 @@ pipeline {
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
 	// a release, and deploys to S3.
-	stage('Produce ontology') {
+	stage('Produce NEO') {
 	    steps {
 		// Create a relative working directory and setup our
 		// data environment.
@@ -210,8 +211,60 @@ pipeline {
 			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY neo.obo neo.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
 		    }
 
-		    // TODO: Future deplyment like?
-		    // s3cmd -c ~/.s3cfg.go-push --acl-public --reduced-redundancy --mime-type=application/rdf+xml put neo.obo neo.owl s3://go-build/$JOB_BASE_NAME/latest/
+		    // Deploy to S3 location for pickup by PURL via CF.
+		    withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+			sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.owl s3://go-build/build-noctua-entity-ontology/latest/'
+			sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.obo s3://go-build/build-noctua-entity-ontology/latest/'
+		    }
+		}
+	    }
+	}
+	// Produce the standard GO package.
+	stage('Produce GO') {
+	    agent {
+		docker {
+		    image 'obolibrary/odkfull:v1.2.22'
+		    // Reset Jenkins Docker agent default to original
+		    // root.
+		    args '-u root:root'
+		}
+	    }
+	    steps {
+		// Create a relative working directory and setup our
+		// data environment.
+		dir('./go-ontology') {
+		    git 'https://github.com/geneontology/go-ontology.git'
+
+		    // Default namespace.
+		    sh 'env'
+
+		    dir('./src/ontology') {
+			retry(3){
+			    sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
+			}
+			retry(3){
+			    sh 'make prepare_release'
+			}
+		    }
+
+		    // Make sure that we copy any files there,
+		    // including the core dump of produced.
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
+		    }
+
+		    // Now that the files are safely away onto skyhook for
+		    // debugging, test for the core dump.
+		    script {
+			if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
+
+			    def found_core_dump_p = fileExists 'target/core_dump.owl'
+			    if( found_core_dump_p ){
+				error 'ROBOT core dump detected--bailing out.'
+			    }
+			}
+		    }
 		}
 	    }
 	}
