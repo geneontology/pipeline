@@ -302,10 +302,15 @@ pipeline {
 		/// Produce blazegraph.
 		///
 
+		// An awkward download and protective cleanup dance.
+		sh 'rm blazegraph.jnl || true'
 		sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_2_1_6_RC/blazegraph.jar'
 		sh 'curl -L -o /tmp/blazegraph.properties https://raw.githubusercontent.com/geneontology/minerva/master/minerva-core/src/main/resources/org/geneontology/minerva/blazegraph.properties'
-		// WARNING: the hardwired URL in the next two steps is not great.
-		sh 'curl -L -o /tmp/go-lego.owl http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/extensions/go-lego.owl'
+		sh 'curl -L -o /tmp/go-lego.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego.owl'
+		// WARNING: Having trouble getting the journal to the
+		// right location. Theoretically, if the pipeline
+		// choked at the wrong time, a hard-to-erase file
+		// could be left on the system. See "rm" above.
 		sh 'java -cp /tmp/blazegraph.jar com.bigdata.rdf.store.DataLoader -defaultGraph http://example.org /tmp/blazegraph.properties /tmp/go-lego.owl'
 		sh 'mv blazegraph.jnl /tmp/blazegraph.jnl'
 		sh 'pigz /tmp/blazegraph.jnl'
