@@ -279,6 +279,10 @@ pipeline {
 		}
             }
             steps {
+		///
+		/// Produce Solr index.
+		///
+
                 // sh 'ls /srv'
                 // sh 'ls /tmp'
 
@@ -292,6 +296,22 @@ pipeline {
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		    // Copy over log.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		}
+
+		///
+		/// Produce blazegraph.
+		///
+
+		sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_2_1_6_RC/blazegraph.jar'
+		sh 'curl -L -o /tmp/blazegraph.properties https://raw.githubusercontent.com/geneontology/minerva/master/minerva-core/src/main/resources/org/geneontology/minerva/blazegraph.properties'
+		// WARNING: the hardwired URL in the next two steps is not great.
+		sh 'curl -L -o /tmp/go-lego.owl http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/extensions/go-lego.owl'
+		sh 'java -cp /tmp/blazegraph.jar com.bigdata.rdf.store.DataLoader -defaultGraph http://example.org /tmp/blazegraph.properties /tmp/go-lego.owl'
+		sh 'mv blazegraph.jnl /tmp/blazegraph.jnl'
+		sh 'pigz /tmp/blazegraph.jnl'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // Copy over journal.
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/blazegraph-go-lego.jnl.gz'
 		}
             }
 	}
