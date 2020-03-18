@@ -343,7 +343,7 @@ pipeline {
 	// Let's let our people know if things go well.
 	success {
 	    script {
-		if( env.BRANCH_NAME == 'release' ){
+		if( env.BRANCH_NAME == 'issue-35-neo-test' ){
 		    echo "There has been a successful run of the ${env.BRANCH_NAME} pipeline."
 		    mail bcc: '', body: "There has been successful run of the ${env.BRANCH_NAME} pipeline. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline success for ${env.BRANCH_NAME}", to: "${TARGET_SUCCESS_EMAILS}"
 		}
