@@ -213,6 +213,13 @@ pipeline {
 			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY neo.obo neo.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
 		    }
 
+		    // WARNING/BUG: This occurs "early" as we need NEO
+		    // in the proper location before building GO (for
+		    // testing, solr loading, etc.). Once we have
+		    // ubiquitous ontology catalogs, publishing can
+		    // occur properly at the end and after testing.
+		    // See commented out section below.
+		    //
 		    // Deploy to S3 location for pickup by PURL via CF.
 		    withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
 			sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.owl s3://go-build/build-noctua-entity-ontology/latest/'
@@ -301,7 +308,7 @@ pipeline {
 		}
 
 		///
-		/// Produce blazegraph.
+		/// Produce go-lego (w/NEO) blazegraph.
 		///
 
 		// An awkward download and protective cleanup dance.
@@ -322,32 +329,50 @@ pipeline {
 		}
             }
 	}
-	// //...
-	// stage('Sanity II') {
-	//     steps {
-	// 	echo 'TODO: Sanity II'
+	//...
+	stage('Sanity 0') {
+	    agent {
+		docker {
+		    image 'obolibrary/odkfull:v1.2.22'
+		    // Reset Jenkins Docker agent default to original
+		    // root.
+		    args '-u root:root'
+		}
+	    }
+	    steps {
+		// Get files back to local.
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/neo.owl /tmp/neo.owl'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/neo.obo /tmp/neo.obo'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/extensions/go-lego.owl /tmp/go-lego.owl'
+		}
+
+		// // TODO: here. Files available /tmp/go-lego.owl /tmp/neo.owl /tmp/go-lego.obo.
+		// sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
+	    }
+	}
+	// // WARNING/BUG: This can only occur in its proper location
+	// // once ontology catalogs are produced in the proper
+	// // locations.
+	// // Currently only the NEO files.
+	// stage('Publish') {
+	//     // Get files back to local.
+	//     withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 	sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/neo.owl neo.owl'
+	// 	sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/neo.obo neo.obo'
 	//     }
-	// }
-	// stage('TODO: Final status') {
-	//     steps {
-	// 	echo 'TODO: final'
-	//     }
-	// }
-	// stage('Flush') {
-	//     steps {
-	// 	echo 'TODO: Flush/invalidate CDN'
+	//     // Deploy to S3 location for pickup by PURL via CF.
+	//     withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+	// 	sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.owl s3://go-build/build-noctua-entity-ontology/latest/'
+	// 	sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.obo s3://go-build/build-noctua-entity-ontology/latest/'
 	//     }
 	// }
     }
     post {
 	// Let's let our people know if things go well.
 	success {
-	    script {
-		if( env.BRANCH_NAME == 'issue-35-neo-test' ){
-		    echo "There has been a successful run of the ${env.BRANCH_NAME} pipeline."
-		    mail bcc: '', body: "There has been successful run of the ${env.BRANCH_NAME} pipeline. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline success for ${env.BRANCH_NAME}", to: "${TARGET_SUCCESS_EMAILS}"
-		}
-	    }
+	    echo "There has been a successful run of the ${env.BRANCH_NAME} pipeline."
+	    mail bcc: '', body: "There has been successful run of the ${env.BRANCH_NAME} pipeline. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline success for ${env.BRANCH_NAME}", to: "${TARGET_SUCCESS_EMAILS}"
 	}
 	// Let's let our internal people know if things change.
         changed {
