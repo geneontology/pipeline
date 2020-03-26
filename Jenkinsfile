@@ -327,7 +327,7 @@ pipeline {
 		    // Copy over journal.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/blazegraph-go-lego.jnl.gz'
 		}
-            }
+	    }
 	}
 	//...
 	stage('Sanity 0') {
@@ -345,6 +345,13 @@ pipeline {
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/neo.owl /tmp/neo.owl'
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/neo.obo /tmp/neo.obo'
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/extensions/go-lego.owl /tmp/go-lego.owl'
+		}
+
+		git 'https://github.com/geneontology/go-ontology.git'
+		sh 'ROBOT_JAVA_ARGS=-Xmx48G robot report --input /tmp/go-lego.owl --tdb true --tdb-directory /tmp/tdb/ -k true -p ../sparql/neo/profile.txt -o neo-violations.report.txt --print 50 -v'
+
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY neo-violations.report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 		}
 
 		// // TODO: here. Files available /tmp/go-lego.owl /tmp/neo.owl /tmp/go-lego.obo.
