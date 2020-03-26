@@ -1026,7 +1026,7 @@ pipeline {
 				}
 
 				// Make holey BDBag in fixed directory.
-				sh 'mkdir go-release-reference'
+				sh 'mkdir -p go-release-reference || true'
 				sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
 
 				// To make a full BDBag, we first need
