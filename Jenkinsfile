@@ -348,7 +348,7 @@ pipeline {
 		}
 
 		git 'https://github.com/geneontology/go-ontology.git'
-		sh 'ROBOT_JAVA_ARGS=-Xmx48G robot report --input /tmp/go-lego.owl --tdb true --tdb-directory /tmp/tdb/ -k true -p ../sparql/neo/profile.txt -o neo-violations.report.txt --print 50 -v'
+		sh 'ROBOT_JAVA_ARGS=-Xmx48G robot report --input /tmp/go-lego.owl --tdb true --tdb-directory /tmp/tdb/ -k true -p go-ontology/src/sparql/neo/profile.txt -o neo-violations.report.txt --print 50 -v'
 
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY neo-violations.report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
