@@ -332,6 +332,9 @@ pipeline {
 		    // Copy over journal.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/blazegraph-go-lego.jnl.gz'
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego-with-reacto.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/blazegraph-go-lego-with-reacto.jnl.gz'
+		    // DANGEROUS! WARNING/TODO: Copy over to temporary holding location for ShEx. Pseudo-publish.
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/blazegraph-go-lego.jnl.gz'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego-with-reacto.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/blazegraph-go-lego-with-reacto.jnl.gz'
 		}
 	    }
 	}
