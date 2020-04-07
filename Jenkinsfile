@@ -183,152 +183,152 @@ pipeline {
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
 	// a release, and deploys to S3.
-	stage('Produce NEO') {
-	    steps {
-		// Create a relative working directory and setup our
-		// data environment.
-		dir('./neo') {
-		    git 'https://github.com/geneontology/neo.git'
-
-		    // Default namespace.
-		    sh 'OBO=http://purl.obolibrary.org/obo'
-
-		    // Make all software products available in bin/.
-		    sh 'mkdir -p bin/'
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-		    }
-		    sh 'chmod +x bin/*'
-
-		    //
-		    withEnv(['PATH+EXTRA=:bin:./bin', 'JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G']){
-			retry(3){
-			    sh 'make clean all'
-			}
-		    }
-
-		    // Make sure that we copy any files there,
-		    // including the core dump of produced.
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY neo.obo neo.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
-		    }
-
-		    // WARNING/BUG: This occurs "early" as we need NEO
-		    // in the proper location before building GO (for
-		    // testing, solr loading, etc.). Once we have
-		    // ubiquitous ontology catalogs, publishing can
-		    // occur properly at the end and after testing.
-		    // See commented out section below.
-		    //
-		    // Deploy to S3 location for pickup by PURL via CF.
-		    withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-			sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.owl s3://go-build/build-noctua-entity-ontology/latest/'
-			sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.obo s3://go-build/build-noctua-entity-ontology/latest/'
-		    }
-		}
-	    }
-	}
+	// stage('Produce NEO') {
+	//     steps {
+	// 	// Create a relative working directory and setup our
+	// 	// data environment.
+	// 	dir('./neo') {
+	// 	    git 'https://github.com/geneontology/neo.git'
+	//
+	// 	    // Default namespace.
+	// 	    sh 'OBO=http://purl.obolibrary.org/obo'
+	//
+	// 	    // Make all software products available in bin/.
+	// 	    sh 'mkdir -p bin/'
+	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+	// 	    }
+	// 	    sh 'chmod +x bin/*'
+	//
+	// 	    //
+	// 	    withEnv(['PATH+EXTRA=:bin:./bin', 'JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G']){
+	// 		retry(3){
+	// 		    sh 'make clean all'
+	// 		}
+	// 	    }
+	//
+	// 	    // Make sure that we copy any files there,
+	// 	    // including the core dump of produced.
+	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 		sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY neo.obo neo.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
+	// 	    }
+	//
+	// 	    // WARNING/BUG: This occurs "early" as we need NEO
+	// 	    // in the proper location before building GO (for
+	// 	    // testing, solr loading, etc.). Once we have
+	// 	    // ubiquitous ontology catalogs, publishing can
+	// 	    // occur properly at the end and after testing.
+	// 	    // See commented out section below.
+	// 	    //
+	// 	    // Deploy to S3 location for pickup by PURL via CF.
+	// 	    withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+	// 		sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.owl s3://go-build/build-noctua-entity-ontology/latest/'
+	// 		sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.obo s3://go-build/build-noctua-entity-ontology/latest/'
+	// 	    }
+	// 	}
+	//     }
+	// }
 	// Produce the standard GO package.
-	stage('Produce GO') {
-	    agent {
-		docker {
-		    image 'obolibrary/odkfull:v1.2.22'
-		    // Reset Jenkins Docker agent default to original
-		    // root.
-		    args '-u root:root'
-		}
-	    }
-	    steps {
-		// Create a relative working directory and setup our
-		// data environment.
-		dir('./go-ontology') {
-		    git 'https://github.com/geneontology/go-ontology.git'
-
-		    // Default namespace.
-		    sh 'env'
-
-		    dir('./src/ontology') {
-			retry(3){
-			    sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
-			}
-			retry(3){
-			    sh 'make prepare_release'
-			}
-		    }
-
-		    // Make sure that we copy any files there,
-		    // including the core dump of produced.
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
-			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
-		    }
-
-		    // Now that the files are safely away onto skyhook for
-		    // debugging, test for the core dump.
-		    script {
-			if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
-
-			    def found_core_dump_p = fileExists 'target/core_dump.owl'
-			    if( found_core_dump_p ){
-				error 'ROBOT core dump detected--bailing out.'
-			    }
-			}
-		    }
-		}
-	    }
-	}
+	// stage('Produce GO') {
+	//     agent {
+	// 	docker {
+	// 	    image 'obolibrary/odkfull:v1.2.22'
+	// 	    // Reset Jenkins Docker agent default to original
+	// 	    // root.
+	// 	    args '-u root:root'
+	// 	}
+	//     }
+	//     steps {
+	// 	// Create a relative working directory and setup our
+	// 	// data environment.
+	// 	dir('./go-ontology') {
+	// 	    git 'https://github.com/geneontology/go-ontology.git'
+	//
+	// 	    // Default namespace.
+	// 	    sh 'env'
+	//
+	// 	    dir('./src/ontology') {
+	// 		retry(3){
+	// 		    sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
+	// 		}
+	// 		retry(3){
+	// 		    sh 'make prepare_release'
+	// 		}
+	// 	    }
+	//
+	// 	    // Make sure that we copy any files there,
+	// 	    // including the core dump of produced.
+	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 		//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
+	// 		sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
+	// 	    }
+	//
+	// 	    // Now that the files are safely away onto skyhook for
+	// 	    // debugging, test for the core dump.
+	// 	    script {
+	// 		if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
+	//
+	// 		    def found_core_dump_p = fileExists 'target/core_dump.owl'
+	// 		    if( found_core_dump_p ){
+	// 			error 'ROBOT core dump detected--bailing out.'
+	// 		    }
+	// 		}
+	// 	    }
+	// 	}
+	//     }
+	// }
 	//..
-	stage('Produce derivatives') {
-            agent {
-                docker {
-		    image 'geneontology/golr-autoindex-ontology:0aeeb57b6e20a4b41d677a8ae934fdf9ecd4b0cd_2019-01-24T124316'
-		    // Reset Jenkins Docker agent default to original
-		    // root.
-		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
-		}
-            }
-            steps {
-		///
-		/// Produce Solr index.
-		///
-
-                // sh 'ls /srv'
-                // sh 'ls /tmp'
-
-		// Build index into tmpfs.
-		sh 'bash /tmp/run-indexer.sh'
-
-		// Copy tmpfs Solr contents onto skyhook.
-		sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // Copy over index.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
-		    // Copy over log.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
-		}
-
-		///
-		/// Produce go-lego (w/NEO) blazegraph.
-		///
-
-		// An awkward download and protective cleanup dance.
-		sh 'rm blazegraph.jnl || true'
-		sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_2_1_6_RC/blazegraph.jar'
-		sh 'curl -L -o /tmp/blazegraph.properties https://raw.githubusercontent.com/geneontology/minerva/master/minerva-core/src/main/resources/org/geneontology/minerva/blazegraph.properties'
-		sh 'curl -L -o /tmp/go-lego.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego.owl'
-		// WARNING: Having trouble getting the journal to the
-		// right location. Theoretically, if the pipeline
-		// choked at the wrong time, a hard-to-erase file
-		// could be left on the system. See "rm" above.
-		sh 'java -cp /tmp/blazegraph.jar com.bigdata.rdf.store.DataLoader -defaultGraph http://example.org /tmp/blazegraph.properties /tmp/go-lego.owl'
-		sh 'mv blazegraph.jnl /tmp/blazegraph.jnl'
-		sh 'pigz /tmp/blazegraph.jnl'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // Copy over journal.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/blazegraph-go-lego.jnl.gz'
-		}
-	    }
-	}
+	// stage('Produce derivatives') {
+        //     agent {
+        //         docker {
+	// 	    image 'geneontology/golr-autoindex-ontology:0aeeb57b6e20a4b41d677a8ae934fdf9ecd4b0cd_2019-01-24T124316'
+	// 	    // Reset Jenkins Docker agent default to original
+	// 	    // root.
+	// 	    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
+	// 	}
+        //     }
+        //     steps {
+	// 	///
+	// 	/// Produce Solr index.
+	// 	///
+	//
+        //         // sh 'ls /srv'
+        //         // sh 'ls /tmp'
+	//
+	// 	// Build index into tmpfs.
+	// 	sh 'bash /tmp/run-indexer.sh'
+	//
+	// 	// Copy tmpfs Solr contents onto skyhook.
+	// 	sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
+	// 	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 	    // Copy over index.
+	// 	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+	// 	    // Copy over log.
+	// 	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+	// 	}
+	//
+	// 	///
+	// 	/// Produce go-lego (w/NEO) blazegraph.
+	// 	///
+	//
+	// 	// An awkward download and protective cleanup dance.
+	// 	sh 'rm blazegraph.jnl || true'
+	// 	sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_2_1_6_RC/blazegraph.jar'
+	// 	sh 'curl -L -o /tmp/blazegraph.properties https://raw.githubusercontent.com/geneontology/minerva/master/minerva-core/src/main/resources/org/geneontology/minerva/blazegraph.properties'
+	// 	sh 'curl -L -o /tmp/go-lego.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego.owl'
+	// 	// WARNING: Having trouble getting the journal to the
+	// 	// right location. Theoretically, if the pipeline
+	// 	// choked at the wrong time, a hard-to-erase file
+	// 	// could be left on the system. See "rm" above.
+	// 	sh 'java -cp /tmp/blazegraph.jar com.bigdata.rdf.store.DataLoader -defaultGraph http://example.org /tmp/blazegraph.properties /tmp/go-lego.owl'
+	// 	sh 'mv blazegraph.jnl /tmp/blazegraph.jnl'
+	// 	sh 'pigz /tmp/blazegraph.jnl'
+	// 	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 	    // Copy over journal.
+	// 	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/blazegraph-go-lego.jnl.gz'
+	// 	}
+	//     }
+	// }
 	//...
 	stage('Sanity 0') {
 	    agent {
@@ -342,16 +342,17 @@ pipeline {
 	    steps {
 		// Get files back to local.
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/neo.owl /tmp/neo.owl'
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/neo.obo /tmp/neo.obo'
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/extensions/go-lego.owl /tmp/go-lego.owl'
+		    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/neo.owl /tmp/neo.owl'
+		    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/neo.obo /tmp/neo.obo'
+		    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/extensions/go-lego.owl /tmp/go-lego.owl'
+		    sh 'wget http://snapshot.geneontology.org/ontology/extensions/go-lego.owl -O /tmp/go-lego.owl'
 		}
 
-		git 'https://github.com/geneontology/go-ontology.git'
-		sh 'cd go-ontology/src/ontology && ROBOT_JAVA_ARGS=-Xmx48G robot report --input /tmp/go-lego.owl --tdb true --tdb-directory /tmp/tdb/ -k true -p go-ontology/src/sparql/neo/profile.txt -o neo-violations.report.txt --print 50 -v'
+		sh 'git clone https://github.com/geneontology/go-ontology.git /tmp/go-ontology'
+		sh 'cd /tmp/go-ontology/src/ontology && ROBOT_JAVA_ARGS=-Xmx48G robot report --input /tmp/go-lego.owl --tdb true --tdb-directory /tmp/tdb/ -k true -p go-ontology/src/sparql/neo/profile.txt -o /tmp/neo-violations.report.txt --print 50 -v'
 
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY neo-violations.report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/neo-violations.report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 		}
 
 		// // TODO: here. Files available /tmp/go-lego.owl /tmp/neo.owl /tmp/go-lego.obo.
