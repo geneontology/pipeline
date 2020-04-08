@@ -179,6 +179,23 @@ pipeline {
 		}
 	    }
 	}
+	// We need some metadata to make the current NEO build work.
+	stage('Produce metadata') {
+	    steps {
+		// Create a relative working directory and setup our
+		// data environment.
+		dir('./go-site') {
+		    git 'https://github.com/geneontology/go-site.git'
+
+		    sh './scripts/combine-datasets-metadata.py metadata/datasets/*.yaml > metadata/datasets.json'
+
+		    // Deploy to S3 location for pickup in next stage.
+		    withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+			sh 's3cmd -c $S3CMD_JSON --acl-public --reduced-redundancy --mime-type=application/json put metadata/datasets.json s3://go-build/metadata/'
+		    }
+		}
+	    }
+	}
 	// See https://github.com/geneontology/go-ontology for details
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
