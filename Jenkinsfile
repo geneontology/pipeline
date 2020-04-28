@@ -337,6 +337,9 @@ pipeline {
 		sh 'curl -L -o /tmp/neo.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/neo.owl'
 		// BUG/TODO: This will need to point inward at some point.
 		sh 'curl -L -o /tmp/reacto.owl http://snapshot.geneontology.org/ontology/extensions/reacto.owl'
+		// DEBUG: confirm for the moment.
+		sh 'ls -AlF /tmp/neo.owl'
+		sh 'ls -AlF /tmp/reacto.owl'
 		// WARNING: Having trouble getting the journal to the
 		// right location. Theoretically, if the pipeline
 		// choked at the wrong time, a hard-to-erase file
