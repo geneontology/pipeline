@@ -296,7 +296,7 @@ pipeline {
 	    }
 	}
 	//..
-	stage('Produce derivatives') {
+	stage('Produce derivatives (GOlr)') {
             agent {
                 docker {
 		    image 'geneontology/golr-autoindex-ontology:0aeeb57b6e20a4b41d677a8ae934fdf9ecd4b0cd_2019-01-24T124316'
@@ -324,9 +324,21 @@ pipeline {
 		    // Copy over log.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		}
+	    }
+	}
 
+	stage('Produce derivatives (GOlr)') {
+            agent {
+                docker {
+		    image 'geneontology/golr-autoindex-ontology:0aeeb57b6e20a4b41d677a8ae934fdf9ecd4b0cd_2019-01-24T124316'
+		    // Reset Jenkins Docker agent default to original
+		    // root.
+		    args '-u root:root --mount type=tmpfs,destination=/tmp'
+		}
+            }
+            steps {
 		///
-		/// Produce go-lego (w/NEO) blazegraph.
+		/// Produce various blazegraphs.
 		///
 
 		// An awkward download and protective cleanup dance.
