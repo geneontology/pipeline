@@ -344,18 +344,14 @@ pipeline {
 		// choked at the wrong time, a hard-to-erase file
 		// could be left on the system. See "rm" above.
 		sh 'java -cp /tmp/blazegraph.jar com.bigdata.rdf.store.DataLoader -defaultGraph http://example.org /tmp/blazegraph.properties /tmp/go-lego.owl'
-		sh 'cp blazegraph.jnl /tmp/blazegraph-go-lego.jnl'
 		sh 'java -cp /tmp/blazegraph.jar com.bigdata.rdf.store.DataLoader -defaultGraph http://example.org /tmp/blazegraph.properties /tmp/reacto.owl'
 		sh 'java -cp /tmp/blazegraph.jar com.bigdata.rdf.store.DataLoader -defaultGraph http://example.org /tmp/blazegraph.properties /tmp/neo.owl'
 		sh 'mv blazegraph.jnl /tmp/blazegraph-go-lego-reacto-neo.jnl'
-		sh 'pigz /tmp/blazegraph-go-lego.jnl'
 		sh 'pigz /tmp/blazegraph-go-lego-reacto-neo.jnl'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    // Copy over journal.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/blazegraph-go-lego.jnl.gz'
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego-reacto-neo.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/blazegraph-go-lego-reacto-neo.jnl.gz'
 		    // DANGEROUS! WARNING/TODO: Copy over to temporary holding location for ShEx. Pseudo-publish.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/blazegraph-go-lego.jnl.gz'
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego-reacto-neo.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/blazegraph-go-lego-reacto-neo.jnl.gz'
 		}
 	    }
