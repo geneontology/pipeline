@@ -350,6 +350,7 @@ pipeline {
 		sh 'curl -L -o /tmp/reacto.owl http://snapshot.geneontology.org/ontology/extensions/reacto.owl'
 		// DEBUG: confirm for the moment.
 		sh 'ls -AlF /tmp/*'
+		sh 'head -1000 /tmp/neo.owl'
 		// WARNING: Having trouble getting the journal to the
 		// right location. Theoretically, if the pipeline
 		// choked at the wrong time, a hard-to-erase file
