@@ -327,7 +327,7 @@ pipeline {
 	    }
 	}
 
-	stage('Produce derivatives (GOlr)') {
+	stage('Produce derivatives (Blazegraph)') {
             agent {
                 docker {
 		    image 'geneontology/golr-autoindex-ontology:0aeeb57b6e20a4b41d677a8ae934fdf9ecd4b0cd_2019-01-24T124316'
