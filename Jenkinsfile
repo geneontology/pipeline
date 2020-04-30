@@ -35,7 +35,7 @@ pipeline {
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'dev'
 	// The branch of minerva to use.
-	TARGET_NOCTUA_MODELS_BRANCH = 'master'
+	TARGET_NOCTUA_MODELS_BRANCH = 'shex-pipeline-testset'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
