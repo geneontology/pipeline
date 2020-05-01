@@ -363,23 +363,23 @@ pipeline {
 		    // sh 'touch /tmp/foo.txt'
 		    // sh 'ls -AlF /tmp/foo.txt'
 
-		    // Setup a local solr data instance for the NEO pipeline.
-		    // Keep in mind the reason we're being careful is that we're trying
-		    // to preserve the permissions environment in the image.
-		    sh 'mkdir -p /srv/solr/data/index'
-		    sh 'chown jetty /srv/solr/data/index'
-		    sh 'chgrp adm /srv/solr/data/index'
-		    sh 'curl -L -o /srv/solr/data/index/golr-index-contents.tgz http://skyhook.berkeleybop.org/issue-35-neo-test/products/solr/golr-index-contents.tgz'
-		    sh 'tar -zxvf /srv/solr/data/index/golr-index-contents.tgz -C /srv/solr/data/index'
-		    sh 'chown -R jetty /srv/solr/data/index'
-		    sh 'chgrp -R adm /srv/solr/data/index'
+		    // // Setup a local solr data instance for the NEO pipeline.
+		    // // Keep in mind the reason we're being careful is that we're trying
+		    // // to preserve the permissions environment in the image.
+		    // sh 'mkdir -p /srv/solr/data/index'
+		    // sh 'chown jetty /srv/solr/data/index'
+		    // sh 'chgrp adm /srv/solr/data/index'
+		    // sh 'curl -L -o /srv/solr/data/index/golr-index-contents.tgz http://skyhook.berkeleybop.org/issue-35-neo-test/products/solr/golr-index-contents.tgz'
+		    // sh 'tar -zxvf /srv/solr/data/index/golr-index-contents.tgz -C /srv/solr/data/index'
+		    // sh 'chown -R jetty /srv/solr/data/index'
+		    // sh 'chgrp -R adm /srv/solr/data/index'
 
-		    // Run it, wait, test.
-		    //sh 'bash /tmp/run-command.sh'
-		    sh 'bash /tmp/run-apache-solr.sh &'
-		    //sh 'java -Xms$GOLR_SOLR_MEMORY -Xmx$GOLR_SOLR_MEMORY -DentityExpansionLimit=8172000 -Djava.awt.headless=true -Dsolr.solr.home=/srv/solr -Djava.io.tmpdir=/tmp/jetty9 -Djava.library.path=/usr/lib -Djetty.home=/usr/share/jetty9 -Djetty.logs=/var/log/jetty9 -Djetty.state=/tmp/jetty.state -Djetty.host=0.0.0.0 -Djetty.port=8080 -jar /usr/share/jetty9/start.jar --daemon /etc/jetty9/jetty-started.xml &'
-		    sleep time: 30, unit: 'SECONDS'
-		    sh 'curl "http://localhost:8080/solr/select?q=*:*&rows=0"'
+		    // // Run it, wait, test.
+		    // //sh 'bash /tmp/run-command.sh'
+		    // sh 'bash /tmp/run-apache-solr.sh &'
+		    // //sh 'java -Xms$GOLR_SOLR_MEMORY -Xmx$GOLR_SOLR_MEMORY -DentityExpansionLimit=8172000 -Djava.awt.headless=true -Dsolr.solr.home=/srv/solr -Djava.io.tmpdir=/tmp/jetty9 -Djava.library.path=/usr/lib -Djetty.home=/usr/share/jetty9 -Djetty.logs=/var/log/jetty9 -Djetty.state=/tmp/jetty.state -Djetty.host=0.0.0.0 -Djetty.port=8080 -jar /usr/share/jetty9/start.jar --daemon /etc/jetty9/jetty-started.xml &'
+		    // sleep time: 30, unit: 'SECONDS'
+		    // sh 'curl "http://localhost:8080/solr/select?q=*:*&rows=0"'
 
 		    // Setup the directory for the models safely and completely in the image.
 		    sh 'mkdir /tmp/noctua-models'
@@ -399,7 +399,7 @@ pipeline {
 
 		    // Check models.
 		    withEnv(['MINERVA_CLI_MEMORY=128G']){
-			sh '/tmp/bin/minerva-cli.sh --validate-go-cams --shex -i /tmp/noctua-models/models -r /tmp/noctua-models/shex.tsv --golr http://127.0.0.1:8080/solr/ --pipeline-output-file /tmp/noctua-models/minerva-shex-report.json'
+			sh '/tmp/bin/minerva-cli.sh --validate-go-cams --shex -i /tmp/noctua-models/models -r /tmp/noctua-models/shex.tsv --pipeline-output-file /tmp/noctua-models/minerva-shex-report.json --ontojournal /tmp/blazegraph-lego.jnl'
 		    }
 
 		    // Move results to skyhook.
