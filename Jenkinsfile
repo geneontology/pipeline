@@ -351,8 +351,12 @@ pipeline {
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    // Copy over journal.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego-reacto-neo.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/blazegraph-go-lego-reacto-neo.jnl.gz'
-		    // DANGEROUS! WARNING/TODO: Copy over to temporary holding location for ShEx. Pseudo-publish.
+		    // DANGEROUS! WARNING/TODO: Copy over to temporary
+		    // holding location for ShEx and stable Noctua
+		    // deployment. Pseudo-publish.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego-reacto-neo.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/blazegraph-go-lego-reacto-neo.jnl.gz'
+		    sh 'curl -L -o /tmp/go-lego-reacto.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego-reacto.owl'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/go-lego-reacto.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/go-lego-reacto.owl'
 		}
 	    }
 	}
