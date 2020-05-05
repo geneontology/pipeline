@@ -315,13 +315,13 @@ pipeline {
 		    },
 		    "Ready blazegraph-runner": {
     			dir('./blazegraph-runner') {
-    	                    sh 'wget -N https://github.com/balhoff/blazegraph-runner/releases/download/v1.4/blazegraph-runner-1.4.tgz'
-    	                    sh 'tar -xvf blazegraph-runner-1.4.tgz'
+                            sh 'wget -N https://github.com/balhoff/blazegraph-runner/releases/download/v1.6/blazegraph-runner-1.6.tgz'
+                            sh 'tar -xvf blazegraph-runner-1.6.tgz'
     	                    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    		// Attempt to rsync bin into bin/.
-    	                        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.4/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+                                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.6/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 				// Attempt to rsync libs into lib/.
-    	    		    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.4/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
+                                sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.6/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
     	                    }
     	                }
 		    },
@@ -393,18 +393,22 @@ pipeline {
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* /tmp/bin/'
 			// // WARNING/BUG: needed for blazegraph-runner
 			// // to run at this point.
-			// sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /tmp/lib/'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /tmp/lib/'
 		    }
 		    sh 'chmod +x /tmp/bin/*'
 
+			// Generate blazegraph journal.
+			sh '/tmp/bin/blazegraph-runner load --journal=/tmp/blazegraph-models.jnl --informat=nquads /tmp/noctua-models/models/*.nq'
+
 		    // Check models.
 		    withEnv(['MINERVA_CLI_MEMORY=128G']){
-			sh '/tmp/bin/minerva-cli.sh --validate-go-cams --shex -i /tmp/noctua-models/models -r /tmp/noctua-models/shex.tsv --pipeline-output-file /tmp/noctua-models/minerva-shex-report.json --ontojournal /tmp/blazegraph-lego.jnl'
+			sh '/tmp/bin/minerva-cli.sh --validate-go-cams --shex -i /tmp/blazegraph-models.jnl -r /tmp/noctua-models/shex.tsv --pipeline-output-file /tmp/noctua-models/minerva-shex-report.json --ontojournal /tmp/blazegraph-lego.jnl'
 		    }
 
 		    // Move results to skyhook.
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/noctua-models/minerva-shex-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/noctua-models/shex.tsv skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 		    }
 		}
 	    }
