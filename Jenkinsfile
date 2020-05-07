@@ -402,13 +402,14 @@ pipeline {
 
 		    // Check models.
 		    withEnv(['MINERVA_CLI_MEMORY=128G']){
-			sh '/tmp/bin/minerva-cli.sh --validate-go-cams --shex -i /tmp/blazegraph-models.jnl -r /tmp/noctua-models/shex.tsv --pipeline-output-file /tmp/noctua-models/minerva-shex-report.json --ontojournal /tmp/blazegraph-lego.jnl'
+			sh '/tmp/bin/minerva-cli.sh --validate-go-cams --shex -i /tmp/blazegraph-models.jnl -r /tmp/noctua-models/shex.tsv -e /tmp/noctua-models/shape_explanation.txt --pipeline-output-file /tmp/noctua-models/minerva-shex-report.json --ontojournal /tmp/blazegraph-lego.jnl'
 		    }
 
 		    // Move results to skyhook.
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/noctua-models/minerva-shex-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/noctua-models/shex.tsv skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/noctua-models/shape_explanation.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 		    }
 		}
 	    }
