@@ -34,8 +34,10 @@ pipeline {
 	TARGET_GO_SITE_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'dev'
-	// The branch of minerva to use.
-	TARGET_NOCTUA_MODELS_BRANCH = 'shex-pipeline-testset'
+	// The repository of models to load
+	TARGET_NOCTUA_MODELS_REPO = 'dustine32/noctua-models'
+	// The branch of noctua-models to use.
+	TARGET_NOCTUA_MODELS_BRANCH = 'syngo-models-only'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'debert@usc.edu'
@@ -383,7 +385,7 @@ pipeline {
 
 		    // Setup the directory for the models safely and completely in the image.
 		    sh 'mkdir /tmp/noctua-models'
-		    sh 'git clone -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/noctua-models.git /tmp/noctua-models'
+		    sh 'git clone -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/$TARGET_NOCTUA_MODELS_REPO.git /tmp/noctua-models'
 
 		    // Make all software products available in bin/
 		    // (and lib/).
@@ -398,7 +400,7 @@ pipeline {
 		    sh 'chmod +x /tmp/bin/*'
 
 			// Generate blazegraph journal.
-			sh '/tmp/bin/blazegraph-runner load --journal=/tmp/blazegraph-models.jnl --informat=nquads /tmp/noctua-models/models/*.nq'
+			sh '/tmp/bin/blazegraph-runner load --journal=/tmp/blazegraph-models.jnl --informat=ttl /tmp/noctua-models/models/*.ttl'
 
 		    // Check models.
 		    withEnv(['MINERVA_CLI_MEMORY=128G']){
