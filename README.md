@@ -20,7 +20,7 @@ Anomalies are evaluated, reported to the upstream sources and fixed, or ignored 
 ## Manual finalization from Zenodo failure
 
 This checklist can be used to manually finish a release that has
-unrecoverably failed while operating with Zenodo.
+unrecoverably failed while operating with Zenodo. See worknotes for 2020-04-24.
 
 - [ ] Go to zenodo for concept/last
 - [ ] Discard if anything is open
