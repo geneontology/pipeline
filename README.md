@@ -4,7 +4,7 @@
 
 Declarative pipeline for the Gene Ontology.
 
-# QC 
+# QC
 
 ## Manual QC steps
 There is a step in the pipeline that halts the pipeline: https://build.geneontology.org/job/geneontology/job/pipeline/job/release/
@@ -13,39 +13,66 @@ Currently pgaudet is reponsible for checking the release. Notes for the checks a
 Products are here: http://skyhook.berkeleybop.org/release/
 AmiGO is here: https://amigo-staging.geneontology.io/amigo
 
-Anomalies are evaluated, reported to the upstream sources and fixed, or ignored if the problem is no worse than the previous release. 
+Anomalies are evaluated, reported to the upstream sources and fixed, or ignored if the problem is no worse than the previous release.
 
 # Troubleshooting
 
-How to manually complete a bum Zenodo archive upload on a production
-pipeline.
+## Manual finalization from Zenodo failure
 
-    1.  go to zenodo for concept/last
-    2.  discard if anything is open
-    3.  start a new version
-    4.  note new entity id (example as E123)
-    5.  delete current tarball in UI
-    6.  get bucket for new entity
-	    (example token T890)
-		`curl -H "Accept: application/json" -H "Authorization: Bearer T890" "https://www.zenodo.org/api/deposit/depositions/E123"`
-		note bucket id in return (example as B456)
-    7.  PUT archive file into bucket:
-        `curl -X PUT -H "Accept: application/json" -H "Content-Type: application/octet-stream" -H "Authorization: Bearer T890" -T ./go-release-archive.tgz https://www.zenodo.org/api/files/B456/go-release-archive.tgz`
-		(took 41m in last run)
-    8.  check md5sum
-        `md5sum ./go-release-archive.tgz`
-    9.  update/add version info to version manually
-	    e.g.: 2018-08-09 in "Version" in "Basic information",
-		not "publication date"
-    10. publish
-    11. generate new doi json
-	    `cat release-reference-doi.json`
-		copy to local and update with E123
-		`mg /tmp/release-archive-doi.json`
-    12. upload created file to:
-	    go-data-product-current/metadata
-	    go-data-product-release/2018-08-09/metadata
-	    NOTE that the index.html will not contain this!
-    13. invalidate metadata/release-archive-doi.json
-    14. celebrate, as this is close enough for the moment until fixing underlying issue
-    15. on to deployment: `update-golr` is the only one needed
+This checklist can be used to manually finish a release that has
+unrecoverably failed while operating with Zenodo.
+
+- [ ] Go to zenodo for concept/last
+- [ ] Discard if anything is open
+- [ ] Get the date of the run and the run number to attach it to. For this example:
+	- Date: 2020-04-23
+	- Build number: 163
+- [ ] get the releases into zenodo
+	in jenkins@wok:~/workspace/neontology\_pipeline\_release-L3OLSRDNGI3ZIUODKFYUI4AO45X5C6RUGMOQAC5WV2Q6ZQOIFHMA/go-site$
+	```time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205166 --file go-release-archive.tgz --output ./release-archive-doi.json --revision 2020-04-23```
+	success
+	```time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205159 --file go-release-reference.tgz --output ./release-reference-doi.json --revision 2020-04-23```
+	success
+- [ ] get DOIs and ensure in files as needed
+    ```cat release-reference-doi.json```
+    ```json
+    {
+       "doi": "10.5281/zenodo.3765935"
+    }
+    ```
+    ```cat release-archive-doi.json```
+    ```json
+    {
+       "doi": "10.5281/zenodo.3765910"
+    }
+    ```
+- [ ] get a working "mount" in place"
+	pre:
+	```scp -i /home/sjcarbon/local/share/secrets/bbop/ssh-keys/id_rsa_nopass.ansible-bbop-local-slave /home/sjcarbon/local/share/secrets/bbop/ssh-keys/id_rsa_nopass.skyhook bbop@build.geneontology.org:/tmp```
+    ```scp -i /home/sjcarbon/local/share/secrets/bbop/ssh-keys/id_rsa_nopass.ansible-bbop-local-slave /home/sjcarbon/local/share/secrets/bbop/aws/s3/aws-go-push.json bbop@build.geneontology.org:/tmp/```
+	main:
+    ```mkdir -p /tmp/workspace```
+    ```mkdir -p /tmp/workspace/mnt/```
+    ```scp -r -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=/tmp/id_rsa_nopass.skyhook skyhook@skyhook.berkeleybop.org:/home/skyhook/release /tmp/workspace/mnt/```
+	```cp release-archive-doi.json /tmp/workspace/mnt/release/metadata/```
+    ```cp release-reference-doi.json /tmp/workspace/mnt/release/metadata/```
+- [ ] manual run of release publish stage
+  Ready:
+  ```pip3 install --user filechunkio boto3```
+  Get build number: 163
+  Get date: 2020-04-23
+- [ ] Current:
+  ```python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory /tmp/workspace/mnt/release --prefix http://current.geneontology.org -x```
+  ```python3 ./scripts/s3-uploader.py -v --credentials /tmp/aws-go-push.json --directory /tmp/workspace/mnt/release/ --bucket go-data-product-current --number 163 --pipeline release```
+- [ ] Release sub-level:
+  ```python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory /tmp/workspace/mnt/release --prefix http://release.geneontology.org/2020-04-23 -x -u```
+  ```python3 ./scripts/s3-uploader.py -v --credentials /tmp/aws-go-push.json --directory /tmp/workspace/mnt/release/ --bucket go-data-product-release/2020-04-23 --number 163 --pipeline release```
+- [ ] New top-level index.html for release:
+  ```python3 ./scripts/bucket-indexer.py --credentials /tmp/aws-go-push.json --bucket go-data-product-release --inject ./scripts/directory-index-template.html --prefix http://release.geneontology.org > top-level-index.html```
+  ```s3cmd -c /tmp/.s3cfg.go-push --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html```
+- [ ] manually run invalidations
+  - [ ] current
+  - [ ] release, top and inner
+- [ ] test
+  - [ ] http://current.geneontology.org
+  - [ ] http://release.geneontology.org
