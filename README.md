@@ -29,18 +29,26 @@ unrecoverably failed while operating with Zenodo.
 	- Build number: 163
 - [ ] get the releases into zenodo
 	in jenkins@wok:~/workspace/neontology\_pipeline\_release-L3OLSRDNGI3ZIUODKFYUI4AO45X5C6RUGMOQAC5WV2Q6ZQOIFHMA/go-site$
-	```time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205166 --file go-release-archive.tgz --output ./release-archive-doi.json --revision 2020-04-23```
+	```
+	time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205166 --file go-release-archive.tgz --output ./release-archive-doi.json --revision 2020-04-23
+	```
 	success
-	```time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205159 --file go-release-reference.tgz --output ./release-reference-doi.json --revision 2020-04-23```
+	```
+	time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205159 --file go-release-reference.tgz --output ./release-reference-doi.json --revision 2020-04-23
+	```
 	success
 - [ ] get DOIs and ensure in files as needed
-    ```cat release-reference-doi.json```
+    ```
+	cat release-reference-doi.json
+	```
     ```json
     {
        "doi": "10.5281/zenodo.3765935"
     }
     ```
-    ```cat release-archive-doi.json```
+    ```
+	cat release-archive-doi.json
+	```
     ```json
     {
        "doi": "10.5281/zenodo.3765910"
@@ -48,28 +56,53 @@ unrecoverably failed while operating with Zenodo.
     ```
 - [ ] get a working "mount" in place"
 	pre:
-	```scp -i /home/sjcarbon/local/share/secrets/bbop/ssh-keys/id_rsa_nopass.ansible-bbop-local-slave /home/sjcarbon/local/share/secrets/bbop/ssh-keys/id_rsa_nopass.skyhook bbop@build.geneontology.org:/tmp```
-    ```scp -i /home/sjcarbon/local/share/secrets/bbop/ssh-keys/id_rsa_nopass.ansible-bbop-local-slave /home/sjcarbon/local/share/secrets/bbop/aws/s3/aws-go-push.json bbop@build.geneontology.org:/tmp/```
+	```
+	scp -i KEY_SKY S3_FILE key2 bbop@build.geneontology.org:/tmp
+	```
 	main:
-    ```mkdir -p /tmp/workspace```
-    ```mkdir -p /tmp/workspace/mnt/```
-    ```scp -r -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=/tmp/id_rsa_nopass.skyhook skyhook@skyhook.berkeleybop.org:/home/skyhook/release /tmp/workspace/mnt/```
-	```cp release-archive-doi.json /tmp/workspace/mnt/release/metadata/```
-    ```cp release-reference-doi.json /tmp/workspace/mnt/release/metadata/```
+    ```
+	mkdir -p /tmp/workspace
+	```
+    ```
+	mkdir -p /tmp/workspace/mnt/
+	```
+    ```
+	scp -r -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=/tmp/KEY_SKY skyhook@skyhook.berkeleybop.org:/home/skyhook/release /tmp/workspace/mnt/
+	```
+	```
+	cp release-archive-doi.json /tmp/workspace/mnt/release/metadata/
+	```
+    ```
+	cp release-reference-doi.json /tmp/workspace/mnt/release/metadata/
+	```
 - [ ] manual run of release publish stage
   Ready:
-  ```pip3 install --user filechunkio boto3```
+  ```
+  pip3 install --user filechunkio boto3
+  ```
   Get build number: 163
   Get date: 2020-04-23
 - [ ] Current:
-  ```python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory /tmp/workspace/mnt/release --prefix http://current.geneontology.org -x```
-  ```python3 ./scripts/s3-uploader.py -v --credentials /tmp/aws-go-push.json --directory /tmp/workspace/mnt/release/ --bucket go-data-product-current --number 163 --pipeline release```
+  ```
+  python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory /tmp/workspace/mnt/release --prefix http://current.geneontology.org -x
+  ```
+  ```
+  python3 ./scripts/s3-uploader.py -v --credentials /tmp/aws-go-push.json --directory /tmp/workspace/mnt/release/ --bucket go-data-product-current --number 163 --pipeline release
+  ```
 - [ ] Release sub-level:
-  ```python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory /tmp/workspace/mnt/release --prefix http://release.geneontology.org/2020-04-23 -x -u```
-  ```python3 ./scripts/s3-uploader.py -v --credentials /tmp/aws-go-push.json --directory /tmp/workspace/mnt/release/ --bucket go-data-product-release/2020-04-23 --number 163 --pipeline release```
+  ```
+  python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory /tmp/workspace/mnt/release --prefix http://release.geneontology.org/2020-04-23 -x -u
+  ```
+  ```
+  python3 ./scripts/s3-uploader.py -v --credentials /tmp/aws-go-push.json --directory /tmp/workspace/mnt/release/ --bucket go-data-product-release/2020-04-23 --number 163 --pipeline release
+  ```
 - [ ] New top-level index.html for release:
-  ```python3 ./scripts/bucket-indexer.py --credentials /tmp/aws-go-push.json --bucket go-data-product-release --inject ./scripts/directory-index-template.html --prefix http://release.geneontology.org > top-level-index.html```
-  ```s3cmd -c /tmp/.s3cfg.go-push --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html```
+  ```
+  python3 ./scripts/bucket-indexer.py --credentials /tmp/aws-go-push.json --bucket go-data-product-release --inject ./scripts/directory-index-template.html --prefix http://release.geneontology.org > top-level-index.html
+  ```
+  ```
+  s3cmd -c /tmp/S3_FILE --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html
+  ```
 - [ ] manually run invalidations
   - [ ] current
   - [ ] release, top and inner
