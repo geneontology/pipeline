@@ -313,17 +313,17 @@ pipeline {
                 // sh 'ls /srv'
                 // sh 'ls /tmp'
 
-		// Build index into tmpfs.
-		sh 'bash /tmp/run-indexer.sh'
+		// // Build index into tmpfs.
+		// sh 'bash /tmp/run-indexer.sh'
 
-		// Copy tmpfs Solr contents onto skyhook.
-		sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // Copy over index.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
-		    // Copy over log.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
-		}
+		// // Copy tmpfs Solr contents onto skyhook.
+		// sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
+		// withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		//     // Copy over index.
+		//     sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		//     // Copy over log.
+		//     sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		// }
 
 		///
 		/// Produce various blazegraphs.
@@ -331,7 +331,8 @@ pipeline {
 
 		// An awkward download and protective cleanup dance.
 		sh 'rm blazegraph.jnl || true'
-		sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_2_1_6_RC/blazegraph.jar'
+		//sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_2_1_6_RC/blazegraph.jar'
+		sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_RELEASE_2_1_5/blazegraph.jar'
 		sh 'curl -L -o /tmp/blazegraph.properties https://raw.githubusercontent.com/geneontology/minerva/master/minerva-core/src/main/resources/org/geneontology/minerva/blazegraph.properties'
 		sh 'curl -L -o /tmp/go-lego.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego.owl'
 		sh 'curl -L -o /tmp/neo.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/neo.owl'
@@ -339,6 +340,7 @@ pipeline {
 		sh 'curl -L -o /tmp/reacto.owl http://snapshot.geneontology.org/ontology/extensions/reacto.owl'
 		// DEBUG: confirm for the moment.
 		sh 'ls -AlF /tmp/*'
+		sh 'java -version'
 		// WARNING: Having trouble getting the journal to the
 		// right location. Theoretically, if the pipeline
 		// choked at the wrong time, a hard-to-erase file
