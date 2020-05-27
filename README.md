@@ -4,6 +4,34 @@
 
 Declarative pipeline for the Gene Ontology.
 
+# Functional branches
+
+## master
+
+The main development and fast testing branch. It has no public
+exposure worth mentioning, but contains the same code as snapshot and
+release.
+
+## snapshot
+
+This runs about once a day, automatically feeding snapshot.go.org.
+
+## release
+
+This runs about once a month, automatically feeding current.go.org and
+release.go.org.
+
+This pipeline automatically feeds the "staging" version of AmiGO for
+testing, but requires a manual deployment to AmiGO once the release is
+finalized.
+
+## issue-35-neo-test
+
+This runs about once a week, Friday afternoon, unless manually
+triggered to update the noctua-golr endpoint for a data refresh of
+some kind. It requires a manual deployment. This is also the generator
+for go-lego and controls the file location for Minerva's defaults.
+
 # QC
 
 ## Manual QC steps
