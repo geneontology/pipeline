@@ -513,6 +513,7 @@ pipeline {
 		// sh "pwd"
 		sh "mkdir -p /opt/bin"
 		sh "mkdir -p /opt/lib"
+		sh "mkdir -p /opt/go-site/gaferencer-products"
 		// git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -621,9 +622,11 @@ pipeline {
 			}
 		    }
 		    // Tarball and copy over gaferences.json to /products/gaferencer/
-		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.\\gaferences.json$" -exec cp {} . \\;'
-		    sh 'tar --use-compress-program=pigz -cvf gaferences.json.tgz *.gaferences.json'
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY gaferences.json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer'
+		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.\\gaferences.json$" -exec cp {} /opt/go-site/gaferencer-products/ \\;'
+			dir('./opt/go-site/gaferencer-products') {
+		    	sh 'tar --use-compress-program=pigz -cvf gaferences.json.tgz *.gaferences.json'
+			}
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/gaferences.json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer'
 		    // Flatten the TTLs into products/ttl/.
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
 		    // Compress the journals.
@@ -671,7 +674,7 @@ pipeline {
 			}
 
 			// Extract gaferences tarball - likely will create '/tmp/gaferencer/target/groups/{group}/' directories
-			dir('/tmp/gaferencer') {
+			dir('./tmp/gaferencer') {
 				sh "tar -xvf gaferences.json.tgz"
 			}
 			// Prepare a working directory based around go-site.
