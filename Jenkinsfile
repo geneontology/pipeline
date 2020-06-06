@@ -668,16 +668,16 @@ pipeline {
 		sh "mkdir -p /opt/go-site/annotations_new"
 		sh "mkdir -p /opt/go-site/gaferencer-products"
 
-		// // Download gaferencer products and /annotations
-		// withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		//     sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/*  /opt/go-site/annotations/"
-		//     sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.tgz  /opt/go-site/gaferencer-products/"
-		// }
+		// Download gaferencer products and /annotations
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/*  /opt/go-site/annotations/"
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.tgz  /opt/go-site/gaferencer-products/"
+		}
 
-		// // Extract gaferences tarball
-		// sh "tar -xvf /opt/go-site/gaferencer-products/gaferences.json.tgz -C /opt/go-site/gaferencer-products"
-		// // Concatenate all gaferences.json files into one large JSON object, then write to all.gaferences.json
-		// sh 'python3 /opt/go-site/scripts/json-concat-lists.py /opt/go-site/gaferencer-products/*.gaferences.json /opt/go-site/gaferencer-products/all.gaferences.json'
+		// Extract gaferences tarball
+		sh "tar -xvf /opt/go-site/gaferencer-products/gaferences.json.tgz -C /opt/go-site/gaferencer-products"
+		// Concatenate all gaferences.json files into one large JSON object, then write to all.gaferences.json
+		sh 'python3 /opt/go-site/scripts/json-concat-lists.py /opt/go-site/gaferencer-products/*.gaferences.json /opt/go-site/gaferencer-products/all.gaferences.json'
 
 		// // Uncompress all files in /tmp/annotations.
 		// sh 'unpigz /opt/go-site/annotations/*.gz'
