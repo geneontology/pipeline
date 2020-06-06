@@ -690,17 +690,17 @@ pipeline {
 		// annotations_new/ files, and then upload.
 		// annotations_new/ files will clobber existing files
 		// in skyhook/$BRANCH_NAME/annotations.
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    echo "NOTE: paint directory does not exist, so no reports to copy"
-		    echo "NOTE: paint directory does not exist, so no reports to copy"
-		    echo "NOTE: paint directory does not exist, so no reports to copy"
-		    echo "NOTE: paint directory does not exist, so no reports to copy"
-		    echo "NOTE: paint directory does not exist, so no reports to copy"
-		    // sh 'pigz /opt/go-site/annotations_new/*'
-		    // sh 'pigz /opt/go-site/gaferencer-products/all.gaferences.json'
-		    //sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-		    //sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
-		}
+		echo "NOTE: paint directory does not exist, so no reports to copy"
+		echo "NOTE: paint directory does not exist, so no reports to copy"
+		echo "NOTE: paint directory does not exist, so no reports to copy"
+		echo "NOTE: paint directory does not exist, so no reports to copy"
+		echo "NOTE: paint directory does not exist, so no reports to copy"
+		// withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		//     sh 'pigz /opt/go-site/annotations_new/*'
+		//     sh 'pigz /opt/go-site/gaferencer-products/all.gaferences.json'
+		//     sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+		//     sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
+		// }
 	    }
 	}
 	// A new step to think about. What is our core metadata?
