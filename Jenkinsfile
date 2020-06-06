@@ -623,7 +623,7 @@ pipeline {
 		    }
 		    // Tarball and copy over gaferences.json to /products/gaferencer/
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.\\gaferences.json$" -exec cp {} /opt/go-site/gaferencer-products/ \\;'
-			sh 'tar --use-compress-program=pigz -cvf /opt/go-site/gaferencer-products/gaferences.json.tgz -C /opt/go-site/gaferencer-products *.gaferences.json'
+		    sh 'tar --use-compress-program=pigz -cvf /opt/go-site/gaferencer-products/gaferences.json.tgz -C /opt/go-site/gaferencer-products *.gaferences.json'
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/gaferences.json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer'
 		    // Flatten the TTLs into products/ttl/.
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
@@ -660,41 +660,40 @@ pipeline {
 		    args "-u root:root --tmpfs /opt:exec -w /opt"
 		}
 	    }
-
 	    steps {
-		    // Prepare a working directory based around go-site.
-		    sh "cd /opt/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
+		// Prepare a working directory based around go-site.
+		sh "cd /opt/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
 
-		    sh "mkdir -p /opt/go-site/annotations"
-		    sh "mkdir -p /opt/go-site/annotations_new"
-		    sh "mkdir -p /opt/go-site/gaferencer-products"
+		sh "mkdir -p /opt/go-site/annotations"
+		sh "mkdir -p /opt/go-site/annotations_new"
+		sh "mkdir -p /opt/go-site/gaferencer-products"
 
-		    // Download gaferencer products and /annotations
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/*  /opt/go-site/annotations/"
-				sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.tgz  /opt/go-site/gaferencer-products/"
-			}
-
-			// Extract gaferences tarball
-			sh "tar -xvf /opt/go-site/gaferencer-products/gaferences.json.tgz -C /opt/go-site/gaferencer-products"
-			// Concatenate all gaferences.json files into one large JSON object, then write to all.gaferences.json
-			sh 'python3 /opt/go-site/scripts/json-concat-lists.py /opt/go-site/gaferencer-products/*.gaferences.json /opt/go-site/gaferencer-products/all.gaferences.json'
-
-			// Uncompress all files in /tmp/annotations.
-			sh 'unpigz /opt/go-site/annotations/*.gz'
-			// This should provide absolute paths in $f for all files in /tmp/annotations. Just plug in 'ontobio-parse-assocs' cmd
-			// by replacing 'echo $f'.
-			sh 'for f in /opt/go-site/annotations/* ; do echo $f ; done'
-
-			// After ontobio-parse-assocs is run and we're all done, zip up all.gaferences.json, all annotations_new/ files, and then upload.
-			// annotations_new/ files will clobber existing files in skyhook/$BRANCH_NAME/annotations.
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				sh 'pigz /opt/go-site/annotations_new/*'
-				sh 'pigz /opt/go-site/gaferencer-products/all.gaferences.json'
-				sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-				sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
-			}
+		// Download gaferencer products and /annotations
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/*  /opt/go-site/annotations/"
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.tgz  /opt/go-site/gaferencer-products/"
 		}
+
+		// Extract gaferences tarball
+		sh "tar -xvf /opt/go-site/gaferencer-products/gaferences.json.tgz -C /opt/go-site/gaferencer-products"
+		// Concatenate all gaferences.json files into one large JSON object, then write to all.gaferences.json
+		sh 'python3 /opt/go-site/scripts/json-concat-lists.py /opt/go-site/gaferencer-products/*.gaferences.json /opt/go-site/gaferencer-products/all.gaferences.json'
+
+		// Uncompress all files in /tmp/annotations.
+		sh 'unpigz /opt/go-site/annotations/*.gz'
+		// This should provide absolute paths in $f for all files in /tmp/annotations. Just plug in 'ontobio-parse-assocs' cmd
+		// by replacing 'echo $f'.
+		sh 'for f in /opt/go-site/annotations/* ; do echo $f ; done'
+
+		// After ontobio-parse-assocs is run and we're all done, zip up all.gaferences.json, all annotations_new/ files, and then upload.
+			// annotations_new/ files will clobber existing files in skyhook/$BRANCH_NAME/annotations.
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'pigz /opt/go-site/annotations_new/*'
+		    sh 'pigz /opt/go-site/gaferencer-products/all.gaferences.json'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
+		}
+	    }
 	}
 	// A new step to think about. What is our core metadata?
 	stage('Produce metadata') {
