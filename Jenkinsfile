@@ -652,7 +652,8 @@ pipeline {
 	    }
 	}
 	// Redownload annotations and run ontobio-parse-assocs over them.
-	stage('Run ontobio-parse-assocs') {
+	// This stage is a hack required to work around data damage described in https://github.com/geneontology/go-site/issues/1484
+	stage('Temporary post filter') {
 	    agent {
 	    	docker {
 		    image 'geneontology/dev-base:eb2f253bb0ff780e1b623adde6d5537c55c31224_2019-08-13T163314'
