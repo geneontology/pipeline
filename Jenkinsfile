@@ -679,11 +679,11 @@ pipeline {
 		// Concatenate all gaferences.json files into one large JSON object, then write to all.gaferences.json
 		sh 'python3 /opt/go-site/scripts/json-concat-lists.py /opt/go-site/gaferencer-products/*.gaferences.json /opt/go-site/gaferencer-products/all.gaferences.json'
 
-		// // Uncompress all files in /tmp/annotations.
-		// sh 'unpigz /opt/go-site/annotations/*.gz'
-		// // This should provide absolute paths in $f for all files in /tmp/annotations. Just plug in 'ontobio-parse-assocs' cmd
-		// // by replacing 'echo $f'.
-		// sh 'for f in /opt/go-site/annotations/* ; do echo $f ; done'
+		// Uncompress all files in /tmp/annotations.
+		sh 'unpigz /opt/go-site/annotations/*.gz'
+		// This should provide absolute paths in $f for all files in /tmp/annotations. Just plug in 'ontobio-parse-assocs' cmd
+		// by replacing 'echo $f'.
+		sh 'for f in /opt/go-site/annotations/* ; do echo $f ; done'
 
 		// // After ontobio-parse-assocs is run and we're all
 		// // done, gzip up all.gaferences.json, all
