@@ -685,17 +685,17 @@ pipeline {
 		// by replacing 'echo $f'.
 		sh 'for f in /opt/go-site/annotations/* ; do echo $f ; done'
 
-		// // After ontobio-parse-assocs is run and we're all
-		// // done, gzip up all.gaferences.json, all
-		// // annotations_new/ files, and then upload.
-		// // annotations_new/ files will clobber existing files
-		// // in skyhook/$BRANCH_NAME/annotations.
-		// withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		//     sh 'pigz /opt/go-site/annotations_new/*'
-		//     sh 'pigz /opt/go-site/gaferencer-products/all.gaferences.json'
-		//     sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-		//     sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
-		// }
+		// After ontobio-parse-assocs is run and we're all
+		// done, gzip up all.gaferences.json, all
+		// annotations_new/ files, and then upload.
+		// annotations_new/ files will clobber existing files
+		// in skyhook/$BRANCH_NAME/annotations.
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'pigz /opt/go-site/annotations_new/*'
+		    sh 'pigz /opt/go-site/gaferencer-products/all.gaferences.json'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
+		}
 	    }
 	}
 	// A new step to think about. What is our core metadata?
