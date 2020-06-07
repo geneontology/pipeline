@@ -625,7 +625,7 @@ pipeline {
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.gaferences.json$" -exec cp {} /opt/go-site/gaferencer-products/ \\;'
 		    // DEBUG: remove debug line later
 		    sh 'ls -AlF /opt/go-site/gaferencer-products'
-		    sh 'tar --use-compress-program=pigz -cvf /opt/go-site/gaferencer-products/gaferences.json.tgz -C /opt/go-site/gaferencer-products *.gaferences.json'
+		    sh 'tar --use-compress-program=pigz -cvf /opt/go-site/gaferencer-products/gaferences.json.tgz -C /opt/go-site/gaferencer-products /opt/go-site/gaferencer-products/*.gaferences.json'
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/gaferences.json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer'
 		    // Flatten the TTLs into products/ttl/.
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
