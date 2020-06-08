@@ -666,9 +666,7 @@ pipeline {
 		// Prepare a working directory based around go-site.
 		sh "cd /opt/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
 
-		sh "mkdir -p /opt/go-site/annotations"
-		sh "mkdir -p /opt/go-site/annotations_new"
-		sh "mkdir -p /opt/go-site/gaferencer-products"
+		sh "mkdir -p /opt/go-site/annotations /opt/go-site/annotations_new /opt/go-site/gaferencer-products"
 
 		sh "cd /opt/go-site/pipeline && pip3 install -r requirements.txt"
 
