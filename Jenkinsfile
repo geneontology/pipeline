@@ -670,6 +670,8 @@ pipeline {
 		sh "mkdir -p /opt/go-site/annotations_new"
 		sh "mkdir -p /opt/go-site/gaferencer-products"
 
+		sh "cd /opt/go-site/pipeline && pip3 install -r requirements.txt"
+
 		// Download gaferencer products and /annotations
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/*  /opt/go-site/annotations/"
@@ -680,11 +682,11 @@ pipeline {
 		    // Concatenate all gaferences.json files into one large JSON object, then write to all.gaferences.json
 		    sh 'python3 /opt/go-site/scripts/json-concat-lists.py /opt/go-site/gaferencer-products/*.gaferences.json /opt/go-site/gaferencer-products/all.gaferences.json'
 
-		    // Uncompress all files in /tmp/annotations.
+		    // Uncompress all files in annotations/.
 		    sh 'unpigz /opt/go-site/annotations/*.gz'
 		    // This should provide absolute paths in $f for all files in /tmp/annotations. Just plug in 'ontobio-parse-assocs' cmd
 		    // by replacing 'echo $f'.
-		    sh 'for f in /opt/go-site/annotations/* ; do echo $f ; done'
+		    sh 'for f in /opt/go-site/annotations/* ; do ontobio-parse-assocs.py -f $f -F gaf -o annotations_new/$f -I all.gaferences.json --report-md /tmp/report.md --report-json /tmp/report.json validate; done'
 
 		    // After ontobio-parse-assocs is run and we're all
 		    // done, gzip up all.gaferences.json, all
