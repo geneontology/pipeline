@@ -676,9 +676,10 @@ pipeline {
 		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.tgz  /opt/go-site/gaferencer-products/"
 
 		    sh "ls -AlF /opt/go-site/scripts/"
-		    sh "chmod +x /opt/go-site/scripts/gaferencer-reprocess.sh"
-		    sh "ls -AlF /opt/go-site/scripts/"
-		    sh "/opt/go-site/scripts/gaferencer-reprocess.sh"
+		    sh "ls -AlF /opt/go-site/scripts/gaferencer-reprocess.sh"
+		    sh "env"
+		    sh "cat /opt/go-site/scripts/gaferencer-reprocess.sh"
+		    sh "bash /opt/go-site/scripts/gaferencer-reprocess.sh"
 
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
