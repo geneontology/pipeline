@@ -621,12 +621,12 @@ pipeline {
 	// 		    echo "NOTE: At least on uniprot core file not found for this run to copy."
 	// 		}
 	// 	    }
-	// 	    // Tarball and copy over gaferences.json to /products/gaferencer/
-	// 	    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.gaferences.json$" -exec cp {} /opt/go-site/gaferencer-products/ \\;'
+	    // 	    // Find all {group}.gaferences.json files and combine into one JSON list in one file
+	// 	    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.gaferences.json$" -exec python3 /opt/go-site/scripts/json-concat-lists.py {} /opt/go-site/gaferencer-products/gaferences.json \\;'
 	// 	    // DEBUG: remove debug line later
 	// 	    sh 'ls -AlF /opt/go-site/gaferencer-products'
-	// 	    sh 'cd /opt/go-site/gaferencer-products && tar --use-compress-program=pigz -cvf /opt/go-site/gaferencer-products/gaferences.json.tgz *.gaferences.json'
-	// 	    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/gaferences.json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer'
+	// 	    sh 'pigz /opt/go-site/gaferencer-products/gaferences.json'
+	// 	    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer'
 	// 	    // Flatten the TTLs into products/ttl/.
 	// 	    sh 'find /opt/go-site/pipeline/target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
 	// 	    // Compress the journals.
@@ -673,16 +673,16 @@ pipeline {
 		// Download gaferencer products and /annotations
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/*  /opt/go-site/annotations/"
-		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.tgz  /opt/go-site/gaferencer-products/"
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz  /opt/go-site/gaferencer-products/"
 
 		    sh "ls -AlF /opt/go-site/scripts/"
-		    sh "ls -AlF /opt/go-site/scripts/gaferencer-reprocess.sh"
+		    sh "ls -AlF /opt/go-site/scripts/Makefile-gaf-reprocess"
 		    sh "env"
-		    sh "cat /opt/go-site/scripts/gaferencer-reprocess.sh"
-		    sh "bash /opt/go-site/scripts/gaferencer-reprocess.sh"
+		    sh "cat /opt/go-site/scripts/Makefile-gaf-reprocess"
+		    sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
 
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
+		    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
 		}
 	    }
 	}
