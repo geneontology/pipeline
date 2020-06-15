@@ -697,10 +697,9 @@ pipeline {
     		sh 'mkdir -p $WORKSPACE/mnt/ || true'
     		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
     		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		    // Rename file.
+    		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/qc_association_inferences.json.gz'
     		}
-
-    		// Rename file.
-    		sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/qc_association_inferences.json.gz'
     	    }
     	    // WARNING: Extra safety as I expect this to sometimes fail.
     	    post {
