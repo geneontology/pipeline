@@ -337,7 +337,9 @@ pipeline {
 		sh 'curl -L -o /tmp/go-lego.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego.owl'
 		sh 'curl -L -o /tmp/neo.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/neo.owl'
 		// BUG/TODO: This will need to point inward at some point.
-		sh 'curl -L -o /tmp/reacto.owl http://snapshot.geneontology.org/ontology/extensions/reacto.owl'
+		//sh 'curl -L -o /tmp/reacto.owl http://snapshot.geneontology.org/ontology/extensions/reacto.owl'
+		//turning it skyhook.  shoulf now be built as part of the go makefile release target
+		sh 'curl -L -o /tmp/reacto.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/reacto.owl'
 		// DEBUG: confirm for the moment.
 		sh 'ls -AlF /tmp/*'
 		sh 'java -version'
