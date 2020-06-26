@@ -658,6 +658,7 @@ pipeline {
 	}
 	// WARNING: Temporary step to get final gaferences products to enduser names.
 	// Will be removed once central makefile refactor is completed. Also see 'Temporary post filer' above.
+	// https://github.com/geneontology/pipeline/issues/185
     	stage('Temporary rename files') {
     	    steps {
 
