@@ -246,6 +246,7 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/pages || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/solr || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/panther || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
@@ -305,61 +306,61 @@ pipeline {
 			}
 		    },
 		    "Ready robot": {
-		    	// Legacy: build 'robot-build'
-		    	dir('./robot') {
-		    	    git 'https://github.com/ontodev/robot.git'
-		    	    // Update the POMs by replacing "SNAPSHOT"
-		    	    // with the current Git hash. First make
-		    	    // sure maven-help-plugin is installed
-		    	    sh 'mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version'
-		    	    // Now get and set the version.
-		    	    // Originally: sh 'VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | sed 's/-SNAPSHOT//'`'
-		    	    sh 'VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v \'\\[\' | sed \'s/-SNAPSHOT//\'`'
-		    	    sh 'BUILD=`git rev-parse --short HEAD`'
-		    	    sh 'mvn versions:set -DnewVersion=$VERSION+$BUILD'
+			// Legacy: build 'robot-build'
+			dir('./robot') {
+			    git 'https://github.com/ontodev/robot.git'
+			    // Update the POMs by replacing "SNAPSHOT"
+			    // with the current Git hash. First make
+			    // sure maven-help-plugin is installed
+			    sh 'mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version'
+			    // Now get and set the version.
+			    // Originally: sh 'VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | sed 's/-SNAPSHOT//'`'
+			    sh 'VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v \'\\[\' | sed \'s/-SNAPSHOT//\'`'
+			    sh 'BUILD=`git rev-parse --short HEAD`'
+			    sh 'mvn versions:set -DnewVersion=$VERSION+$BUILD'
 			    sh 'mvn -U clean install -DskipTests'
-		    	    // Attempt to rsync produced into bin/.
-		    	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
-		    	    }
-		    	}
+			    // Attempt to rsync produced into bin/.
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			    }
+			}
 		    },
 		    "Ready arachne": {
-		    	dir('./arachne') {
-		    	    sh 'wget -N https://github.com/balhoff/arachne/releases/download/v1.0.2/arachne-1.0.2.tgz'
+			dir('./arachne') {
+			    sh 'wget -N https://github.com/balhoff/arachne/releases/download/v1.0.2/arachne-1.0.2.tgz'
 			    sh 'tar -xvf arachne-1.0.2.tgz'
-		    	    // Attempt to rsync produced into bin/.
-		    	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			    // Attempt to rsync produced into bin/.
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 				// WARNING/BUG: needed for arachne to
 				// run at this point.
-		    		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
-		    	    }
-		    	}
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" arachne-1.0.2/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
+			    }
+			}
 		    },
 		    "Ready blazegraph-runner": {
-    			dir('./blazegraph-runner') {
-    	                    sh 'wget -N https://github.com/balhoff/blazegraph-runner/releases/download/v1.4/blazegraph-runner-1.4.tgz'
-    	                    sh 'tar -xvf blazegraph-runner-1.4.tgz'
-    	                    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    		// Attempt to rsync bin into bin/.
-    	                        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.4/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			dir('./blazegraph-runner') {
+			    sh 'wget -N https://github.com/balhoff/blazegraph-runner/releases/download/v1.4/blazegraph-runner-1.4.tgz'
+			    sh 'tar -xvf blazegraph-runner-1.4.tgz'
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				// Attempt to rsync bin into bin/.
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.4/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 				// Attempt to rsync libs into lib/.
-    	    		    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.4/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
-    	                    }
-    	                }
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" blazegraph-runner-1.4/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
+			    }
+			}
 		    },
 		    "Ready Gaferencer": {
-    			dir('./gaferencer') {
-    	                    sh 'wget -N https://github.com/geneontology/gaferencer/releases/download/v0.4.1/gaferencer-0.4.1.tgz'
-    	                    sh 'tar -xvf gaferencer-0.4.1.tgz'
-    	                    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    		// Attempt to rsync bin into bin/.
-    	                        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.4.1/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+			dir('./gaferencer') {
+			    sh 'wget -N https://github.com/geneontology/gaferencer/releases/download/v0.4.1/gaferencer-0.4.1.tgz'
+			    sh 'tar -xvf gaferencer-0.4.1.tgz'
+			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				// Attempt to rsync bin into bin/.
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.4.1/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 				// Attempt to rsync libs into lib/.
-    	    		    	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.4.1/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
-    	                    }
-    	                }
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.4.1/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
+			    }
+			}
 		    }
 		)
 	    }
@@ -444,38 +445,6 @@ pipeline {
 			}
 		    }
 		}
-
-		// Create a relative working directory and setup our
-		// data environment.
-		// Note:
-		//  pathways2GO: v0.1.0 (not master)
-		//  reactome: current/human
-		dir('./pathways2GO') {
-		    git 'https://github.com/geneontology/pathways2GO.git'
-
-		    // Default namespace.
-		    sh 'env'
-
-		    retry(3){
-			// Get jar.
-			sh 'curl -O -L https://github.com/geneontology/pathways2GO/releases/download/v0.1.0/biopax2go.jar'
-
-			// Biopax files needed
-			sh 'curl -O -L https://reactome.org/download/current/biopax.zip'
-		    }
-
-		    // Ready.
-		    sh 'unzip -o biopax.zip'
-
-		    // The actual command.
-		    sh 'java -jar biopax2go.jar -b Homo_sapiens.owl -reacto ./reacto'
-
-		    // Make sure that we copy any files there,
-		    // including the core dump of produced.
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r ./reacto.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/extensions/reacto.owl'
-		    }
-		}
 	    }
 	}
 	stage('Make Noctua GPAD') {
@@ -524,7 +493,7 @@ pipeline {
 
 	stage('Produce GAFs, TTLs, and journal (mega-step)') {
 	    agent {
-	    	docker {
+		docker {
 		    image 'geneontology/dev-base:eb2f253bb0ff780e1b623adde6d5537c55c31224_2019-08-13T163314'
 		    args "-u root:root --tmpfs /opt:exec -w /opt"
 		}
@@ -533,11 +502,13 @@ pipeline {
 	    steps {
 
 		// Legacy: build 'gaf-production'
-	    	sh "mkdir -p /opt/go-site"
+		sh "mkdir -p /opt/go-site"
 		sh "cd /opt/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
 		// sh "pwd"
 		sh "mkdir -p /opt/bin"
 		sh "mkdir -p /opt/lib"
+		sh "mkdir -p /opt/go-site/gaferencer-products"
+		sh "mkdir -p /opt/go-site/gaferencer-products-tmp"
 		// git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -584,7 +555,7 @@ pipeline {
 			    // // For GAF joy, plus "extras".
 			    // sh 'make all'
 			    // Shaking the magic beads for "extras".
-	        	    // sh '$MAKECMD -e extra_files'
+			    // sh '$MAKECMD -e extra_files'
 			    // Make basic (non-enriched/reasoned) TTLs.
 			    //sh '$MAKECMD -e all_targets_ttl'
 
@@ -645,6 +616,13 @@ pipeline {
 			    echo "NOTE: At least on uniprot core file not found for this run to copy."
 			}
 		    }
+		    // Find all {group}.gaferences.json files and combine into one JSON list in one file
+		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.gaferences.json$" -exec cp {} /opt/go-site/gaferencer-products-tmp/ \\;'
+		    sh 'python3 /opt/go-site/scripts/json-concat-lists.py  /opt/go-site/gaferencer-products-tmp/*.gaferences.json /opt/go-site/gaferencer-products/all.gaferences.json'
+		    // DEBUG: remove debug line later
+		    sh 'ls -AlF /opt/go-site/gaferencer-products'
+		    sh 'pigz /opt/go-site/gaferencer-products/all.gaferences.json'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer'
 		    // Flatten the TTLs into products/ttl/.
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
 		    // Compress the journals.
@@ -669,6 +647,63 @@ pipeline {
 		    }
 		}
 
+	    }
+	}
+	// WARNING: This stage is a hack required to work around data damage described in https://github.com/geneontology/go-site/issues/1484
+	// Redownload annotations and run ontobio-parse-assocs over them.
+	stage('Temporary post filter') {
+	    agent {
+		docker {
+		    image 'geneontology/dev-base:eb2f253bb0ff780e1b623adde6d5537c55c31224_2019-08-13T163314'
+		    args "-u root:root --tmpfs /opt:exec -w /opt"
+		}
+	    }
+	    steps {
+		// Prepare a working directory based around go-site.
+		sh "cd /opt/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
+
+		sh "mkdir -p /opt/go-site/annotations /opt/go-site/annotations_new /opt/go-site/gaferencer-products"
+
+		sh "cd /opt/go-site/pipeline && pip3 install -r requirements.txt"
+
+		// Download gaferencer products and /annotations
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/*  /opt/go-site/annotations/"
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz  /opt/go-site/gaferencer-products/"
+
+		    sh "ls -AlF /opt/go-site/scripts/"
+		    sh "ls -AlF /opt/go-site/scripts/Makefile-gaf-reprocess"
+		    sh "env"
+		    sh "cat /opt/go-site/scripts/Makefile-gaf-reprocess"
+		    sh "$MAKECMD -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
+
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+		    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
+		}
+	    }
+	}
+	// WARNING: Temporary step to get final gaferences products to enduser names.
+	// Will be removed once central makefile refactor is completed. Also see 'Temporary post filer' above.
+	// https://github.com/geneontology/pipeline/issues/185
+	stage('Temporary rename files') {
+	    steps {
+
+		// Mount the remote filesystem.
+		sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		    // Rename file.
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/qc_association_inferences.json.gz'
+		}
+	    }
+	    // WARNING: Extra safety as I expect this to sometimes fail.
+	    post {
+		always {
+		    // Bail on the remote filesystem.
+		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+		    // Purge the copyover point.
+		    sh 'rm -r -f $WORKSPACE/copyover || true'
+		}
 	    }
 	}
 	// A new step to think about. What is our core metadata?
@@ -835,12 +870,12 @@ pipeline {
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
-                always {
+		always {
 		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
 		    // Purge the copyover point.
 		    sh 'rm -r -f $WORKSPACE/copyover || true'
-                }
+		}
 	    }
 	}
 	stage('Sanity I') {
@@ -875,18 +910,18 @@ pipeline {
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
-                always {
+		always {
 		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
 		    // Purge the copyover point.
 		    sh 'rm -r -f $WORKSPACE/copyover || true'
-                }
+		}
 	    }
 	}
 	//...
 	stage('Produce derivatives') {
 	    agent {
-                docker {
+		docker {
 		    image 'geneontology/golr-autoindex:3d8d4ed9a33169af1304e359bf6c425e54d52383_2019-08-28T134514'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
@@ -894,8 +929,8 @@ pipeline {
 		}
 	    }
 	    steps {
-                // sh 'ls /srv'
-                // sh 'ls /tmp'
+		// sh 'ls /srv'
+		// sh 'ls /tmp'
 
 		// Build index into tmpfs.
 		sh 'bash /tmp/run-indexer.sh'
@@ -1159,7 +1194,7 @@ pipeline {
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
-                always {
+		always {
 		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
 		    // Purge the copyover point.
@@ -1213,7 +1248,7 @@ pipeline {
 				// skyhook. For "release", this will
 				// be "current". For "snapshot", this
 				// will be "snapshot".
-		 		sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
+				sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
 
 				// Push into S3 buckets. Simple
 				// overall case: copy tree directly
@@ -1229,7 +1264,7 @@ pipeline {
 				    // "release" -> dated path for
 				    // indexing (clobbering
 				    // "current"'s index.
-		 		    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
+				    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
 				    // "release" -> dated path for S3.
 				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
 
@@ -1266,7 +1301,7 @@ pipeline {
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
-                always {
+		always {
 		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
 		}
@@ -1378,15 +1413,15 @@ pipeline {
 
 					    echo 'No current public push on release to Blazegraph.'
 					    // retry(3){
-					    // 	sh 'ansible-playbook update-endpoint.yaml --inventory=hosts.local-rdf-endpoint --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_user=bbop --extra-vars="pipeline=current build=production endpoint=production"'
+					    //	sh 'ansible-playbook update-endpoint.yaml --inventory=hosts.local-rdf-endpoint --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_user=bbop --extra-vars="pipeline=current build=production endpoint=production"'
 					    // }
 
 					    echo 'No current public push on release to GOlr.'
 					    // retry(3){
-					    // 	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-aux -e target_user=bbop'
+					    //	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-aux -e target_user=bbop'
 					    // }
 					    // retry(3){
-					    // 	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-production -e target_user=bbop'
+					    //	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-production -e target_user=bbop'
 					    // }
 
 					}else if( env.BRANCH_NAME == 'snapshot' ){
@@ -1418,15 +1453,15 @@ pipeline {
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
-                always {
+		always {
 		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-                }
+		}
 	    }
 	}
 	// stage('TODO: Final status') {
 	//     steps {
-	// 	echo 'TODO: final'
+	//	echo 'TODO: final'
 	//     }
 	// }
     }
@@ -1441,7 +1476,7 @@ pipeline {
 	    }
 	}
 	// Let's let our internal people know if things change.
-        changed {
+	changed {
 	    echo "There has been a change in the ${env.BRANCH_NAME} pipeline."
 	    mail bcc: '', body: "There has been a pipeline status change in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
 	}
@@ -1449,6 +1484,6 @@ pipeline {
 	failure {
 	    echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
 	    mail bcc: '', body: "There has been a pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
-        }
+	}
     }
 }
