@@ -682,30 +682,30 @@ pipeline {
 		}
 	    }
 	}
-	// WARNING: Temporary step to get final gaferences products to enduser names.
-	// Will be removed once central makefile refactor is completed. Also see 'Temporary post filer' above.
-	// https://github.com/geneontology/pipeline/issues/185
-	stage('Temporary rename files') {
-	    steps {
+	// // WARNING: Temporary step to get final gaferences products to enduser names.
+	// // Will be removed once central makefile refactor is completed. Also see 'Temporary post filer' above.
+	// // https://github.com/geneontology/pipeline/issues/185
+	// stage('Temporary rename files') {
+	//     steps {
 
-		// Mount the remote filesystem.
-		sh 'mkdir -p $WORKSPACE/mnt/ || true'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-		    // Rename file.
-		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/qc_association_inferences.json.gz'
-		}
-	    }
-	    // WARNING: Extra safety as I expect this to sometimes fail.
-	    post {
-		always {
-		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-		    // Purge the copyover point.
-		    sh 'rm -r -f $WORKSPACE/copyover || true'
-		}
-	    }
-	}
+	// 	// Mount the remote filesystem.
+	// 	sh 'mkdir -p $WORKSPACE/mnt/ || true'
+	// 	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 	    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+	// 	    // Rename file.
+	// 	    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/qc_association_inferences.json.gz'
+	// 	}
+	//     }
+	//     // WARNING: Extra safety as I expect this to sometimes fail.
+	//     post {
+	// 	always {
+	// 	    // Bail on the remote filesystem.
+	// 	    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+	// 	    // Purge the copyover point.
+	// 	    sh 'rm -r -f $WORKSPACE/copyover || true'
+	// 	}
+	//     }
+	// }
 	// A new step to think about. What is our core metadata?
 	stage('Produce metadata') {
 	    steps {
