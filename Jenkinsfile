@@ -329,6 +329,9 @@ pipeline {
 		/// Produce various blazegraphs.
 		///
 
+		// DEBUG: confirm for the moment.
+		sh 'ls -AlF /tmp/*'
+
 		// An awkward download and protective cleanup dance.
 		sh 'rm blazegraph.jnl || true'
 		sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_2_1_6_RC/blazegraph.jar'
@@ -337,11 +340,15 @@ pipeline {
 		sh 'curl -L -o /tmp/go-lego.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego.owl'
 		sh 'curl -L -o /tmp/neo.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/neo.owl'
 		// BUG/TODO: This will need to point inward at some point.
+		// Attempt to pull "locally" from skyhook--it should now be built as part of the go makefile release target.
 		//sh 'curl -L -o /tmp/reacto.owl http://snapshot.geneontology.org/ontology/extensions/reacto.owl'
-		//turning it skyhook.  shoulf now be built as part of the go makefile release target
 		sh 'curl -L -o /tmp/reacto.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/reacto.owl'
 		// DEBUG: confirm for the moment.
 		sh 'ls -AlF /tmp/*'
+		sh 'head -100 /tmp/go-lego.owl'
+		sh 'head -100 /tmp/neo.owl'
+		sh 'head -100 /tmp/reacto.owl'
+		sh 'head -100 /tmp/blazegraph.properties'
 		sh 'java -version'
 		// WARNING: Having trouble getting the journal to the
 		// right location. Theoretically, if the pipeline
