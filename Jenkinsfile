@@ -642,13 +642,18 @@ pipeline {
 
 		// Download gaferencer products and /annotations
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/*  /opt/go-site/annotations/"
-		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz  /opt/go-site/gaferencer-products/"
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/* /opt/go-site/annotations/"
+		    // Get rid of goa_uniprot_all_noiea-type products
+		    // as they take too long to run.
+		    sh 'ls -AlF /opt/go-site/annotations/'
+		    sh 'rm -f /opt/go-site/annotations/*uniprot_all_noiea* || true'
+		    sh 'ls -AlF /opt/go-site/annotations/'
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz /opt/go-site/gaferencer-products/"
 
-		    sh "ls -AlF /opt/go-site/scripts/"
-		    sh "ls -AlF /opt/go-site/scripts/Makefile-gaf-reprocess"
-		    sh "env"
-		    sh "cat /opt/go-site/scripts/Makefile-gaf-reprocess"
+		    // sh "ls -AlF /opt/go-site/scripts/"
+		    // sh "ls -AlF /opt/go-site/scripts/Makefile-gaf-reprocess"
+		    // sh "env"
+		    // sh "cat /opt/go-site/scripts/Makefile-gaf-reprocess"
 		    //sh "$MAKECMD -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
 		    sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
 
