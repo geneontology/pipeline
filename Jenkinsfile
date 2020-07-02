@@ -672,7 +672,7 @@ pipeline {
 		    // Get rid of goa_uniprot_all_noiea-type products
 		    // as they take too long to run.
 		    sh 'ls -AlF /opt/go-site/annotations/'
-		    sh 'rm -f /opt/go-site/annotations/*uniprot_all_noiea* || true'
+		    sh 'rm -f /opt/go-site/annotations/*uniprot_all* || true'
 		    sh 'ls -AlF /opt/go-site/annotations/'
 		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz /opt/go-site/gaferencer-products/"
 
