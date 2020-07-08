@@ -31,7 +31,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'master'
+	TARGET_GO_SITE_BRANCH = 'stats-update'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
@@ -946,7 +946,7 @@ pipeline {
 		    echo "Check that results have been stored properly"
 		    sh "curl 'http://localhost:8080/solr/select?q=*:*&rows=0'"
 		    echo "End of results"
-		    sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s http://current.geneontology.org/release_stats/go-stats.json -n http://current.geneontology.org/release_stats/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p http://current.geneontology.org/ontology/go.obo -o /tmp/stats/ -d $START_DATE'
+		    sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s http://current.geneontology.org/release_stats/go-stats.json -n http://current.geneontology.org/release_stats/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p http://current.geneontology.org/ontology/go.obo -r https://geneontology-archive.s3.amazonaws.com/2020-06-01/go-references.tsv -o /tmp/stats/ -d $START_DATE'
 		    sh 'wget -N http://current.geneontology.org/release_stats/aggregated-go-stats-summaries.json'
 
 		    // Roll the stats forward.
