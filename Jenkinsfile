@@ -36,9 +36,9 @@ pipeline {
 	TARGET_MINERVA_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov'
-	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,suzia@stanford.edu'
-	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,pascale.gaudet@sib.swiss'
+	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
+	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov'
+	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
@@ -73,15 +73,15 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = '425671'
-	ZENODO_ARCHIVE_CONCEPT = '425674'
+	ZENODO_REFERENCE_CONCEPT = 'null'
+	ZENODO_ARCHIVE_CONCEPT = 'null'
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
 	// need this as it is always a new location and the index
 	// upload already has an invalidation on it. For current,
 	// snapshot, and experimental.
-	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
-	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'null'
+	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'null'
 
 	///
 	/// Minerva input.
