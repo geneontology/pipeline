@@ -972,8 +972,12 @@ pipeline {
 		    echo "Check that results have been stored properly"
 		    sh "curl 'http://localhost:8080/solr/select?q=*:*&rows=0'"
 		    echo "End of results"
-		    sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s http://current.geneontology.org/release_stats/go-stats.json -n http://current.geneontology.org/release_stats/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p http://current.geneontology.org/ontology/go.obo -o /tmp/stats/ -d $START_DATE'
-		    sh 'wget -N http://current.geneontology.org/release_stats/aggregated-go-stats-summaries.json'
+		    retry(3){
+			sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s https://geneontology-archive.s3.amazonaws.com/2020-07-16/go-stats.json -n https://geneontology-archive.s3.amazonaws.com/2020-07-16/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p http://current.geneontology.org/ontology/go.obo -r https://geneontology-archive.s3.amazonaws.com/2020-07-16/go-references.tsv -o /tmp/stats/ -d $START_DATE'
+		    }
+		    retry(3) {
+		    	sh 'wget -N http://current.geneontology.org/release_stats/aggregated-go-stats-summaries.json'
+		    }
 
 		    // Roll the stats forward.
 		    sh 'ls .'
@@ -982,8 +986,10 @@ pipeline {
 		    sh 'python3 /tmp/aggregate-stats.py -a aggregated-go-stats-summaries.json -b /tmp/stats/go-stats-summary.json -o /tmp/stats/aggregated-go-stats-summaries.json'
 
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			// Copy over stats files.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/stats/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/release_stats/'
+		    	retry(3) {
+			    // Copy over stats files.
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/stats/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/release_stats/'
+			}
 		    }
 		}
 	    }
