@@ -621,6 +621,17 @@ pipeline {
 			    echo "NOTE: At least on uniprot core file not found for this run to copy."
 			}
 		    }
+			sh 'echo "Testing code-too-large issue 1"'
+			sh 'echo "Testing code-too-large issue 2"'
+			sh 'echo "Testing code-too-large issue 3"'
+			sh 'echo "Testing code-too-large issue 4"'
+			sh 'echo "Testing code-too-large issue 5"'
+			sh 'echo "Testing code-too-large issue 6"'
+			sh 'echo "Testing code-too-large issue 7"'
+			sh 'echo "Testing code-too-large issue 8"'
+			sh 'echo "Testing code-too-large issue 9"'
+			sh 'echo "Testing code-too-large issue 10"'
+			sh 'echo "Testing code-too-large issue 11"'
 		    // // Tarball and copy over gaferences.json to /products/gaferencer/
 		    // sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.gaferences.json$" -exec cp {} /opt/go-site/gaferencer-products/ \\;'
 		    // // DEBUG: remove debug line later
