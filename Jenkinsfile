@@ -167,6 +167,7 @@ pipeline {
 		// Check that we do not affect public targets on
 		// non-mainline runs.
 		script {
+		    callThoseEchos()
 		    if( BRANCH_NAME != 'master' && TARGET_BUCKET == 'go-data-product-experimental'){
 			echo 'Only master can touch that target.'
 			sh '`exit -1`'
