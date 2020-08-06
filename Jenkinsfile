@@ -621,25 +621,25 @@ pipeline {
 			    echo "NOTE: At least on uniprot core file not found for this run to copy."
 			}
 		    }
-		    // Tarball and copy over gaferences.json to /products/gaferencer/
-		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.gaferences.json$" -exec cp {} /opt/go-site/gaferencer-products/ \\;'
-		    // DEBUG: remove debug line later
-		    sh 'ls -AlF /opt/go-site/gaferencer-products'
-		    sh 'cd /opt/go-site/gaferencer-products && tar --use-compress-program=pigz -cvf /opt/go-site/gaferencer-products/gaferences.json.tgz *.gaferences.json'
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/gaferences.json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer'
-		    // Flatten the TTLs into products/ttl/.
-		    sh 'find /opt/go-site/pipeline/target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
-		    // Compress the journals.
-		    sh 'pigz /opt/go-site/pipeline/target/blazegraph-internal.jnl'
-		    sh 'pigz /opt/go-site/pipeline/target/blazegraph-production.jnl'
-		    // Copy the journals directly to products.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
-		    // Copy the reports into reports.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
-		    // Plus: flatten product reports in json,
-		    // md reports, text files, etc.
-		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\.\\(json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports \\;'
+		    // // Tarball and copy over gaferences.json to /products/gaferencer/
+		    // sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.gaferences.json$" -exec cp {} /opt/go-site/gaferencer-products/ \\;'
+		    // // DEBUG: remove debug line later
+		    // sh 'ls -AlF /opt/go-site/gaferencer-products'
+		    // sh 'cd /opt/go-site/gaferencer-products && tar --use-compress-program=pigz -cvf /opt/go-site/gaferencer-products/gaferences.json.tgz *.gaferences.json'
+		    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/gaferences.json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer'
+		    // // Flatten the TTLs into products/ttl/.
+		    // sh 'find /opt/go-site/pipeline/target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
+		    // // Compress the journals.
+		    // sh 'pigz /opt/go-site/pipeline/target/blazegraph-internal.jnl'
+		    // sh 'pigz /opt/go-site/pipeline/target/blazegraph-production.jnl'
+		    // // Copy the journals directly to products.
+		    // sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+		    // sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+		    // // Copy the reports into reports.
+		    // sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+		    // // Plus: flatten product reports in json,
+		    // // md reports, text files, etc.
+		    // sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\.\\(json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports \\;'
 		    script {
 			try {
 			    // WARNING: This is a hacky fix for https://github.com/geneontology/go-site/issues/1253 .
