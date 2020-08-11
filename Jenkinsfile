@@ -140,6 +140,8 @@ pipeline {
 	// Optional. This acts as an override, /if/ it's grabbed (as
 	// defined above).
 	GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
+	
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.json"
     }
     options{
 	timestamps()
@@ -491,7 +493,7 @@ pipeline {
 		// Note the complex assignment of VIRTUAL_ENV and PATH.
 		// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
 		// "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin'
-		withEnv(['JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G', 'FOO=BAR']){
+		withEnv(['JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G', "ONTOLOGY=${VALIDATION_ONTOLOGY_URL}"]){
 		    // Note environment for future debugging.
 		    // Note: https://issues.jenkins-ci.org/browse/JENKINS-53025 and
 		    // https://issues.jenkins-ci.org/browse/JENKINS-49076
