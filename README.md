@@ -96,7 +96,11 @@ AmiGO is here: https://amigo-staging.geneontology.io/amigo
 
 Anomalies are evaluated, reported to the upstream sources and fixed, or ignored if the problem is no worse than the previous release.
 
-# Troubleshooting deployment (needs updating)
+# Run finalization
+
+After a successful run, a manual "finalization" needs to be completed. See https://github.com/geneontology/operations/blob/master/README.pipeline-finalization.md .
+
+# Troubleshooting deployment (TODO: likely needs updating)
 
 ## Manual finalization from Zenodo failure
 
