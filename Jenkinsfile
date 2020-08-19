@@ -82,6 +82,11 @@ pipeline {
 	// snapshot, and experimental.
 	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
 	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
+	
+	///
+	/// Ontobio Validation
+	///
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/master/ontology/go.json"
 
 	///
 	/// Minerva input.
@@ -154,7 +159,6 @@ pipeline {
 	// defined above).
 	GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
 	
-	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.json"
     }
     options{
 	timestamps()
