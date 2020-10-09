@@ -121,7 +121,6 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/release/annotations/ecocyc.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/fb.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/genedb_lmajor.gaf.gz",
-	    "http://skyhook.berkeleybop.org/release/annotations/genedb_pfalciparum.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/genedb_tbrucei.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/goa_chicken.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/goa_chicken_complex.gaf.gz",
