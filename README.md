@@ -112,6 +112,7 @@ unrecoverably failed while operating with Zenodo. See worknotes for 2020-04-24.
 - [ ] Get the date of the run and the run number to attach it to. For this example:
 	- Date: 2020-04-23
 	- Build number: 163
+- [ ] query-replace the numbers above with the old ones from these instructions 
 - [ ] get the releases into zenodo
 	in jenkins@wok:~/workspace/neontology\_pipeline\_release-L3OLSRDNGI3ZIUODKFYUI4AO45X5C6RUGMOQAC5WV2Q6ZQOIFHMA/go-site$
 	```
