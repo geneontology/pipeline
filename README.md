@@ -124,43 +124,43 @@ unrecoverably failed while operating with Zenodo. See worknotes for 2020-04-24.
 	```
 	success
 - [ ] get DOIs and ensure in files as needed
-    ```bash
-	cat release-reference-doi.json
-    ```
-    ```json
-    {
+      ```bash
+      cat release-reference-doi.json
+      ```
+      ```json
+      {
        "doi": "10.5281/zenodo.3765935"
-    }
-    ```
-    ```
-	cat release-archive-doi.json
-	```
-    ```json
-    {
+      }
+      ```
+      ```bash
+      cat release-archive-doi.json
+      ```
+      ```json
+      {
        "doi": "10.5281/zenodo.3765910"
-    }
-    ```
+      }
+      ```
 - [ ] get a working "mount" in place"
-	pre:
-	```
-	scp -i KEY_SKY S3_FILE key2 bbop@build.geneontology.org:/tmp
-	```
-	main:
-    ```
-	mkdir -p /tmp/workspace
-	```
-    ```
-	mkdir -p /tmp/workspace/mnt/
-	```
-    ```
-	scp -r -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=/tmp/KEY_SKY skyhook@skyhook.berkeleybop.org:/home/skyhook/release /tmp/workspace/mnt/
-	```
-	```
-	cp release-archive-doi.json /tmp/workspace/mnt/release/metadata/
-	```
-    ```
-	cp release-reference-doi.json /tmp/workspace/mnt/release/metadata/
-	```
+      pre, on local machine:
+      ```bash
+      scp -i KEY_SKY S3_FILE key2 bbop@build.geneontology.org:/tmp
+      ```
+      main, on pipeline machine:
+      ```bash
+      mkdir -p /tmp/workspace
+      ```
+      ```bash
+      mkdir -p /tmp/workspace/mnt/
+      ```
+      ```bash
+      scp -r -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=/tmp/KEY_SKY skyhook@skyhook.berkeleybop.org:/home/skyhook/release /tmp/workspace/mnt/
+      ```
+      ```bash
+      cp release-archive-doi.json /tmp/workspace/mnt/release/metadata/
+      ```
+      ```bash
+      cp release-reference-doi.json /tmp/workspace/mnt/release/metadata/
+      ```
 - [ ] manual run of release publish stage
   Ready:
   ```
