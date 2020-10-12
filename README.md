@@ -113,6 +113,7 @@ unrecoverably failed while operating with Zenodo. See worknotes for 2020-04-24.
 	- Date: 2020-04-23
 	- Build number: 163
 - [ ] query-replace the numbers above with the old ones from these instructions 
+- [ ] become jenkins user (to be able to write output files)
 - [ ] get the releases into zenodo in `jenkins@wok:~/workspace/neontology\_pipeline\_release-L3OLSRDNGI3ZIUODKFYUI4AO45X5C6RUGMOQAC5WV2Q6ZQOIFHMA/go-site$`
 	```bash
 	time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205166 --file go-release-archive.tgz --output ./release-archive-doi.json --revision 2020-04-23
