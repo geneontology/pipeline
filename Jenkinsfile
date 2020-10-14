@@ -1295,7 +1295,10 @@ pipeline {
 	}
 	// Big things to do on major branches.
 	stage('Deploy') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    // For exploration of #204, we'll hold back attempts to push out to AmiGO for master and snapshot
+	    // so we don't keep clobbering #204 trials out.
+	    //when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    when { anyOf { branch 'release' } }
 	    steps {
 		parallel(
 		    "SVN Export": {
