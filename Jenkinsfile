@@ -504,7 +504,7 @@ pipeline {
 		    // Ready, set...
 		    // Do this thing, but the watchdog sits
 		    // waiting.
-		    timeout(time: 20, unit: 'HOURS') {
+		    timeout(time: 48, unit: 'HOURS') {
 			script {
 			    /// All branches now try to produce all
 			    /// targets in the go-site Makefile.
