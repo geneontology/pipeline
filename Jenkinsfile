@@ -552,22 +552,27 @@ pipeline {
 		}
 		// Copy products over to skyhook.
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // No longer copy goa uniprot all source to products, try to catch it early.
+		    // https://github.com/geneontology/pipeline/issues/207
+		    sh 'rm -f ./target/goa_uniprot_all-src.gaf.gz || true'
 		    // All non-core GAFs to the side in
 		    // products/gaf. Basically:
 		    //  - all irregular gaffy files + anything paint-y
 		    //  - but not uniprot_all anything (elsewhere)
 		    //  - and not any of the ttls
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*goa_uniprot_all.*$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
-		    // Now copy over the (single) uniprot
-		    // non-core; may not be there in all runs
-		    // (e.g. speed runs of master).
-		    script {
-			try {
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
-			} catch (exception) {
-			    echo "NOTE: No goa_uniprot_all-src.gaf.gz found for this run to copy."
-			}
-		    }
+		    // No longer copy goa uniprot all source to products:
+		    // https://github.com/geneontology/pipeline/issues/207
+		    // // Now copy over the (single) uniprot
+		    // // non-core; may not be there in all runs
+		    // // (e.g. speed runs of master).
+		    // script {
+		    // 	try {
+		    // 	    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
+		    // 	} catch (exception) {
+		    // 	    echo "NOTE: No goa_uniprot_all-src.gaf.gz found for this run to copy."
+		    // 	}
+		    // }
 		    // Finally, the non-zipped prediction files.
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\-prediction.gaf$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
 		    // Flatten all GAFs and GAF-like products
@@ -582,14 +587,14 @@ pipeline {
 		    // for master).
 		    script {
 			try {
-			    // No longer copy goa uniprot all source to products:
+			    // No longer copy goa uniprot all source to annotations:
 			    // https://github.com/geneontology/pipeline/issues/207
 			    //sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gpi.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			} catch (exception) {
-			    echo "NOTE: At least on uniprot core file not found for this run to copy."
+			    echo "NOTE: At least one uniprot core file not found for this run to copy."
 			}
 		    }
 		    // Find all {group}.gaferences.json files and combine into one JSON list in one file
