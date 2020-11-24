@@ -581,10 +581,11 @@ pipeline {
 		    // https://github.com/geneontology/pipeline/issues/207
 		    sh 'pwd'
 		    sh 'ls -AlF ./ || true'
-		    sh 'ls -AlF ./target/ || true'
 		    sh 'ls -AlF /opt/go-site/pipeline/target/groups/goa/ || true'
 		    sh 'rm -f ./target/goa_uniprot_all-src.gaf.gz || true'
 		    sh 'rm -f /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all-src.gaf.gz || true'
+		    sh 'ls -AlF ./ || true'
+		    sh 'ls -AlF /opt/go-site/pipeline/target/groups/goa/ || true'
 
 		    // All non-core GAFs to the side in
 		    // products/gaf. Basically:
