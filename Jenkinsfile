@@ -577,9 +577,6 @@ pipeline {
 		}
 		// Copy products over to skyhook.
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // No longer copy goa uniprot all source to products, try to catch it early.
-		    // https://github.com/geneontology/pipeline/issues/207
-		    sh 'rm -f ./target/goa_uniprot_all-src.gaf.gz || true'
 		    // All non-core GAFs to the side in
 		    // products/gaf. Basically:
 		    //  - all irregular gaffy files + anything paint-y
@@ -1047,6 +1044,13 @@ pipeline {
 		sh 'mkdir -p $WORKSPACE/mnt/ || true'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+
+		    // Try to catch and prevent goa_uniprot_all-src from getting into archive, etc.
+		    // https://github.com/geneontology/pipeline/issues/207
+		    sh 'pwd'
+		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
+		    sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/goa_uniprot_all-src.gaf.gz || true'
+		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
 		}
 		// Copy the product to the right location. As well,
 		// archive.
