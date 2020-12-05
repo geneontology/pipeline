@@ -697,177 +697,177 @@ pipeline {
 	// //     }
 	// // }
 	// // A new step to think about. What is our core metadata?
-	stage('Produce metadata') {
-	    steps {
+	// stage('Produce metadata') {
+	//     steps {
 
-		// Prep a copyover point, as the overhead for doing
-		// large i/o over sshfs seems /really/ high.
-		sh 'mkdir -p $WORKSPACE/copyover/ || true'
-		// Mount the remote filesystem.
-		sh 'mkdir -p $WORKSPACE/mnt/ || true'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-		}
-		// Copy over the files that we want to work on--both
-		// annotations/ and reports/ (which we separated
-		// earlier).
-		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
-		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/reports/* $WORKSPACE/copyover/'
-		script {
-		    try {
-			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/paint_* $WORKSPACE/copyover/'
-		    } catch (exception) {
-			// No PAINT files this run? It could happen if
-			// on a limited run with only non-PAINT
-			// resources involved (e.g. speed run master).
-			echo "NOTE: No PAINT files were found for this run to copy."
-		    }
-		}
-		// Make all software products available in bin/.
-		sh 'mkdir -p $WORKSPACE/bin/ || true'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* $WORKSPACE/bin/'
-		}
-		sh 'chmod +x $WORKSPACE/bin/*'
+	// 	// Prep a copyover point, as the overhead for doing
+	// 	// large i/o over sshfs seems /really/ high.
+	// 	sh 'mkdir -p $WORKSPACE/copyover/ || true'
+	// 	// Mount the remote filesystem.
+	// 	sh 'mkdir -p $WORKSPACE/mnt/ || true'
+	// 	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 	    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+	// 	}
+	// 	// Copy over the files that we want to work on--both
+	// 	// annotations/ and reports/ (which we separated
+	// 	// earlier).
+	// 	sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
+	// 	sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/reports/* $WORKSPACE/copyover/'
+	// 	script {
+	// 	    try {
+	// 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/paint_* $WORKSPACE/copyover/'
+	// 	    } catch (exception) {
+	// 		// No PAINT files this run? It could happen if
+	// 		// on a limited run with only non-PAINT
+	// 		// resources involved (e.g. speed run master).
+	// 		echo "NOTE: No PAINT files were found for this run to copy."
+	// 	    }
+	// 	}
+	// 	// Make all software products available in bin/.
+	// 	sh 'mkdir -p $WORKSPACE/bin/ || true'
+	// 	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* $WORKSPACE/bin/'
+	// 	}
+	// 	sh 'chmod +x $WORKSPACE/bin/*'
 
-		// Prepare a working directory based around go-site.
-		dir('./go-site') {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+	// 	// Prepare a working directory based around go-site.
+	// 	dir('./go-site') {
+	// 	    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-		    // Generate interesting PANTHER information
-		    // (.arbre files) based on upstream source.
-		    sh 'wget -N http://data.pantherdb.org/PANTHER$PANTHER_VERSION/globals/tree_files.tar.gz'
-		    sh 'wget -N http://data.pantherdb.org/PANTHER$PANTHER_VERSION/globals/names.tab'
-		    sh 'tar -zxvf tree_files.tar.gz'
-		    sh 'python3 ./scripts/prepare-panther-arbre-directory.py -v --names names.tab --trees tree_files --output arbre'
-		    sh 'tar --use-compress-program=pigz -cvf arbre.tgz -C arbre .'
-		    sh 'mv arbre.tgz $WORKSPACE/mnt/$BRANCH_NAME/products/panther'
+	// 	    // Generate interesting PANTHER information
+	// 	    // (.arbre files) based on upstream source.
+	// 	    sh 'wget -N http://data.pantherdb.org/PANTHER$PANTHER_VERSION/globals/tree_files.tar.gz'
+	// 	    sh 'wget -N http://data.pantherdb.org/PANTHER$PANTHER_VERSION/globals/names.tab'
+	// 	    sh 'tar -zxvf tree_files.tar.gz'
+	// 	    sh 'python3 ./scripts/prepare-panther-arbre-directory.py -v --names names.tab --trees tree_files --output arbre'
+	// 	    sh 'tar --use-compress-program=pigz -cvf arbre.tgz -C arbre .'
+	// 	    sh 'mv arbre.tgz $WORKSPACE/mnt/$BRANCH_NAME/products/panther'
 
-		    // Generate combined annotation report for driving
-		    // annotation download pages and drop it into
-		    // reports/ for copyover.
-		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./combined.report.json'
+	// 	    // Generate combined annotation report for driving
+	// 	    // annotation download pages and drop it into
+	// 	    // reports/ for copyover.
+	// 	    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./combined.report.json'
 
-		    // Generate the static download page directly from
-		    // the metadata.
-		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --date $START_DATE --inject ./scripts/downloads-page-template.html > ./downloads.html'
+	// 	    // Generate the static download page directly from
+	// 	    // the metadata.
+	// 	    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --date $START_DATE --inject ./scripts/downloads-page-template.html > ./downloads.html'
 
-		    // Generate the a users.yaml report for missing
-		    // data in the GO pattern.
-		    sh 'python3 ./scripts/sanity-check-users-and-groups.py --users metadata/users.yaml --groups metadata/groups.yaml > ./users-and-groups-report.txt'
-		    // WARNING: Caveats and reasons as above. Started
-		    // as be need* to process frontmatter using our
-		    // in-house "yamldown" parser.
-		    sh 'python3 -m venv mypyenv'
-		    withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+	// 	    // Generate the a users.yaml report for missing
+	// 	    // data in the GO pattern.
+	// 	    sh 'python3 ./scripts/sanity-check-users-and-groups.py --users metadata/users.yaml --groups metadata/groups.yaml > ./users-and-groups-report.txt'
+	// 	    // WARNING: Caveats and reasons as above. Started
+	// 	    // as be need* to process frontmatter using our
+	// 	    // in-house "yamldown" parser.
+	// 	    sh 'python3 -m venv mypyenv'
+	// 	    withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
-			// "External" packages required to run these
-			// scripts.
-			sh 'python3 ./mypyenv/bin/pip3 install click'
-			sh 'python3 ./mypyenv/bin/pip3 install pystache'
-			sh 'python3 ./mypyenv/bin/pip3 install yamldown'
-			sh 'python3 ./mypyenv/bin/pip3 install pypandoc'
+	// 		// "External" packages required to run these
+	// 		// scripts.
+	// 		sh 'python3 ./mypyenv/bin/pip3 install click'
+	// 		sh 'python3 ./mypyenv/bin/pip3 install pystache'
+	// 		sh 'python3 ./mypyenv/bin/pip3 install yamldown'
+	// 		sh 'python3 ./mypyenv/bin/pip3 install pypandoc'
 
-			// Generate the static overall gorule report
-			// page.
+	// 		// Generate the static overall gorule report
+	// 		// page.
 
-			// Build either a release or testing
-			// version of a generic BDBag/DOI
-			// workflow, keeping special bucket
-			// mappings in mind.
-			script {
-			    if( env.GORULE_TAGS_TO_SUPPRESS && env.GORULE_TAGS_TO_SUPPRESS != "" ){
-				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE --suppress-rule-tag $GORULE_TAGS_TO_SUPPRESS > gorule-report.html'
-			    }else{
-				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
-			    }
-			}
+	// 		// Build either a release or testing
+	// 		// version of a generic BDBag/DOI
+	// 		// workflow, keeping special bucket
+	// 		// mappings in mind.
+	// 		script {
+	// 		    if( env.GORULE_TAGS_TO_SUPPRESS && env.GORULE_TAGS_TO_SUPPRESS != "" ){
+	// 			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE --suppress-rule-tag $GORULE_TAGS_TO_SUPPRESS > gorule-report.html'
+	// 		    }else{
+	// 			sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
+	// 		    }
+	// 		}
 
-			// Generate the new GO refs data.
-			sh 'python3 ./scripts/aggregate-references.py -v --directory ./metadata/gorefs --json ./metadata/go-refs.json --stanza ./metadata/GO.references'
-		    }
+	// 		// Generate the new GO refs data.
+	// 		sh 'python3 ./scripts/aggregate-references.py -v --directory ./metadata/gorefs --json ./metadata/go-refs.json --stanza ./metadata/GO.references'
+	// 	    }
 
-		    // Get the date into the metadata, in a similar format
-		    // to what is produced by the Zenodo sections.
-		    sh 'echo \'{\' > ./metadata/release-date.json'
-		    sh 'echo -n \'    "date": "\' >> ./metadata/release-date.json'
-		    sh 'echo -n "$START_DATE" >> ./metadata/release-date.json'
-		    sh 'echo \'"\' >> ./metadata/release-date.json'
-		    sh 'echo \'}\' >> ./metadata/release-date.json'
+	// 	    // Get the date into the metadata, in a similar format
+	// 	    // to what is produced by the Zenodo sections.
+	// 	    sh 'echo \'{\' > ./metadata/release-date.json'
+	// 	    sh 'echo -n \'    "date": "\' >> ./metadata/release-date.json'
+	// 	    sh 'echo -n "$START_DATE" >> ./metadata/release-date.json'
+	// 	    sh 'echo \'"\' >> ./metadata/release-date.json'
+	// 	    sh 'echo \'}\' >> ./metadata/release-date.json'
 
-		    // Some scripts that require NPM.
-		    withEnv(['PATH+EXTRA=../bin:node_modules/.bin']){
-			sh 'npm install'
+	// 	    // Some scripts that require NPM.
+	// 	    withEnv(['PATH+EXTRA=../bin:node_modules/.bin']){
+	// 		sh 'npm install'
 
-			// Generate the TTL from users.yaml and
-			// groups.yaml.  This is meant to be an
-			// unwinding of the somewhat too hard-coded
-			// go-site/scripts/yaml2turtle.sh from Jim.
-			//sh 'GRPTEMP=`mktemp --tmpdir=. --suffix=.jsonld`'
-			sh 'echo \'{"@context": \' > ./metadata/groups.tmp.jsonld'
-			sh 'yaml2json ./metadata/users-groups-context.yaml >> ./metadata/groups.tmp.jsonld'
-			sh 'echo \', "@graph": \' >> ./metadata/groups.tmp.jsonld'
-			sh 'yaml2json metadata/groups.yaml >> ./metadata/groups.tmp.jsonld'
-			sh 'echo \'}\' >> ./metadata/groups.tmp.jsonld'
-			sh 'robot convert -i ./metadata/groups.tmp.jsonld -o ./metadata/groups.ttl'
-			//sh 'USRTEMP=`mktemp --tmpdir=. --suffix=.jsonld`'
-			sh 'echo \'{"@context": \' > ./metadata/users.tmp.jsonld'
-			sh 'yaml2json ./metadata/users-groups-context.yaml >> ./metadata/users.tmp.jsonld'
-			sh 'echo \', "@graph": \' >> ./metadata/users.tmp.jsonld'
-			sh 'yaml2json metadata/users.yaml >> ./metadata/users.tmp.jsonld'
-			sh 'echo \'}\' >> ./metadata/users.tmp.jsonld'
-			sh 'robot convert -i ./metadata/users.tmp.jsonld -o ./metadata/users.ttl'
+	// 		// Generate the TTL from users.yaml and
+	// 		// groups.yaml.  This is meant to be an
+	// 		// unwinding of the somewhat too hard-coded
+	// 		// go-site/scripts/yaml2turtle.sh from Jim.
+	// 		//sh 'GRPTEMP=`mktemp --tmpdir=. --suffix=.jsonld`'
+	// 		sh 'echo \'{"@context": \' > ./metadata/groups.tmp.jsonld'
+	// 		sh 'yaml2json ./metadata/users-groups-context.yaml >> ./metadata/groups.tmp.jsonld'
+	// 		sh 'echo \', "@graph": \' >> ./metadata/groups.tmp.jsonld'
+	// 		sh 'yaml2json metadata/groups.yaml >> ./metadata/groups.tmp.jsonld'
+	// 		sh 'echo \'}\' >> ./metadata/groups.tmp.jsonld'
+	// 		sh 'robot convert -i ./metadata/groups.tmp.jsonld -o ./metadata/groups.ttl'
+	// 		//sh 'USRTEMP=`mktemp --tmpdir=. --suffix=.jsonld`'
+	// 		sh 'echo \'{"@context": \' > ./metadata/users.tmp.jsonld'
+	// 		sh 'yaml2json ./metadata/users-groups-context.yaml >> ./metadata/users.tmp.jsonld'
+	// 		sh 'echo \', "@graph": \' >> ./metadata/users.tmp.jsonld'
+	// 		sh 'yaml2json metadata/users.yaml >> ./metadata/users.tmp.jsonld'
+	// 		sh 'echo \'}\' >> ./metadata/users.tmp.jsonld'
+	// 		sh 'robot convert -i ./metadata/users.tmp.jsonld -o ./metadata/users.ttl'
 
-			// Convert db-xrefs into the legacy xrefs
-			// formats.
-			sh 'yaml2json -p ./metadata/db-xrefs.yaml > ./metadata/db-xrefs.json'
-			sh 'node ./scripts/db-xrefs-yaml2legacy.js -i ./metadata/db-xrefs.yaml > ./metadata/db-xrefs.legacy'
-			sh 'cp ./metadata/db-xrefs.legacy ./metadata/GO.xrf_abbs'
-		    }
+	// 		// Convert db-xrefs into the legacy xrefs
+	// 		// formats.
+	// 		sh 'yaml2json -p ./metadata/db-xrefs.yaml > ./metadata/db-xrefs.json'
+	// 		sh 'node ./scripts/db-xrefs-yaml2legacy.js -i ./metadata/db-xrefs.yaml > ./metadata/db-xrefs.legacy'
+	// 		sh 'cp ./metadata/db-xrefs.legacy ./metadata/GO.xrf_abbs'
+	// 	    }
 
-		    // Carry everything we want to save over to
-		    // skyhook.
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 	    // Carry everything we want to save over to
+	// 	    // skyhook.
+	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 
-			// Copy all upstream metadata into metadata folder.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" metadata/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/metadata'
+	// 		// Copy all upstream metadata into metadata folder.
+	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" metadata/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/metadata'
 
-			// Copy all of the reports to the reports
-			// directory.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./combined.report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./users-and-groups-report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
+	// 		// Copy all of the reports to the reports
+	// 		// directory.
+	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./combined.report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
+	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./users-and-groups-report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 
-			// Copy generated pages over to page output.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./downloads.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/pages'
-			// Copy gorule report page to the reports directory
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./gorule-report.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
-		    }
+	// 		// Copy generated pages over to page output.
+	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./downloads.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/pages'
+	// 		// Copy gorule report page to the reports directory
+	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./gorule-report.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
+	// 	    }
 
-		    // Produce the slightly improved combined reports
-		    // inplace on remote.
-		    sh 'python3 ./scripts/merge-all-reports.py --verbose --directory $WORKSPACE/mnt/$BRANCH_NAME/reports'
-		}
-		// Run and report shared annotation check.
-		dir('./shared-annotation-check') {
-		    git url: 'https://github.com/geneontology/shared-annotation-check.git'
-		    // Setup.
-		    withEnv(['PATH+EXTRA=../bin:node_modules/.bin']){
-			sh 'npm install'
-			// Run annotation checks.
-			sh 'node ./check-runner.js -i ./rules.txt -o $WORKSPACE/mnt/$BRANCH_NAME/reports/shared-annotation-check.html'
-		    }
-		}
-	    }
-	    // WARNING: Extra safety as I expect this to sometimes fail.
-	    post {
-		always {
-		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-		    // Purge the copyover point.
-		    sh 'rm -r -f $WORKSPACE/copyover || true'
-		}
-	    }
-	}
+	// 	    // Produce the slightly improved combined reports
+	// 	    // inplace on remote.
+	// 	    sh 'python3 ./scripts/merge-all-reports.py --verbose --directory $WORKSPACE/mnt/$BRANCH_NAME/reports'
+	// 	}
+	// 	// Run and report shared annotation check.
+	// 	dir('./shared-annotation-check') {
+	// 	    git url: 'https://github.com/geneontology/shared-annotation-check.git'
+	// 	    // Setup.
+	// 	    withEnv(['PATH+EXTRA=../bin:node_modules/.bin']){
+	// 		sh 'npm install'
+	// 		// Run annotation checks.
+	// 		sh 'node ./check-runner.js -i ./rules.txt -o $WORKSPACE/mnt/$BRANCH_NAME/reports/shared-annotation-check.html'
+	// 	    }
+	// 	}
+	//     }
+	//     // WARNING: Extra safety as I expect this to sometimes fail.
+	//     post {
+	// 	always {
+	// 	    // Bail on the remote filesystem.
+	// 	    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+	// 	    // Purge the copyover point.
+	// 	    sh 'rm -r -f $WORKSPACE/copyover || true'
+	// 	}
+	//     }
+	// }
 	// stage('Sanity I') {
 	//     steps {
 	// 	// Prep a copyover point, as the overhead for doing
