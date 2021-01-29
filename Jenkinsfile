@@ -6,7 +6,7 @@ pipeline {
 	// Master never runs--Feb 31st.
 	//cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
-	cron('0 0 2-31 * *')
+	cron('0 0 2-31/2 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
     }
@@ -183,7 +183,7 @@ pipeline {
 	// Optional. This acts as an override, /if/ it's grabbed (as
 	// defined above).
 	//GOA_UNIPROT_ALL_URL=""
-	
+
     }
     options{
 	timestamps()
