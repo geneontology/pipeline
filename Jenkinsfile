@@ -588,7 +588,7 @@ pipeline {
 		    //  - all irregular gaffy files + anything paint-y
 		    //  - but not uniprot_all anything (elsewhere)
 		    //  - and not any of the ttls
-		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*goa_uniprot_all.*$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
+		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
 		    // No longer copy goa uniprot all source to products:
 		    // https://github.com/geneontology/pipeline/issues/207
 		    // // Now copy over the (single) uniprot
@@ -1051,12 +1051,12 @@ pipeline {
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 
-		    // Try to catch and prevent goa_uniprot_all-src from getting into archive, etc.
-		    // https://github.com/geneontology/pipeline/issues/207
-		    sh 'pwd'
-		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
-		    sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/goa_uniprot_all-src.gaf.gz || true'
-		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
+		    // // Try to catch and prevent goa_uniprot_all-src from getting into archive, etc.
+		    // // https://github.com/geneontology/pipeline/issues/207
+		    //sh 'pwd'
+		    //sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
+		    //sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/goa_uniprot_all-src.gaf.gz || true'
+		    //sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
 		}
 		// Copy the product to the right location. As well,
 		// archive.
