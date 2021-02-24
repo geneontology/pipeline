@@ -1242,6 +1242,11 @@ pipeline {
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
 
+			    // Let's be explicit here as well, as there were recent issues.
+			    //
+			    sh 'python3 ./mypyenv/bin/pip3 install rsa'
+			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
+
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
 			    // into the scripting mode.
