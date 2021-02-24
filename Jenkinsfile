@@ -32,6 +32,8 @@ pipeline {
 
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'master'
+	// The branch of go-ontology to use.
+	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
@@ -392,7 +394,7 @@ pipeline {
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
-		    git 'https://github.com/geneontology/go-ontology.git'
+		    git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
 
 		    // Default namespace.
 		    sh 'env'
