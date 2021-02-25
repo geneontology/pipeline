@@ -85,6 +85,13 @@ triggered to update the noctua-golr endpoint for a data refresh of
 some kind. It requires a manual deployment. This is also the generator
 for go-lego and controls the file location for Minerva's defaults.
 
+### go-ontology-dev
+
+This is a standing branch that we want to use in the future to test
+changes to the full ontology build without disrupting the other branches.
+It is pared down to just setup and the ontology build and is tied to the `dev`
+branch of go-ontology.
+
 # Quality control/assurance
 
 ## Manual QC steps
