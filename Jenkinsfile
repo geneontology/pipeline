@@ -38,9 +38,12 @@ pipeline {
 	TARGET_MINERVA_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu'
-	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu,suzia@stanford.edu'
-	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss'
+	//TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu'
+	//TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu,suzia@stanford.edu'
+	//TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss'
+	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
+	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov'
+	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'null'
 	// The URL prefix to use when creating site indices.
