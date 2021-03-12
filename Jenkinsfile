@@ -660,15 +660,9 @@ pipeline {
 		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/* /opt/go-site/annotations/"
 		    // Get rid of goa_uniprot_all_noiea-type products
 		    // as they take too long to run.
-		    sh 'ls -AlF /opt/go-site/annotations/'
 		    sh 'rm -f /opt/go-site/annotations/*uniprot_all* || true'
-		    sh 'ls -AlF /opt/go-site/annotations/'
 		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz /opt/go-site/gaferencer-products/"
 
-		    // sh "ls -AlF /opt/go-site/scripts/"
-		    // sh "ls -AlF /opt/go-site/scripts/Makefile-gaf-reprocess"
-		    // sh "env"
-		    // sh "cat /opt/go-site/scripts/Makefile-gaf-reprocess"
 		    //sh "$MAKECMD -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
 		    sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
 
@@ -700,30 +694,6 @@ pipeline {
 		}
 	    }
 	}
-	// // WARNING: Temporary step to get final gaferences products to enduser names.
-	// // Will be removed once central makefile refactor is completed. Also see 'Temporary post filer' above.
-	// // https://github.com/geneontology/pipeline/issues/185
-	// stage('Temporary rename files') {
-	//     steps {
-
-	// 	// Mount the remote filesystem.
-	// 	sh 'mkdir -p $WORKSPACE/mnt/ || true'
-	// 	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-	// 	    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-	// 	    // Rename file.
-	// 	    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/qc_association_inferences.json.gz'
-	// 	}
-	//     }
-	//     // WARNING: Extra safety as I expect this to sometimes fail.
-	//     post {
-	// 	always {
-	// 	    // Bail on the remote filesystem.
-	// 	    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-	// 	    // Purge the copyover point.
-	// 	    sh 'rm -r -f $WORKSPACE/copyover || true'
-	// 	}
-	//     }
-	// }
 	// A new step to think about. What is our core metadata?
 	stage('Produce metadata') {
 	    steps {
@@ -947,8 +917,6 @@ pipeline {
 		}
 	    }
 	    steps {
-		// sh 'ls /srv'
-		// sh 'ls /tmp'
 
 		// Build index into tmpfs.
 		sh 'bash /tmp/run-indexer.sh'
@@ -992,9 +960,6 @@ pipeline {
 		    }
 
 		    // Roll the stats forward.
-		    sh 'ls .'
-		    sh 'ls /tmp/'
-		    sh 'ls /tmp/stats/'
 		    sh 'python3 /tmp/aggregate-stats.py -a aggregated-go-stats-summaries.json -b /tmp/stats/go-stats-summary.json -o /tmp/stats/aggregated-go-stats-summaries.json'
 
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -1053,13 +1018,6 @@ pipeline {
 		sh 'mkdir -p $WORKSPACE/mnt/ || true'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-
-		    // // Try to catch and prevent goa_uniprot_all-src from getting into archive, etc.
-		    // // https://github.com/geneontology/pipeline/issues/207
-		    //sh 'pwd'
-		    //sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
-		    //sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/goa_uniprot_all-src.gaf.gz || true'
-		    //sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
 		}
 		// Copy the product to the right location. As well,
 		// archive.
