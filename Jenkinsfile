@@ -533,27 +533,6 @@ pipeline {
 			script {
 			    /// All branches now try to produce all
 			    /// targets in the go-site Makefile.
-
-			    // // For GAF joy, plus "extras".
-			    // sh 'make all'
-			    // Shaking the magic beads for "extras".
-			    // sh '$MAKECMD -e extra_files'
-			    // Make basic (non-enriched/reasoned) TTLs.
-			    //sh '$MAKECMD -e all_targets_ttl'
-
-			    // // Make journals with what we have
-			    // // on the filesystem, for
-			    // // convenience at this point.
-			    // // -internal" is /everything/.
-			    // sh 'make target/blazegraph-internal.jnl'
-			    // // "-production" is just GAFs+"production"
-			    // // models.
-			    // sh 'make target/blazegraph-production.jnl'
-
-			    // As long as we're here and have
-			    // everything handy: this is
-			    // SPARTA!
-			    // sh 'pwd'
 			    sh 'cd /opt/go-site/pipeline && PATH=/opt/bin:$PATH $MAKECMD PY_BIN=/usr/local/bin/ -e target/sparta-report.json'
 			}
 		    }
