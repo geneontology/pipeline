@@ -635,8 +635,9 @@ pipeline {
 
 	    }
 	}
-	// WARNING: This stage is a hack required to work around data damage described in https://github.com/geneontology/go-site/issues/1484
-	// Redownload annotations and run ontobio-parse-assocs over them.
+	// WARNING: This stage is a hack required to work around data damage described in https://github.com/geneontology/go-site/issues/1484 and
+	// https://github.com/geneontology/pipeline/issues/220.
+	// Redownload annotations and run ontobio-parse-assocs over them in various ways.
 	stage('Temporary post filter') {
 	    agent {
 		docker {
@@ -645,7 +646,9 @@ pipeline {
 		}
 	    }
 	    steps {
-		// Prepare a working directory based around go-site.
+
+		// Starting with https://github.com/geneontology/go-site/issues/1484,
+		// prepare a working directory based around go-site.
 		sh "cd /opt/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
 
 		sh "mkdir -p /opt/go-site/annotations /opt/go-site/annotations_new /opt/go-site/gaferencer-products"
@@ -672,6 +675,10 @@ pipeline {
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 		    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
 		}
+
+		// From here, we are making corrections to the Noctua
+		// GPADs (https://github.com/geneontology/pipeline/issues/220) to fix errors that are
+		// apparent in the model upstream.
 		sh "mkdir -p /opt/go-site/noctua_sources /opt/go-site/noctua_target"
 		// Download source noctua files from skyhook
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
