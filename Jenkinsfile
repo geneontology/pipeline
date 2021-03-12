@@ -647,26 +647,23 @@ pipeline {
 
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 		    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
-		}
 
-		// From here, we are making corrections to the Noctua
-		// GPADs (https://github.com/geneontology/pipeline/issues/220) to fix errors that are
-		// apparent in the model upstream.
-		sh "mkdir -p /opt/go-site/noctua_sources /opt/go-site/noctua_target"
-		// Download source noctua files from skyhook
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // From here, we are making corrections to the Noctua
+		    // GPADs (https://github.com/geneontology/pipeline/issues/220) to fix errors that are
+		    // apparent in the model upstream.
+		    sh "mkdir -p /opt/go-site/noctua_sources /opt/go-site/noctua_target"
+
+		    // Download source noctua files from skyhook
 		    // Download noctua_*.gpad.gz from products/annotations/ in skyhook
 		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/noctua_*.gpad.gz /opt/go-site/noctua_sources/"
 		    // Do we need GPI files for GO Rules? Maybe? Try and see if these are needed for GO Rules.
-		}
 
-		// Run the noctua gpad through ontobio
-		withEnv(["ONTOLOGY=${VALIDATION_ONTOLOGY_URL}"]){
-		    sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess noctua_gpad"
-		}
+		    // Run the noctua gpad through ontobio
+		    withEnv(["ONTOLOGY=${VALIDATION_ONTOLOGY_URL}"]){
+			sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess noctua_gpad"
+		    }
 
-		// Upload result files to skyhook
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // Upload result files to skyhook
 		    // Upload noctua valid to skyhook
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/noctua*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/*.report.* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
