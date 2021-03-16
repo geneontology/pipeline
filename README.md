@@ -85,6 +85,13 @@ triggered to update the noctua-golr endpoint for a data refresh of
 some kind. It requires a manual deployment. This is also the generator
 for go-lego and controls the file location for Minerva's defaults.
 
+### go-ontology-dev
+
+This is a standing branch that we want to use in the future to test
+changes to the full ontology build without disrupting the other branches.
+It is pared down to just setup and the ontology build and is tied to the `dev`
+branch of go-ontology.
+
 # Quality control/assurance
 
 ## Manual QC steps
@@ -112,54 +119,55 @@ unrecoverably failed while operating with Zenodo. See worknotes for 2020-04-24.
 - [ ] Get the date of the run and the run number to attach it to. For this example:
 	- Date: 2020-04-23
 	- Build number: 163
-- [ ] get the releases into zenodo
-	in jenkins@wok:~/workspace/neontology\_pipeline\_release-L3OLSRDNGI3ZIUODKFYUI4AO45X5C6RUGMOQAC5WV2Q6ZQOIFHMA/go-site$
-	```
+- [ ] query-replace the numbers above with the old ones from these instructions 
+- [ ] become jenkins user (to be able to write output files)
+- [ ] get the releases into zenodo in `jenkins@wok:~/workspace/neontology\_pipeline\_release-L3OLSRDNGI3ZIUODKFYUI4AO45X5C6RUGMOQAC5WV2Q6ZQOIFHMA/go-site$`
+	```bash
 	time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205166 --file go-release-archive.tgz --output ./release-archive-doi.json --revision 2020-04-23
 	```
 	success
-	```
+	```bash
 	time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205159 --file go-release-reference.tgz --output ./release-reference-doi.json --revision 2020-04-23
 	```
 	success
 - [ ] get DOIs and ensure in files as needed
-    ```
-	cat release-reference-doi.json
-	```
-    ```json
-    {
+      ```bash
+      cat release-reference-doi.json
+      ```
+      ```json
+      {
        "doi": "10.5281/zenodo.3765935"
-    }
-    ```
-    ```
-	cat release-archive-doi.json
-	```
-    ```json
-    {
+      }
+      ```
+      ```bash
+      cat release-archive-doi.json
+      ```
+      ```json
+      {
        "doi": "10.5281/zenodo.3765910"
-    }
-    ```
+      }
+      ```
 - [ ] get a working "mount" in place"
-	pre:
-	```
-	scp -i KEY_SKY S3_FILE key2 bbop@build.geneontology.org:/tmp
-	```
-	main:
-    ```
-	mkdir -p /tmp/workspace
-	```
-    ```
-	mkdir -p /tmp/workspace/mnt/
-	```
-    ```
-	scp -r -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=/tmp/KEY_SKY skyhook@skyhook.berkeleybop.org:/home/skyhook/release /tmp/workspace/mnt/
-	```
-	```
-	cp release-archive-doi.json /tmp/workspace/mnt/release/metadata/
-	```
-    ```
-	cp release-reference-doi.json /tmp/workspace/mnt/release/metadata/
-	```
+      pre, on local machine:
+      ```bash
+      scp -i KEY_SKY S3_FILE key2 bbop@build.geneontology.org:/tmp
+      ```
+      main, on pipeline machine:
+      ```bash
+      mkdir -p /tmp/workspace
+      ```
+      ```bash
+      mkdir -p /tmp/workspace/mnt/
+      ```
+      ```bash
+      scp -r -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=/tmp/KEY_SKY skyhook@skyhook.berkeleybop.org:/home/skyhook/release /tmp/workspace/mnt/
+      ```
+      ```bash
+      cp release-archive-doi.json /tmp/workspace/mnt/release/metadata/
+      ```
+      ```bash
+      cp release-reference-doi.json /tmp/workspace/mnt/release/metadata/
+      ```
 - [ ] manual run of release publish stage
   Ready:
   ```

@@ -6,7 +6,7 @@ pipeline {
 	// Master never runs--Feb 31st.
 	cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
-	//cron('0 0 2-31 * *')
+	//cron('0 0 2-31/2 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
     }
@@ -32,13 +32,15 @@ pipeline {
 
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'master'
+	// The branch of go-ontology to use.
+	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov'
-	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,suzia@stanford.edu'
-	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,pascale.gaudet@sib.swiss'
+	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu'
+	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu,suzia@stanford.edu'
+	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
@@ -82,6 +84,11 @@ pipeline {
 	// snapshot, and experimental.
 	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
 	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
+
+	///
+	/// Ontobio Validation
+	///
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/master/ontology/go.json"
 
 	///
 	/// Minerva input.
@@ -153,6 +160,7 @@ pipeline {
 	// Optional. This acts as an override, /if/ it's grabbed (as
 	// defined above).
 	GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
+
     }
     options{
 	timestamps()
@@ -386,7 +394,7 @@ pipeline {
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
-		    git 'https://github.com/geneontology/go-ontology.git'
+		    git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
 
 		    // Default namespace.
 		    sh 'env'
@@ -507,7 +515,7 @@ pipeline {
 		// Note the complex assignment of VIRTUAL_ENV and PATH.
 		// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
 		// "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin'
-		withEnv(['JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G', 'FOO=BAR']){
+		withEnv(['JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G', "ONTOLOGY=${VALIDATION_ONTOLOGY_URL}"]){
 		    // Note environment for future debugging.
 		    // Note: https://issues.jenkins-ci.org/browse/JENKINS-53025 and
 		    // https://issues.jenkins-ci.org/browse/JENKINS-49076
@@ -525,27 +533,6 @@ pipeline {
 			script {
 			    /// All branches now try to produce all
 			    /// targets in the go-site Makefile.
-
-			    // // For GAF joy, plus "extras".
-			    // sh 'make all'
-			    // Shaking the magic beads for "extras".
-			    // sh '$MAKECMD -e extra_files'
-			    // Make basic (non-enriched/reasoned) TTLs.
-			    //sh '$MAKECMD -e all_targets_ttl'
-
-			    // // Make journals with what we have
-			    // // on the filesystem, for
-			    // // convenience at this point.
-			    // // -internal" is /everything/.
-			    // sh 'make target/blazegraph-internal.jnl'
-			    // // "-production" is just GAFs+"production"
-			    // // models.
-			    // sh 'make target/blazegraph-production.jnl'
-
-			    // As long as we're here and have
-			    // everything handy: this is
-			    // SPARTA!
-			    // sh 'pwd'
 			    sh 'cd /opt/go-site/pipeline && PATH=/opt/bin:$PATH $MAKECMD PY_BIN=/usr/local/bin/ -e target/sparta-report.json'
 			}
 		    }
@@ -557,17 +544,19 @@ pipeline {
 		    //  - all irregular gaffy files + anything paint-y
 		    //  - but not uniprot_all anything (elsewhere)
 		    //  - and not any of the ttls
-		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*goa_uniprot_all.*$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
-		    // Now copy over the (single) uniprot
-		    // non-core; may not be there in all runs
-		    // (e.g. speed runs of master).
-		    script {
-			try {
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
-			} catch (exception) {
-			    echo "NOTE: No goa_uniprot_all-src.gaf.gz found for this run to copy."
-			}
-		    }
+		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
+		    // No longer copy goa uniprot all source to products:
+		    // https://github.com/geneontology/pipeline/issues/207
+		    // // Now copy over the (single) uniprot
+		    // // non-core; may not be there in all runs
+		    // // (e.g. speed runs of master).
+		    // script {
+		    // 	try {
+		    // 	    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
+		    // 	} catch (exception) {
+		    // 	    echo "NOTE: No goa_uniprot_all-src.gaf.gz found for this run to copy."
+		    // 	}
+		    // }
 		    // Finally, the non-zipped prediction files.
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\-prediction.gaf$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
 		    // Flatten all GAFs and GAF-like products
@@ -582,12 +571,14 @@ pipeline {
 		    // for master).
 		    script {
 			try {
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+			    // No longer copy goa uniprot all source to annotations:
+			    // https://github.com/geneontology/pipeline/issues/207
+			    //sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gpi.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			} catch (exception) {
-			    echo "NOTE: At least on uniprot core file not found for this run to copy."
+			    echo "NOTE: At least one uniprot core file not found for this run to copy."
 			}
 		    }
 		    // Find all {group}.gaferences.json files and combine into one JSON list in one file
@@ -623,8 +614,9 @@ pipeline {
 
 	    }
 	}
-	// WARNING: This stage is a hack required to work around data damage described in https://github.com/geneontology/go-site/issues/1484
-	// Redownload annotations and run ontobio-parse-assocs over them.
+	// WARNING: This stage is a hack required to work around data damage described in https://github.com/geneontology/go-site/issues/1484 and
+	// https://github.com/geneontology/pipeline/issues/220.
+	// Redownload annotations and run ontobio-parse-assocs over them in various ways.
 	stage('Temporary post filter') {
 	    agent {
 		docker {
@@ -633,7 +625,9 @@ pipeline {
 		}
 	    }
 	    steps {
-		// Prepare a working directory based around go-site.
+
+		// Starting with https://github.com/geneontology/go-site/issues/1484,
+		// prepare a working directory based around go-site.
 		sh "cd /opt/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
 
 		sh "mkdir -p /opt/go-site/annotations /opt/go-site/annotations_new /opt/go-site/gaferencer-products"
@@ -645,47 +639,37 @@ pipeline {
 		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/* /opt/go-site/annotations/"
 		    // Get rid of goa_uniprot_all_noiea-type products
 		    // as they take too long to run.
-		    sh 'ls -AlF /opt/go-site/annotations/'
 		    sh 'rm -f /opt/go-site/annotations/*uniprot_all* || true'
-		    sh 'ls -AlF /opt/go-site/annotations/'
 		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz /opt/go-site/gaferencer-products/"
 
-		    // sh "ls -AlF /opt/go-site/scripts/"
-		    // sh "ls -AlF /opt/go-site/scripts/Makefile-gaf-reprocess"
-		    // sh "env"
-		    // sh "cat /opt/go-site/scripts/Makefile-gaf-reprocess"
 		    //sh "$MAKECMD -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
 		    sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
 
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 		    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
+
+		    // From here, we are making corrections to the Noctua
+		    // GPADs (https://github.com/geneontology/pipeline/issues/220) to fix errors that are
+		    // apparent in the model upstream.
+		    sh "mkdir -p /opt/go-site/noctua_sources /opt/go-site/noctua_target"
+
+		    // Download source noctua files from skyhook
+		    // Download noctua_*.gpad.gz from products/annotations/ in skyhook
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/noctua_*.gpad.gz /opt/go-site/noctua_sources/"
+		    // Do we need GPI files for GO Rules? Maybe? Try and see if these are needed for GO Rules.
+
+		    // Run the noctua gpad through ontobio
+		    withEnv(["ONTOLOGY=${VALIDATION_ONTOLOGY_URL}"]){
+			sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess noctua_gpad"
+		    }
+
+		    // Upload result files to skyhook
+		    // Upload noctua valid to skyhook
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/noctua*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/*.report.* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 		}
 	    }
 	}
-	// // WARNING: Temporary step to get final gaferences products to enduser names.
-	// // Will be removed once central makefile refactor is completed. Also see 'Temporary post filer' above.
-	// // https://github.com/geneontology/pipeline/issues/185
-	// stage('Temporary rename files') {
-	//     steps {
-
-	// 	// Mount the remote filesystem.
-	// 	sh 'mkdir -p $WORKSPACE/mnt/ || true'
-	// 	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-	// 	    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-	// 	    // Rename file.
-	// 	    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer/qc_association_inferences.json.gz'
-	// 	}
-	//     }
-	//     // WARNING: Extra safety as I expect this to sometimes fail.
-	//     post {
-	// 	always {
-	// 	    // Bail on the remote filesystem.
-	// 	    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-	// 	    // Purge the copyover point.
-	// 	    sh 'rm -r -f $WORKSPACE/copyover || true'
-	// 	}
-	//     }
-	// }
 	// A new step to think about. What is our core metadata?
 	stage('Produce metadata') {
 	    steps {
@@ -909,8 +893,6 @@ pipeline {
 		}
 	    }
 	    steps {
-		// sh 'ls /srv'
-		// sh 'ls /tmp'
 
 		// Build index into tmpfs.
 		sh 'bash /tmp/run-indexer.sh'
@@ -954,9 +936,6 @@ pipeline {
 		    }
 
 		    // Roll the stats forward.
-		    sh 'ls .'
-		    sh 'ls /tmp/'
-		    sh 'ls /tmp/stats/'
 		    sh 'python3 /tmp/aggregate-stats.py -a aggregated-go-stats-summaries.json -b /tmp/stats/go-stats-summary.json -o /tmp/stats/aggregated-go-stats-summaries.json'
 
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
@@ -1225,6 +1204,11 @@ pipeline {
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
 
+			    // Let's be explicit here as well, as there were recent issues.
+			    //
+			    sh 'python3 ./mypyenv/bin/pip3 install rsa'
+			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
+
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
 			    // into the scripting mode.
@@ -1295,7 +1279,10 @@ pipeline {
 	}
 	// Big things to do on major branches.
 	stage('Deploy') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    // For exploration of #204, we'll hold back attempts to push out to AmiGO for master and snapshot
+	    // so we don't keep clobbering #204 trials out.
+	    //when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    when { anyOf { branch 'release' } }
 	    steps {
 		parallel(
 		    "SVN Export": {
@@ -1335,7 +1322,6 @@ pipeline {
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/ecocyc.gaf.gz $WORKSPACE/goannsvn/gene_association.ecocyc.gz'
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/fb.gaf.gz $WORKSPACE/goannsvn/gene_association.fb.gz'
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_lmajor.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_Lmajor.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_pfalciparum.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_Pfalciparum.gz'
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_tbrucei.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_Tbrucei.gz'
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_chicken_complex.gaf.gz $WORKSPACE/goannsvn/goa_chicken_complex.gaf.gz'
 					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_chicken.gaf.gz $WORKSPACE/goannsvn/goa_chicken.gaf.gz'
