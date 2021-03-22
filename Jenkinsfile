@@ -655,7 +655,7 @@ pipeline {
 
 		    // Download source noctua files from skyhook
 		    // Download noctua_*.gpad.gz from products/annotations/ in skyhook
-		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/noctua_*.gpad.gz /opt/go-site/noctua_sources/"
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/noctua_*-src.gpad.gz /opt/go-site/noctua_sources/"
 		    // Do we need GPI files for GO Rules? Maybe? Try and see if these are needed for GO Rules.
 
 		    // Run the noctua gpad through ontobio
