@@ -488,10 +488,10 @@ pipeline {
 			sh 'perl ./util/collate-gpads.pl legacy/gpad/*.gpad'
 
 			// Rename, compress, and move to skyhook.
-			sh 'mcp "legacy/*.gpad" "legacy/noctua_#1.gpad"'
+			sh 'mcp "legacy/*.gpad" "legacy/noctua_#1-src.gpad"'
 			sh 'gzip -vk legacy/noctua_*.gpad'
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
 			}
 		    }
 		}
@@ -680,7 +680,7 @@ pipeline {
 
 		    // Download source noctua files from skyhook
 		    // Download noctua_*.gpad.gz from products/annotations/ in skyhook
-		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/noctua_*.gpad.gz /opt/go-site/noctua_sources/"
+		    sh "rsync -avz -e \"ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY\" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/noctua_*-src.gpad.gz /opt/go-site/noctua_sources/"
 		    // Do we need GPI files for GO Rules? Maybe? Try and see if these are needed for GO Rules.
 
 		    // Run the noctua gpad through ontobio
