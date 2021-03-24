@@ -499,7 +499,8 @@ pipeline {
 		    // to run at this point.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /opt/lib/'
 		    // Copy the sources we downloaded earlier to local.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/*  /opt/go-site/sources/'
+		    // We're grabbing anything that's gaf, zipped or unzipped. This leaves gpad or anything else behind since currently we only expect gafs
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/*.gaf*  /opt/go-site/sources/'
 		}
 		sh "chmod +x /opt/bin/*"
 
