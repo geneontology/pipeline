@@ -889,7 +889,7 @@ pipeline {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
 		    // Run sanity checks.
-		    sh 'python3 ./scripts/sanity-check-ann-report.py -v -d $WORKSPACE/copyover/'
+		    sh 'python3 ./scripts/sanity-check-ann-report.py -v -d $WORKSPACE/copyover/ --ignore_noctua'
 		    // Make sure that the SPARTA report has nothing
 		    // nasty in it.
 		    // Note: Used to be pipes (|), but Jenkins Pipeline shell
