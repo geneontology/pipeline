@@ -476,7 +476,7 @@ pipeline {
 	stage('Produce GAFs, TTLs, and journal (mega-step)') {
 	    agent {
 		docker {
-		    image 'geneontology/dev-base:87790151d0c7189009e589c5450f7d81646ed652_2021-04-13T163318'
+		    image 'geneontology/dev-base:857fc148379e5afea6c27f798d4c62b2fadf3577_2021-04-27T182251'
 		    args "-u root:root --tmpfs /opt:exec -w /opt"
 		}
 	    }
@@ -621,7 +621,7 @@ pipeline {
 	stage('Temporary post filter') {
 	    agent {
 		docker {
-		    image 'geneontology/dev-base:87790151d0c7189009e589c5450f7d81646ed652_2021-04-13T163318'
+		    image 'geneontology/dev-base:857fc148379e5afea6c27f798d4c62b2fadf3577_2021-04-27T182251'
 		    args "-u root:root --tmpfs /opt:exec -w /opt"
 		}
 	    }
