@@ -42,6 +42,7 @@ pipeline {
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
+	TARGET_GO_SUMMARY_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'null'
@@ -190,7 +191,7 @@ pipeline {
 		}
 
 		// Give us a minute to cancel if we want.
-		sleep time: 1, unit: 'MINUTES'
+		//sleep time: 1, unit: 'MINUTES'
 		cleanWs deleteDirs: true, disableDeferredWipeout: true
 	    }
 	}
@@ -260,43 +261,27 @@ pipeline {
 	}
 	stage('Make summary emails') {
 	    steps {
-		// May be parallelized in the future, but may need to
-		// serve as input into into mega step.
 		script {
 
-		    dir('./noctua-models') {
-			git url: 'https://github.com/geneontology/noctua-models.git'
+		    dir('./go-site') {
+			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-			// Make all software products available in bin/
-			// (and lib/).
-			sh 'mkdir -p bin/'
-			sh 'mkdir -p lib/'
+			// Create summaries.
+			sh 'python3 scripts/github_issue_summary.py geneontology/go-ontology 1 > ontology-summary.html'
+			sh 'python3 scripts/github_issue_summary.py geneontology/go-annotation 1 > annotation-summary.html'
+
+			// Store on skyhook for examination.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-			    // WARNING/BUG: needed for blazegraph-runner
-			    // to run at this point.
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
-			}
-			sh 'chmod +x bin/*'
-
-			// Compile models.
-			sh 'mkdir -p legacy/gpad'
-			withEnv(['MINERVA_CLI_MEMORY=128G']){
-			    // "Import" models.
-			    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
-			    // Convert GO-CAM to GPAD.
-			    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i blazegraph.jnl --gpad-output legacy/gpad'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ontology-summary.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY annotation-summary.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 			}
 
-			// Collation.
-			sh 'perl ./util/collate-gpads.pl legacy/gpad/*.gpad'
-
-			// Rename, compress, and move to skyhook.
-			sh 'mcp "legacy/*.gpad" "legacy/noctua_#1-src.gpad"'
-			sh 'gzip -vk legacy/noctua_*.gpad'
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
-			}
+			// Email to interested parties.
+			echo "Emailing..."
+			def ontsum = readFile "ontology-summary.html"
+			def annsum = readFile "annotation-summary.html"
+			mail bcc: '', body: "${ontsum}", cc: '', from: '', replyTo: '', subject: "GO Ontology Summary", to: "${TARGET_GO_SUMMARY_EMAILS}"
+			echo "...completed."
 		    }
 		}
 	    }
