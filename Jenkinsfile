@@ -281,7 +281,8 @@ pipeline {
 			script {
 			    def ontsum = readFile "ontology-summary.html"
 			    def annsum = readFile "annotation-summary.html"
-			    mail bcc: '', body: "${ontsum}", cc: '', from: '', replyTo: '', subject: "GO Ontology Summary", to: "${TARGET_GO_SUMMARY_EMAILS}"
+			    mail bcc: '', body: "${ontsum}", cc: '', from: '', replyTo: '', subject: "GO Ontology Daily Summary", to: "${TARGET_GO_SUMMARY_EMAILS}"
+			    mail bcc: '', body: "${annsum}", cc: '', from: '', replyTo: '', subject: "GO Annotation Daily Summary", to: "${TARGET_GO_SUMMARY_EMAILS}"
 			}
 			echo "...completed."
 		    }
