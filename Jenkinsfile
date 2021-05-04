@@ -266,9 +266,9 @@ pipeline {
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-			// Create summaries.
-			sh 'python3 scripts/github_issue_summary.py geneontology/go-ontology 1 > ontology-summary.html'
-			sh 'python3 scripts/github_issue_summary.py geneontology/go-annotation 1 > annotation-summary.html'
+			// Create summaries; needs python 3.6 for strings for now, should replace later.
+			sh 'python3.6 scripts/github_issue_summary.py geneontology/go-ontology 1 > ontology-summary.html'
+			sh 'python3.6 scripts/github_issue_summary.py geneontology/go-annotation 1 > annotation-summary.html'
 
 			// Store on skyhook for examination.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
