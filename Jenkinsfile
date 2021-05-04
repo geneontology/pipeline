@@ -42,7 +42,7 @@ pipeline {
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
-	TARGET_GO_SUMMARY_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
+	TARGET_GO_SUMMARY_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,vanauken@caltech.edu'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'null'
