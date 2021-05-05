@@ -85,6 +85,13 @@ triggered to update the noctua-golr endpoint for a data refresh of
 some kind. It requires a manual deployment. This is also the generator
 for go-lego and controls the file location for Minerva's defaults.
 
+### issue-go-site-1530-summary-emails
+
+This branch is temporary to allow for summary emails to start getting sent
+again, while we work on migrating cron-based emails to GHA (see
+https://github.com/geneontology/go-site/issues/1530). It executes at
+about 16:15 PT daily.
+
 ### go-ontology-dev
 
 This is a standing branch that we want to use in the future to test
@@ -119,7 +126,7 @@ unrecoverably failed while operating with Zenodo. See worknotes for 2020-04-24.
 - [ ] Get the date of the run and the run number to attach it to. For this example:
 	- Date: 2020-04-23
 	- Build number: 163
-- [ ] query-replace the numbers above with the old ones from these instructions 
+- [ ] query-replace the numbers above with the old ones from these instructions
 - [ ] become jenkins user (to be able to write output files)
 - [ ] get the releases into zenodo in `jenkins@wok:~/workspace/neontology\_pipeline\_release-L3OLSRDNGI3ZIUODKFYUI4AO45X5C6RUGMOQAC5WV2Q6ZQOIFHMA/go-site$`
 	```bash
