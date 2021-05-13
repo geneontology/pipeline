@@ -738,7 +738,7 @@ pipeline {
 
 			// "External" packages required to run these
 			// scripts.
-			sh 'python3 ./mypyenv/bin/pip3 install click'
+			sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall click==7.1.2'
 			sh 'python3 ./mypyenv/bin/pip3 install pystache'
 			sh 'python3 ./mypyenv/bin/pip3 install yamldown'
 			sh 'python3 ./mypyenv/bin/pip3 install pypandoc'
