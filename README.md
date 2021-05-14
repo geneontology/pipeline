@@ -2,21 +2,74 @@
 
 # pipeline
 
-Declarative pipeline for the Gene Ontology.
+This is the GitHub home for the declarative Jenkins pipeline for the
+Gene Ontology. This pipeline is the "main" pipeline for the Gene
+Ontology, currently covering synchronized ETL, QA/QC, and deployment
+duties.
 
-# Functional branches
+A standing slide set, giving an overview of the system and its
+rationale, can be found here:
+https://docs.google.com/presentation/d/1Te9fZZqTqYGisEdjyGbTJy-zhhJzyTi-NOxn0LWlxk8/edit?usp=sharing
+.
 
-## master
+# Development
+
+## Basics
+
+The pipeline and it's related development are based around the
+Jenkinsfile in this repository. Our Jenkins instance is step to watch
+for new branches and run them on discovery, update, or declarative
+"cron" settings. Before developing and running pipelines, check with
+the GO software group about issues around running, canceling, and
+availability of resources.
+
+The typical (and usually recommended) developmental flow would be to:
+
+- make a branch of `master`
+- remove "cron"
+- change or remove the variables: "ZENODO\_REFERENCE\_CONCEPT", "ZENODO\_ARCHIVE\_CONCEPT", "TARGET\_BUCKET", "AWS\_CLOUDFRONT\_DISTRIBUTION\_ID", and "AWS\_CLOUDFRONT\_RELEASE\_DISTRIBUTION\_ID"
+- leave the stages 'Ready and clean' and 'Initialize' in place (see: https://github.com/geneontology/pipeline/issues/145)
+- remove or alter as needed to run experiments
+
+Code that successfully goes through development on a branch will
+graduate to being added to `master`. Once successful there, graduate
+out the the other branches (see below).
+
+For the sake of data safety, please check with the GO software group
+before undertaking pipeline development.
+
+## Data load
+
+Ideally (and with very narrow exceptions), all pipeline code should be
+able to run any arbitrary subset of ontologies or GAF (or GO-CAM
+model) input, including doctored, reduced, or inflated files, as given
+in the metadata stanza. The exceptions are largely carved out to
+archive and deployment steps.
+
+This is in order to ensure both code robustness and ease of
+development for data experiments and variations.
+
+## Functional branches
+
+These are the current branches in the pipeline that server special
+duties. All other branches should be development or experiment-only.
+
+It should be noted that unless a change is percolating out from
+testing, the "code" in `master`, `snapshot`, and `release` is
+identical--only the "environment" (metadata) stanza should ever be
+different.
+
+### master
 
 The main development and fast testing branch. It has no public
 exposure worth mentioning, but contains the same code as snapshot and
 release.
 
-## snapshot
+### snapshot
 
 This runs about once a day, automatically feeding snapshot.go.org.
 
-## release
+### release
 
 This runs about once a month, automatically feeding current.go.org and
 release.go.org.
@@ -25,14 +78,28 @@ This pipeline automatically feeds the "staging" version of AmiGO for
 testing, but requires a manual deployment to AmiGO once the release is
 finalized.
 
-## issue-35-neo-test
+### issue-35-neo-test
 
 This runs about once a week, Friday afternoon, unless manually
 triggered to update the noctua-golr endpoint for a data refresh of
 some kind. It requires a manual deployment. This is also the generator
 for go-lego and controls the file location for Minerva's defaults.
 
-# QC
+### issue-go-site-1530-summary-emails
+
+This branch is temporary to allow for summary emails to start getting sent
+again, while we work on migrating cron-based emails to GHA (see
+https://github.com/geneontology/go-site/issues/1530). It executes at
+about 16:15 PT daily.
+
+### go-ontology-dev
+
+This is a standing branch that we want to use in the future to test
+changes to the full ontology build without disrupting the other branches.
+It is pared down to just setup and the ontology build and is tied to the `dev`
+branch of go-ontology.
+
+# Quality control/assurance
 
 ## Manual QC steps
 There is a step in the pipeline that halts the pipeline: https://build.geneontology.org/job/geneontology/job/pipeline/job/release/
@@ -43,7 +110,11 @@ AmiGO is here: https://amigo-staging.geneontology.io/amigo
 
 Anomalies are evaluated, reported to the upstream sources and fixed, or ignored if the problem is no worse than the previous release.
 
-# Troubleshooting
+# Run finalization
+
+After a successful run, a manual "finalization" needs to be completed. See https://github.com/geneontology/operations/blob/master/README.pipeline-finalization.md .
+
+# Troubleshooting deployment (TODO: likely needs updating)
 
 ## Manual finalization from Zenodo failure
 
@@ -55,54 +126,55 @@ unrecoverably failed while operating with Zenodo. See worknotes for 2020-04-24.
 - [ ] Get the date of the run and the run number to attach it to. For this example:
 	- Date: 2020-04-23
 	- Build number: 163
-- [ ] get the releases into zenodo
-	in jenkins@wok:~/workspace/neontology\_pipeline\_release-L3OLSRDNGI3ZIUODKFYUI4AO45X5C6RUGMOQAC5WV2Q6ZQOIFHMA/go-site$
-	```
+- [ ] query-replace the numbers above with the old ones from these instructions
+- [ ] become jenkins user (to be able to write output files)
+- [ ] get the releases into zenodo in `jenkins@wok:~/workspace/neontology\_pipeline\_release-L3OLSRDNGI3ZIUODKFYUI4AO45X5C6RUGMOQAC5WV2Q6ZQOIFHMA/go-site$`
+	```bash
 	time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205166 --file go-release-archive.tgz --output ./release-archive-doi.json --revision 2020-04-23
 	```
 	success
-	```
+	```bash
 	time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205159 --file go-release-reference.tgz --output ./release-reference-doi.json --revision 2020-04-23
 	```
 	success
 - [ ] get DOIs and ensure in files as needed
-    ```
-	cat release-reference-doi.json
-	```
-    ```json
-    {
+      ```bash
+      cat release-reference-doi.json
+      ```
+      ```json
+      {
        "doi": "10.5281/zenodo.3765935"
-    }
-    ```
-    ```
-	cat release-archive-doi.json
-	```
-    ```json
-    {
+      }
+      ```
+      ```bash
+      cat release-archive-doi.json
+      ```
+      ```json
+      {
        "doi": "10.5281/zenodo.3765910"
-    }
-    ```
+      }
+      ```
 - [ ] get a working "mount" in place"
-	pre:
-	```
-	scp -i KEY_SKY S3_FILE key2 bbop@build.geneontology.org:/tmp
-	```
-	main:
-    ```
-	mkdir -p /tmp/workspace
-	```
-    ```
-	mkdir -p /tmp/workspace/mnt/
-	```
-    ```
-	scp -r -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=/tmp/KEY_SKY skyhook@skyhook.berkeleybop.org:/home/skyhook/release /tmp/workspace/mnt/
-	```
-	```
-	cp release-archive-doi.json /tmp/workspace/mnt/release/metadata/
-	```
-    ```
-	cp release-reference-doi.json /tmp/workspace/mnt/release/metadata/
-	```
+      pre, on local machine:
+      ```bash
+      scp -i KEY_SKY S3_FILE key2 bbop@build.geneontology.org:/tmp
+      ```
+      main, on pipeline machine:
+      ```bash
+      mkdir -p /tmp/workspace
+      ```
+      ```bash
+      mkdir -p /tmp/workspace/mnt/
+      ```
+      ```bash
+      scp -r -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=/tmp/KEY_SKY skyhook@skyhook.berkeleybop.org:/home/skyhook/release /tmp/workspace/mnt/
+      ```
+      ```bash
+      cp release-archive-doi.json /tmp/workspace/mnt/release/metadata/
+      ```
+      ```bash
+      cp release-reference-doi.json /tmp/workspace/mnt/release/metadata/
+      ```
 - [ ] manual run of release publish stage
   Ready:
   ```
