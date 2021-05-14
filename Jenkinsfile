@@ -1462,13 +1462,10 @@ pipeline {
 void watchdog() {
     echo 'Working in branch $BRANCH_NAME ...'
     if( BRANCH_NAME != 'master' && TARGET_BUCKET == 'go-data-product-experimental'){
-	echo 'Only master can touch that target.'
-	sh '`exit -1`'
+	error 'Only master can touch that target.'
     }else if( BRANCH_NAME != 'snapshot' && TARGET_BUCKET == 'go-data-product-snapshot'){
-	echo 'Only snapshot can touch that target.'
-	sh '`exit -1`'
+	error 'Only snapshot can touch that target.'
     }else if( BRANCH_NAME != 'release' && TARGET_BUCKET == 'go-data-product-release'){
-	echo 'Only release can touch that target.'
-	sh '`exit -1`'
+	error 'Only release can touch that target.'
     }
 }
