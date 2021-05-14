@@ -174,19 +174,7 @@ pipeline {
 
 		// Check that we do not affect public targets on
 		// non-mainline runs.
-		script {
-		    callThoseEchos()
-		    if( BRANCH_NAME != 'master' && TARGET_BUCKET == 'go-data-product-experimental'){
-			echo 'Only master can touch that target.'
-			sh '`exit -1`'
-		    }else if( BRANCH_NAME != 'snapshot' && TARGET_BUCKET == 'go-data-product-snapshot'){
-			echo 'Only master can touch that target.'
-			sh '`exit -1`'
-		    }else if( BRANCH_NAME != 'release' && TARGET_BUCKET == 'go-data-product-release'){
-			echo 'Only master can touch that target.'
-			sh '`exit -1`'
-		    }
-		}
+		watchdog();
 
 		// Give us a minute to cancel if we want.
 		sleep time: 1, unit: 'MINUTES'
@@ -583,7 +571,6 @@ pipeline {
 			    echo "NOTE: At least one uniprot core file not found for this run to copy."
 			}
 		    }
-		    callThoseEchos()
 		    // Find all {group}.gaferences.json files and combine into one JSON list in one file
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.gaferences.json$" -exec cp {} /opt/go-site/gaferencer-products-tmp/ \\;'
 		    sh 'python3 /opt/go-site/scripts/json-concat-lists.py  /opt/go-site/gaferencer-products-tmp/*.gaferences.json /opt/go-site/gaferencer-products/all.gaferences.json'
@@ -1470,16 +1457,18 @@ pipeline {
     }
 }
 
-void callThoseEchos() {
-    sh 'echo "Testing code-too-large issue 1"'
-    sh 'echo "Testing code-too-large issue 2"'
-    sh 'echo "Testing code-too-large issue 3"'
-    sh 'echo "Testing code-too-large issue 4"'
-    sh 'echo "Testing code-too-large issue 5"'
-    sh 'echo "Testing code-too-large issue 6"'
-    sh 'echo "Testing code-too-large issue 7"'
-    sh 'echo "Testing code-too-large issue 8"'
-    sh 'echo "Testing code-too-large issue 9"'
-    sh 'echo "Testing code-too-large issue 10"'
-    sh 'echo "Testing code-too-large issue 11"'
+// Experimental function/tests to try and prevent accidential
+// manipulation of key external resources.
+void watchdog() {
+    echo 'Working in branch $BRANCH_NAME ...'
+    if( BRANCH_NAME != 'master' && TARGET_BUCKET == 'go-data-product-experimental'){
+	echo 'Only master can touch that target.'
+	sh '`exit -1`'
+    }else if( BRANCH_NAME != 'snapshot' && TARGET_BUCKET == 'go-data-product-snapshot'){
+	echo 'Only master can touch that target.'
+	sh '`exit -1`'
+    }else if( BRANCH_NAME != 'release' && TARGET_BUCKET == 'go-data-product-release'){
+	echo 'Only master can touch that target.'
+	sh '`exit -1`'
+    }
 }
