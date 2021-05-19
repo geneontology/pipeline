@@ -361,7 +361,8 @@ pipeline {
 
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			// Upload to skyhook to the expected location.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+			//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+			copyBackToSkyhook('./target/*', 'products/annotations/');
 		    }
 		}
 	    }
@@ -1383,5 +1384,13 @@ void watchdog() {
 	error 'Only snapshot can touch that target.'
     }else if( BRANCH_NAME != 'release' && TARGET_BUCKET == 'go-data-product-release'){
 	error 'Only release can touch that target.'
+    }
+}
+
+// Experimental function to demonstrate/test copying back.
+// Upload to skyhook.
+void copyBackToSkyhook(localSource, relativeTarget) {
+    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" $localSource skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/$relativeTarget'
     }
 }
