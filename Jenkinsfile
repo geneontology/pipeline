@@ -31,20 +31,20 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'master'
+	TARGET_GO_SITE_BRANCH = 'issue-1434-add-xenbase'
 	// The branch of go-ontology to use.
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu'
-	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu,suzia@stanford.edu'
-	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss'
+	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
+	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,suzia@stanford.edu'
+	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-experimental'
+	TARGET_BUCKET = 'null'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	TARGET_INDEXER_PREFIX = 'null'
 	// This variable should typically be 'TRUE', which will cause
 	// some additional basic checks to be made. There are some
 	// very exotic cases where these check may need to be skipped
@@ -75,20 +75,20 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = '425671'
-	ZENODO_ARCHIVE_CONCEPT = '425674'
+	ZENODO_REFERENCE_CONCEPT = 'null'
+	ZENODO_ARCHIVE_CONCEPT = 'null'
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
 	// need this as it is always a new location and the index
 	// upload already has an invalidation on it. For current,
 	// snapshot, and experimental.
-	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
-	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'null'
+	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'null'
 
 	///
 	/// Ontobio Validation
 	///
-	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/master/ontology/go.json"
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/ontology/go.json"
 
 	///
 	/// Minerva input.
@@ -96,7 +96,7 @@ pipeline {
 
 	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/ontology/extensions/go-lego.owl"
 	].join(" ")
 
 	///
@@ -107,10 +107,10 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/gorel.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-modules-annotations.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-taxon-subsets.owl",
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/ontology/extensions/go-gaf.owl",
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/ontology/extensions/gorel.owl",
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/ontology/extensions/go-modules-annotations.owl",
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/ontology/extensions/go-taxon-subsets.owl",
 	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
 	    "http://purl.obolibrary.org/obo/cl/cl-basic.owl",
@@ -121,17 +121,18 @@ pipeline {
 	    "http://purl.obolibrary.org/obo/wbbt.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
-	    //"http://skyhook.berkeleybop.org/master/products/annotations/paint_other.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/aspgd.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken_complex.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/mgi.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/pombase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz"
+	    //"http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/products/annotations/paint_other.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/aspgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/goa_chicken.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/goa_chicken_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/mgi.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/pombase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/wb.gaf.gz"
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/xenbase.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
-	    "http://skyhook.berkeleybop.org/master/products/panther/arbre.tgz"
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/products/panther/arbre.tgz"
 	].join(" ")
 
 	///
