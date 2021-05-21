@@ -128,7 +128,7 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/goa_uniprot_all_noiea.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/mgi.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/pombase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/wb.gaf.gz"
+	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/wb.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/annotations/xenbase.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
