@@ -541,7 +541,7 @@ pipeline {
 		// Note the complex assignment of VIRTUAL_ENV and PATH.
 		// https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#code-withenv-code-set-environment-variables
 		// "PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/pipeline/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/pipeline/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin'
-		withEnv(['JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G', "ONTOLOGY=${VALIDATION_ONTOLOGY_URL}"]){
+		withEnv(['JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G', "ONTOLOGY=${VALIDATION_ONTOLOGY_URL}", "BRANCH_NAME=${BRANCH_NAME}"]){
 		    // Note environment for future debugging.
 		    // Note: https://issues.jenkins-ci.org/browse/JENKINS-53025 and
 		    // https://issues.jenkins-ci.org/browse/JENKINS-49076
@@ -590,7 +590,7 @@ pipeline {
 		    //  - all product-y files
 		    //  - but not uniprot_all anything (elsewhere)
 		    //  - and not anything "irregular"
-		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.\\(gaf\\|gpad\\|gpi\\).gz$" -not -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint_.*\\).gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
+		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*.\\(gaf\\|gpad\\|gpi\\).gz$" -not -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|noctua_.*\\|paint_.*\\).gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
 		    // Now copy over the four uniprot core
 		    // files, if they are in our run set
 		    // (e.g. may not be there on speed runs
