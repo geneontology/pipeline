@@ -36,6 +36,8 @@ pipeline {
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
+	// The branch of noctua-models to use.
+	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
@@ -437,7 +439,7 @@ pipeline {
 		script {
 
 		    dir('./noctua-models') {
-			git url: 'https://github.com/geneontology/noctua-models.git'
+			git branch: TARGET_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
 
 			// Make all software products available in bin/
 			// (and lib/).
