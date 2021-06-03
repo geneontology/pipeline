@@ -31,7 +31,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'issue-238-wormbase-test-pipeline'
+	TARGET_GO_SITE_BRANCH = 'issue-pipeline-238-wormbase-test-pipeline'
 	// The branch of go-ontology to use.
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
