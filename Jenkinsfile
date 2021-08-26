@@ -913,15 +913,15 @@ pipeline {
 		// from indexing--create stats products from running
 		// GOlr.
 		// Prepare a working directory based around go-site.
-		dir('./go-site') {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+		dir('./go-stats') {
+		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-stats.git'
 
 		    // Not much want or need here--simple
 		    // python3. However, using the information hidden
 		    // in run-indexer.sh to know where the Solr
 		    // instance is hiding.
 		    sh 'mkdir -p /tmp/stats/ || true'
-		    sh 'cp ./scripts/*.py /tmp'
+		    sh 'cp ./libraries/go-stats/*.py /tmp'
 		    // Needed as extra library.
 		    sh 'pip3 install --force-reinstall requests==2.19.1'
 		    sh 'pip3 install --force-reinstall networkx==2.2'
