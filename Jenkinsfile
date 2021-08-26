@@ -32,6 +32,8 @@ pipeline {
 
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'master'
+	// The branch of geneontology/go-stats to use.
+	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
@@ -914,7 +916,7 @@ pipeline {
 		// GOlr.
 		// Prepare a working directory based around go-site.
 		dir('./go-stats') {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-stats.git'
+		    git branch: TARGET_GO_STATS_BRANCH, url: 'https://github.com/geneontology/go-stats.git'
 
 		    // Not much want or need here--simple
 		    // python3. However, using the information hidden
