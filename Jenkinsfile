@@ -1073,6 +1073,14 @@ pipeline {
 			    // https://stackoverflow.com/questions/45821085/awshttpsconnection-object-has-no-attribute-ssl-context
 			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
 
+			    // A temporary workaround for
+			    // https://github.com/geneontology/pipeline/issues/247,
+			    // forcing requests used by bdbags to a
+			    // verion that is usable by python 3.5
+			    // (our current raw machine default
+			    // version of python3).
+			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall requests==2.25.1'
+
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
 			    // into the scripting mode.
