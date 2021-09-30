@@ -279,8 +279,8 @@ pipeline {
 		sh 'env'
 		sh 'ls -AlF'
 		dir('./go-ontology') {
-		    git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
-
+		    //git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
+		    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_GO_ONTOLOGY_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: false, reference: '', shallow: true]], userRemoteConfigs: [[url: 'https://github.com/geneontology/go-ontology.git']]]
 		    // Default namespace.
 		    sh 'env'
 		    sh 'ls -AlF'
