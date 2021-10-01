@@ -278,10 +278,12 @@ pipeline {
 		// data environment.
 		sh 'env'
 		sh 'ls -AlF'
+		sh 'date'
 		dir('./go-ontology') {
 		    //git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
-		    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_GO_ONTOLOGY_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: false, reference: '', shallow: true]], userRemoteConfigs: [[url: 'https://github.com/geneontology/go-ontology.git']]]
+		    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_GO_ONTOLOGY_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true]], userRemoteConfigs: [[url: 'https://github.com/geneontology/go-ontology.git']]]
 		    // Default namespace.
+		    sh 'date'
 		    sh 'env'
 		    sh 'ls -AlF'
 		}
