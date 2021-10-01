@@ -25,6 +25,14 @@ pipeline {
 	).trim()
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'master'
+        // The branch of geneontology/go-stats to use.
+        TARGET_GO_STATS_BRANCH = 'master'
+        // The branch of go-ontology to use.
+        TARGET_GO_ONTOLOGY_BRANCH = 'master'
+        // The branch of minerva to use.
+        TARGET_MINERVA_BRANCH = 'master'
+        // The branch of noctua-models to use.
+        TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
