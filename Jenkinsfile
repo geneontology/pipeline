@@ -891,7 +891,7 @@ pipeline {
 	stage('Produce derivatives') {
 	    agent {
 		docker {
-		    image 'geneontology/golr-autoindex:f815e3e9004f96493f29a80a73526c91c2a4c25d_2021-10-01T162208_issue-620-change-default-closure'
+		    image 'geneontology/golr-autoindex:8a685e860f0f79d059c6bd06bca710f4ef518ab0_2021-10-04T165013_issue-620-change-default-closure'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
