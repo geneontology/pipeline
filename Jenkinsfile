@@ -125,14 +125,39 @@ pipeline {
 	    "http://purl.obolibrary.org/obo/wbbt.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
-	    //"http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/products/annotations/paint_other.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/products/annotations/paint_other.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/aspgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/cgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/dictybase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/ecocyc.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/fb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/genedb_lmajor.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/genedb_tbrucei.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_chicken.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_chicken_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_chicken_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_cow.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_cow_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_cow_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_dog.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_dog_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_dog_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_human.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_human_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_human_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_pig.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_pig_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_pig_rna.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/goa_uniprot_all_noiea.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/mgi.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/pombase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/wb.gaf.gz"
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/pseudocap.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/rgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/sgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/sgn.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/tair.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/wb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/annotations/zfin.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
 	    "http://skyhook.berkeleybop.org/issue-amigo-620-change-default-closure/products/panther/arbre.tgz"
@@ -154,16 +179,16 @@ pipeline {
 	// for no rule suppression (default behavior everything), or a
 	// single value (practically speaking pretty much always
 	// "silent")
-	//GORULE_TAGS_TO_SUPPRESS="silent"
+	GORULE_TAGS_TO_SUPPRESS="silent"
 
 	// Optional. Groups to run.
-	RESOURCE_GROUPS="aspgd ecocyc goa mgi paint pseudocap wb"
+	//RESOURCE_GROUPS=""
 	// Optional. Datasets to skip within the resources that we
 	// will run (defined in the line above).
-	DATASET_EXCLUDES="goa_uniprot_gcrp goa_pdb goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human goa_human goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
+	//DATASET_EXCLUDES=""
 	// Optional. This acts as an override, /if/ it's grabbed (as
 	// defined above).
-	GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
+	//GOA_UNIPROT_ALL_URL=""
 
     }
     options{
