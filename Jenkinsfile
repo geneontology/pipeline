@@ -291,26 +291,26 @@ pipeline {
 			// and boto in some versions, so we will use a
 			// virtual env to paper that over.  See:
 			// https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
-			// python3.6 being used here to deal with boto
+			// python3 being used here to deal with boto
 			// no longer supporting base python 3.5. See #250.
-			sh 'python3.6 -m venv mypyenv'
+			sh 'python3 -m venv mypyenv'
 			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
 			    // Extra package for the indexer.
-			    sh 'python3.6 ./mypyenv/bin/pip3 install pystache'
+			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
 
 			    // Correct for (possibly) bad boto3,
 			    // as mentioned above.
-			    sh 'python3.6 ./mypyenv/bin/pip3 install boto3'
-			    sh 'python3.6 ./mypyenv/bin/pip3 install botocore'
+			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
+			    sh 'python3 ./mypyenv/bin/pip3 install botocore'
 
 			    // Extra package for the uploader.
-			    sh 'python3.6 ./mypyenv/bin/pip3 install filechunkio'
+			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
 
 			    // Let's be explicit here as well, as there were recent issues.
 			    //
-			    sh 'python3.6 ./mypyenv/bin/pip3 install rsa'
-			    sh 'python3.6 ./mypyenv/bin/pip3 install awscli'
+			    sh 'python3 ./mypyenv/bin/pip3 install rsa'
+			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
@@ -321,14 +321,14 @@ pipeline {
 				// skyhook. For "release", this will
 				// be "current". For "snapshot", this
 				// will be "snapshot".
-				sh 'python3.6 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
+				sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
 
 				// Push into S3 buckets. Simple
 				// overall case: copy tree directly
 				// over. For "release", this will be
 				// "current". For "snapshot", this
 				// will be "snapshot".
-				sh 'python3.6 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
+				sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
 
 				// Also, some runs have special maps
 				// to buckets...
@@ -338,18 +338,18 @@ pipeline {
 				    // debugging buckets are intended
 				    // to be RO directly in S3 for
 				    // debugging.
-				    sh 'python3.6 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DAY --number $BUILD_ID --pipeline $BRANCH_NAME'
+				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DAY --number $BUILD_ID --pipeline $BRANCH_NAME'
 
 				}
 
 				// // Invalidate the CDN now that the new
 				// // files are up.
 				// sh 'echo "[preview]" > ./awscli_config.txt && echo "cloudfront=true" >> ./awscli_config.txt'
-				// sh 'AWS_CONFIG_FILE=./awscli_config.txt python3.6 ./mypyenv/bin/aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION_ID --paths "/*"'
+				// sh 'AWS_CONFIG_FILE=./awscli_config.txt python3 ./mypyenv/bin/aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION_ID --paths "/*"'
 				// // The release branch also needs to
 				// // deal with the second location.
 				// if( env.BRANCH_NAME == 'release' ){
-				//     sh 'AWS_CONFIG_FILE=./awscli_config.txt python3.6 ./mypyenv/bin/aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID --paths "/*"'
+				//     sh 'AWS_CONFIG_FILE=./awscli_config.txt python3 ./mypyenv/bin/aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID --paths "/*"'
 				// }
 			    }
 			}
