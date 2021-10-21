@@ -261,6 +261,13 @@ pipeline {
 	    }
 	}
 	stage('Publish') {
+	    agent {
+		docker {
+		    image 'geneontology/dev-base:857fc148379e5afea6c27f798d4c62b2fadf3577_2021-04-27T182251'
+		    args "-u root:root --tmpfs /opt:exec -w /opt"
+		}
+	    }
+
 	    when { anyOf { branch 'issue-250-boto-python' } }
 	    steps {
 		// Experimental stanza to support mounting the sshfs
