@@ -263,7 +263,7 @@ pipeline {
 	stage('Publish') {
 	    agent {
 		docker {
-		    image 'geneontology/dev-base:857fc148379e5afea6c27f798d4c62b2fadf3577_2021-04-27T182251'
+		    image 'geneontology/dev-base:a320e294271b931b86dce20301b60a93ff094038_2021-10-21T174803'
 		    args "-u root:root --tmpfs /opt:exec -w /opt"
 		}
 	    }
