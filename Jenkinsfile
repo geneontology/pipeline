@@ -261,12 +261,12 @@ pipeline {
 	    }
 	}
 	stage('Publish') {
-	    agent {
-		docker {
-		    image 'geneontology/dev-base:a320e294271b931b86dce20301b60a93ff094038_2021-10-21T174803'
-		    args "-u root:root --tmpfs /opt:exec -w /opt --device=/dev/fuse:/dev/fuse"
-		}
-	    }
+	    // agent {
+	    // 	docker {
+	    // 	    image 'geneontology/dev-base:a320e294271b931b86dce20301b60a93ff094038_2021-10-21T174803'
+	    // 	    args "-u root:root --tmpfs /opt:exec -w /opt --device=/dev/fuse:/dev/fuse"
+	    // 	}
+	    // }
 
 	    when { anyOf { branch 'issue-250-boto-python' } }
 	    steps {
@@ -299,11 +299,6 @@ pipeline {
 			    // Extra package for the indexer.
 			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
 
-			    // Correct for (possibly) bad boto3,
-			    // as mentioned above.
-			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
-			    sh 'python3 ./mypyenv/bin/pip3 install botocore'
-
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
 
@@ -311,6 +306,11 @@ pipeline {
 			    //
 			    sh 'python3 ./mypyenv/bin/pip3 install rsa'
 			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
+
+			    // Correct for (possibly) bad boto3,
+			    // as mentioned above.
+			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
+			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
