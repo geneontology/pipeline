@@ -264,7 +264,7 @@ pipeline {
 	    agent {
 		docker {
 		    image 'geneontology/dev-base:a320e294271b931b86dce20301b60a93ff094038_2021-10-21T174803'
-		    args "-u root:root --tmpfs /opt:exec -w /opt"
+		    args "-u root:root --tmpfs /opt:exec -w /opt --device=/dev/fuse:/dev/fuse"
 		}
 	    }
 
