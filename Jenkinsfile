@@ -291,8 +291,6 @@ pipeline {
 			// and boto in some versions, so we will use a
 			// virtual env to paper that over.  See:
 			// https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
-			// python3 being used here to deal with boto
-			// no longer supporting base python 3.5. See #250.
 			sh 'python3 -m venv mypyenv'
 			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
@@ -307,8 +305,9 @@ pipeline {
 			    sh 'python3 ./mypyenv/bin/pip3 install rsa'
 			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
 
-			    // Correct for (possibly) bad boto3,
-			    // as mentioned above.
+			    // Version locking for boto3 / botocore
+			    // upgrade that is incompatible with
+			    // python3.5. See issue #250.
 			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
 			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
 
