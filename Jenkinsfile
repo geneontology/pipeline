@@ -1242,15 +1242,6 @@ pipeline {
 			    // Extra package for the indexer.
 			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
 
-			    // Correct for (possibly) bad boto3,
-			    // as mentioned above.
-			    // The versions are locked to ensure that
-			    // we have the right versions due to
-			    // closing support for python 3.5 (see
-			    // https://github.com/geneontology/pipeline/issues/250).
-			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall boto3==1.18.52'
-			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall botocore==1.21.52'
-
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
 
@@ -1258,6 +1249,12 @@ pipeline {
 			    //
 			    sh 'python3 ./mypyenv/bin/pip3 install rsa'
 			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
+
+			    // Version locking for boto3 / botocore
+			    // upgrade that is incompatible with
+			    // python3.5. See issue #250.
+			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
+			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
