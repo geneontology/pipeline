@@ -149,6 +149,7 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/release/annotations/goa_pig_complex.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/goa_pig_rna.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/japonicusdb.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/mgi.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/pombase.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/pseudocap.gaf.gz",
