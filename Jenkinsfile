@@ -270,7 +270,7 @@ pipeline {
 		dir('./go-ontology') {
 		    // Fix for #248, by reducing go-ontology checkout size.
 		    //git 'https://github.com/geneontology/go-ontology.git'
-		    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_GO_ONTOLOGY_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: false, reference: '', shallow: true]], userRemoteConfigs: [[url: 'https://github.com/geneontology/go-ontology.git']]]
+		    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_GO_ONTOLOGY_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: false, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/go-ontology.git']]]
 
 		    // Default namespace.
 		    sh 'env'
