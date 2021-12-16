@@ -414,7 +414,7 @@ pipeline {
 	stage('Produce ontology') {
 	    agent {
 		docker {
-		    image 'obolibrary/odkfull:v1.2.27'
+		    image 'obolibrary/odkfull:v1.2.31'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
@@ -769,7 +769,7 @@ pipeline {
 			// "External" packages required to run these
 			// scripts.
 			sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall click==7.1.2'
-			sh 'python3 ./mypyenv/bin/pip3 install pystache'
+			sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall pystache==0.5.4'
 			sh 'python3 ./mypyenv/bin/pip3 install yamldown'
 			sh 'python3 ./mypyenv/bin/pip3 install pypandoc'
 
