@@ -400,7 +400,8 @@ pipeline {
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/extensions/go-lego.owl /tmp/go-lego.owl'
 		}
 
-		git 'https://github.com/geneontology/go-ontology.git'
+
+		echo "WARNING: this is a sanity test placeholder (old tests never passed)."
 		// TODO: reactivate once there is a chance of passing.
 		// sh 'ROBOT_JAVA_ARGS=-Xmx48G robot report --input /tmp/go-lego.owl --tdb true --tdb-directory /tmp/tdb/ -k true -p go-ontology/src/sparql/neo/profile.txt -o neo-violations.report.txt --print 50 -v'
 		// withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
