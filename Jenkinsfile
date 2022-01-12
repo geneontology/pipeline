@@ -226,6 +226,7 @@ pipeline {
 			// this point.
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/lib || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/api-static-files || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/ttl || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/blazegraph || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/annotations || true'
@@ -358,9 +359,8 @@ pipeline {
 		dir("./go-site") {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-			// Upload to skyhook to the expected location.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
-		    }
+		    // Upload to skyhook to the expected location.
+		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
 		}
 	    }
 	}
