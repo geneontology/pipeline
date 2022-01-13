@@ -441,7 +441,7 @@ pipeline {
 			sh 'wget http://localhost:8888/models/gp -O gocam-gps.json'
 
 			// Upload to skyhook to the expected location.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./gocam*.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/api-static-files/'
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r ./gocam*.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/api-static-files/'
 		    }
 		}
 	    }
