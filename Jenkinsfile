@@ -372,6 +372,10 @@ pipeline {
 		    sh 'ls -AlF'
 		    sh 'mvn package'
 
+		    // Setup for future use as we need tools.
+		    sh 'apt-get update'
+		    sh 'apt-get -y install pigz'
+
 		    // WARNING/TEMP: Get a blazegraph journal, get it
 		    // setup in the right spot.
 		    sh 'rm -f blazegraph-production.jnl.gz || true'
@@ -381,7 +385,7 @@ pipeline {
 		    	sh 'wget -N http://current.geneontology.org/products/blazegraph/blazegraph-production.jnl.gz'
 		    	//sh 'wget -N http://skyhook.berkeleybop.org/master/products/blazegraph/blazegraph-production.jnl.gz'
 		    }
-		    sh 'gunzip blazegraph-production.jnl.gz'
+		    sh 'pigz -d blazegraph-production.jnl.gz'
 		    sh 'mv blazegraph-production.jnl blazegraph.jnl'
 
 		    // Setup runtime.
@@ -401,7 +405,6 @@ pipeline {
 		    sh 'curl -I http://localhost:9876/blazegraph/'
 
 		    // Setup environmant to run npm.
-		    sh 'apt-get update'
 		    sh 'curl -fsSL https://deb.nodesource.com/setup_17.x | bash -'
 		    sh 'apt-get install -y nodejs'
 		    dir("./go-graphstore/api-gorest-2021") {
