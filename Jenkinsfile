@@ -436,6 +436,10 @@ pipeline {
 			// Revert config.json now that it's running.
 			sh 'cp -f config.json.bak config.json'
 
+			// A little cleaning.
+			sh 'rm -f gocam-*.json || true'
+			sh 'rm -f gocam-*.json.gz || true'
+
 			// Run commands.
 			sh 'wget http://localhost:8888/models/go -O gocam-goterms.json'
 			sh 'wget http://localhost:8888/models/gp -O gocam-gps.json'
