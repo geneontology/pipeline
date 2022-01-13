@@ -381,7 +381,7 @@ pipeline {
 		    	//sh 'wget -N http://current.geneontology.org/products/blazegraph/blazegraph-production.jnl.gz'
 		    	sh 'wget -N http://skyhook.berkeleybop.org/master/products/blazegraph/blazegraph-production.jnl.gz'
 		    }
-		    sh 'pigz -d blazegraph-production.jnl.gz'
+		    sh 'gunzip blazegraph-production.jnl.gz'
 		    sh 'mv blazegraph-production.jnl blazegraph.jnl'
 
 		    // Setup runtime.
