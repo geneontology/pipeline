@@ -464,10 +464,10 @@ pipeline {
 			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-models.json s3://go-public/files/gocam-models.json'
 			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-pmids.json s3://go-public/files/gocam-pmids.json'
 			    // Gzip.
-			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-goterms.json.gz s3://go-public/files/gocam-goterms.json.gz'
-			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-gps.json.gz s3://go-public/files/gocam-gps.json.gz'
-			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-models.json.gz s3://go-public/files/gocam-models.json.gz'
-			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-pmids.json.gz s3://go-public/files/gocam-pmids.json.gz'
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/gzip put gocam-goterms.json.gz s3://go-public/files/gocam-goterms.json.gz'
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/gzip put gocam-gps.json.gz s3://go-public/files/gocam-gps.json.gz'
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/gzip put gocam-models.json.gz s3://go-public/files/gocam-models.json.gz'
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/gzip put gocam-pmids.json.gz s3://go-public/files/gocam-pmids.json.gz'
 			}
 		    }
 		}
