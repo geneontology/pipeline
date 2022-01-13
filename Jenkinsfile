@@ -355,11 +355,54 @@ pipeline {
 	// Download GAFs from datasets.yaml in go-site and then upload
 	// to skyhook in their appropriate locations.
 	stage("Create GO-CAM JSON products") {
+	    agent {
+		docker {
+		    image 'maven:3.6.3-openjdk-8'
+		    args "-u root:root --tmpfs /opt:exec -w /opt"
+		}
+	    }
 	    steps {
-		dir("./go-site") {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+		dir("./go-graphstore") {
+		    // Note: I currently cannot imagine a reason not
+		    // to have this pinned to master.
+		    git branch: 'master', url: 'https://github.com/geneontology/go-graphstore.git'
 
-		    // Upload to skyhook to the expected location.
+		    // Build/ready blazegraph (from go-graphstore
+		    // pom.xml).
+		    sh 'ls -AlF'
+		    sh 'mvn package'
+
+		    // WARNING/TEMP: Get a blazegraph journal, get it
+		    // setup in the right spot.
+		    sh 'rm -f blazegraph-production.jnl.gz || true'
+		    sh 'rm -f blazegraph-production.jnl || true'
+		    sh 'rm -f blazegraph.jnl || true'
+		    retry(3) {
+		    	//sh 'wget -N http://current.geneontology.org/products/blazegraph/blazegraph-production.jnl.gz'
+		    	sh 'wget -N http://skyhook.berkeleybop.org/master/products/blazegraph/blazegraph-production.jnl.gz'
+		    }
+		    sh 'pigz -d blazegraph-production.jnl.gz'
+		    sh 'mv blazegraph-production.jnl blazegraph.jnl'
+
+		    // Setup runtime.
+		    sh 'echo \'#!/bin/bash\' > run.sh'
+		    sh 'echo \'set -x\' >> run.sh'
+		    sh 'echo \'java -server -Djetty.port=8899 -Xmx2G -Djetty.overrideWebXml=./conf/readonly_cors.xml -Dbigdata.propertyFile=./conf/blazegraph.properties -cp jars/blazegraph-jar.jar:jars/jetty-servlets.jar com.bigdata.rdf.sail.webapp.StandaloneNanoSparqlServer \&\' >> run.sh'
+
+		    // Check runtime.
+		    sh 'ls -AlF ./run.sh'
+		    sh 'cat ./run.sh'
+
+		    // Run runtime, sleep to give it a chance.
+		    sh 'bash ./run.sh'
+		    sh 'sleep 10'
+
+		    // Check runtime.
+		    sh 'curl -I http://localhost:8899/blazegraph/'
+
+		    // TODO: Run commands.
+
+		    // TODO: Upload to skyhook to the expected location.
 		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
 		}
 	    }
