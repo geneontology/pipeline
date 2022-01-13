@@ -400,10 +400,49 @@ pipeline {
 		    // Check runtime.
 		    sh 'curl -I http://localhost:9876/blazegraph/'
 
-		    // TODO: Run commands.
+		    // TODO: Setup environmant to run npm.
+		    sh 'apt-get update'
+		    sh 'curl -fsSL https://deb.nodesource.com/setup_17.x | bash -'
+		    sh 'apt-get install -y nodejs'
+		    dir("./go-graphstore/api-gorest-2021") {
+			// Note: I currently cannot imagine a reason not
+			// to have this pinned to master.
+			git branch: 'master', url: 'https://github.com/geneontology/api-gorest-2021.git'
+			sh 'npm install'
 
-		    // TODO: Upload to skyhook to the expected location.
-		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+			// Uncomment the last four lines of the app.js
+			// file into a new runtime js.
+			sh 'cat app.js > newapp.js'
+			sh 'echo >> newapp.js'
+			sh 'cat app.js | tail -4 | sed \'s:\\/::g\' >> newapp.js'
+			sh 'echo >> newapp.js'
+			sh 'cat newapp.js'
+
+			// Create runner for newapp.
+			sh 'echo \'#!/bin/bash\' > newapp.sh'
+			sh 'echo \'set -x\' >> newapp.sh'
+			sh 'echo \'node newapp.js &\' >> newapp.sh'
+			sh 'cat ./newapp.sh'
+
+			// Create local config for newapp.
+			sh 'cp -f config.json config.json.bak'
+			sh 'cat config.json.bak | sed \'s:rdf.geneontology.org:localhost\\:9876:g\' > config.json'
+			sh 'cat config.json'
+
+			// Run newapp.
+			sh 'bash newapp.sh'
+			sh 'sleep 10'
+
+			// Revert config.json now that it's running.
+			sh 'cp -f config.json.bak config.json'
+
+			// Run commands.
+			sh 'wget http://localhost:8888/models/go -O gocam-goterms.json'
+			sh 'wget http://localhost:8888/models/gp -O gocam-gps.json'
+
+			// Upload to skyhook to the expected location.
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./gocam*.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/api-static-files/'
+		    }
 		}
 	    }
 	}
