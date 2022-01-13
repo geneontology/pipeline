@@ -453,6 +453,22 @@ pipeline {
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./gocam*.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/api-static-files/'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./gocam*.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/api-static-files/'
 			}
+
+			// WARNING/TEMP: Upload to a temporary working
+			// location in S3. Grab tools needed.
+			withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+			    sh 'apt-get install -y s3cmd'
+			    // Standard.
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-goterms.json s3://go-public/files/gocam-goterms.json'
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-gps.json s3://go-public/files/gocam-gps.json'
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-models.json s3://go-public/files/gocam-models.json'
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-pmids.json s3://go-public/files/gocam-pmids.json'
+			    // Gzip.
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-goterms.json.gz s3://go-public/files/gocam-goterms.json.gz'
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-gps.json.gz s3://go-public/files/gocam-gps.json.gz'
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-models.json.gz s3://go-public/files/gocam-models.json.gz'
+			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-pmids.json.gz s3://go-public/files/gocam-pmids.json.gz'
+			}
 		    }
 		}
 	    }
