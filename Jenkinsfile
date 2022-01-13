@@ -449,16 +449,9 @@ pipeline {
 			sh 'wget http://localhost:8888/models -O gocam-models.json'
 			sh 'wget http://localhost:8888/models/pmid -O gocam-pmids.json'
 
-			// Create gzipped versions.
-			sh 'gzip -k gocam-goterms.json'
-			sh 'gzip -k gocam-gps.json'
-			sh 'gzip -k gocam-models.json'
-			sh 'gzip -k gocam-pmids.json'
-
 			// Upload to skyhook to the expected location.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./gocam*.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/api-static-files/'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./gocam*.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/api-static-files/'
 			}
 
 			// WARNING/TEMP: Upload to a temporary working
@@ -473,11 +466,6 @@ pipeline {
 			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-gps.json s3://go-public/files/gocam-gps.json'
 			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-models.json s3://go-public/files/gocam-models.json'
 			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-pmids.json s3://go-public/files/gocam-pmids.json'
-			    // Gzip.
-			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/gzip put gocam-goterms.json.gz s3://go-public/files/gocam-goterms.json.gz'
-			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/gzip put gocam-gps.json.gz s3://go-public/files/gocam-gps.json.gz'
-			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/gzip put gocam-models.json.gz s3://go-public/files/gocam-models.json.gz'
-			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/gzip put gocam-pmids.json.gz s3://go-public/files/gocam-pmids.json.gz'
 			}
 		    }
 		}
