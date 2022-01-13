@@ -387,7 +387,7 @@ pipeline {
 		    // Setup runtime.
 		    sh 'echo \'#!/bin/bash\' > run.sh'
 		    sh 'echo \'set -x\' >> run.sh'
-		    sh 'echo \'java -server -Djetty.port=8899 -Xmx2G -Djetty.overrideWebXml=./conf/readonly_cors.xml -Dbigdata.propertyFile=./conf/blazegraph.properties -cp jars/blazegraph-jar.jar:jars/jetty-servlets.jar com.bigdata.rdf.sail.webapp.StandaloneNanoSparqlServer &\' >> run.sh'
+		    sh 'echo \'java -server -Djetty.port=9876 -Xmx2G -Djetty.overrideWebXml=./conf/readonly_cors.xml -Dbigdata.propertyFile=./conf/blazegraph.properties -cp jars/blazegraph-jar.jar:jars/jetty-servlets.jar com.bigdata.rdf.sail.webapp.StandaloneNanoSparqlServer &\' >> run.sh'
 
 		    // Check runtime.
 		    sh 'ls -AlF ./run.sh'
@@ -398,7 +398,7 @@ pipeline {
 		    sh 'sleep 10'
 
 		    // Check runtime.
-		    sh 'curl -I http://localhost:8899/blazegraph/'
+		    sh 'curl -I http://localhost:9876/blazegraph/'
 
 		    // TODO: Run commands.
 
