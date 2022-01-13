@@ -92,6 +92,11 @@ again, while we work on migrating cron-based emails to GHA (see
 https://github.com/geneontology/go-site/issues/1530). It executes at
 about 16:15 PT daily.
 
+### issue-265-go-cam-products
+
+This branch is temporary to allow for the creation of JSON files for
+consumption by the GO-CAM API.
+
 ### go-ontology-dev
 
 This is a standing branch that we want to use in the future to test
