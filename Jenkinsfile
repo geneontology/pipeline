@@ -378,8 +378,8 @@ pipeline {
 		    sh 'rm -f blazegraph-production.jnl || true'
 		    sh 'rm -f blazegraph.jnl || true'
 		    retry(3) {
-		    	//sh 'wget -N http://current.geneontology.org/products/blazegraph/blazegraph-production.jnl.gz'
-		    	sh 'wget -N http://skyhook.berkeleybop.org/master/products/blazegraph/blazegraph-production.jnl.gz'
+		    	sh 'wget -N http://current.geneontology.org/products/blazegraph/blazegraph-production.jnl.gz'
+		    	//sh 'wget -N http://skyhook.berkeleybop.org/master/products/blazegraph/blazegraph-production.jnl.gz'
 		    }
 		    sh 'gunzip blazegraph-production.jnl.gz'
 		    sh 'mv blazegraph-production.jnl blazegraph.jnl'
@@ -400,7 +400,7 @@ pipeline {
 		    // Check runtime.
 		    sh 'curl -I http://localhost:9876/blazegraph/'
 
-		    // TODO: Setup environmant to run npm.
+		    // Setup environmant to run npm.
 		    sh 'apt-get update'
 		    sh 'curl -fsSL https://deb.nodesource.com/setup_17.x | bash -'
 		    sh 'apt-get install -y nodejs'
@@ -442,9 +442,16 @@ pipeline {
 			sh 'wget http://localhost:8888/models -O gocam-models.json'
 			sh 'wget http://localhost:8888/models/pmid -O gocam-pmids.json'
 
+			// Create gzipped versions.
+			sh 'gzip -k gocam-goterms.json'
+			sh 'gzip -k gocam-gps.json'
+			sh 'gzip -k gocam-models.json'
+			sh 'gzip -k gocam-pmids.json'
+
 			// Upload to skyhook to the expected location.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./gocam*.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/api-static-files/'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./gocam*.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/api-static-files/'
 			}
 		    }
 		}
