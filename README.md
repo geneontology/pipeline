@@ -80,8 +80,8 @@ finalized.
 
 ### issue-35-neo-test
 
-This runs about once a week, Friday afternoon, unless manually
-triggered to update the noctua-golr endpoint for a data refresh of
+This runs about once a week, Thursday morning, unless manually
+triggered, to update the noctua-golr endpoint for a data refresh of
 some kind. It requires a manual deployment. This is also the generator
 for go-lego and controls the file location for Minerva's defaults.
 
