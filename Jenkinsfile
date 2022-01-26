@@ -9,8 +9,8 @@ pipeline {
 	//cron('0 0 2-31 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
-	// Every week on Friday, noon.
-	cron('0 12 * * 5')
+	// Every week on Thursday, 8am.
+	cron('0 8 * * 4')
     }
     environment {
 	// Pin dates and day to beginning of run.
