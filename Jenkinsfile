@@ -465,7 +465,7 @@ pipeline {
 			    // "Import" models.
 			    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
 			    // Convert GO-CAM to GPAD.
-			    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i blazegraph.jnl --gpad-output legacy/gpad'
+			    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES --ontojournal ontojournal.jnl -i blazegraph.jnl --gpad-output legacy/gpad'
 			}
 
 			// Collation.
