@@ -414,7 +414,7 @@ pipeline {
 	stage('Produce ontology') {
 	    agent {
 		docker {
-		    image 'obolibrary/odkfull:v1.2.31'
+		    image 'obolibrary/odkfull:v1.2.32'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
@@ -491,7 +491,7 @@ pipeline {
 			    // "Import" models.
 			    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
 			    // Convert GO-CAM to GPAD.
-			    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i blazegraph.jnl --gpad-output legacy/gpad'
+			    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES --ontojournal ontojournal.jnl -i blazegraph.jnl --gpad-output legacy/gpad'
 			}
 
 			// Collation.
