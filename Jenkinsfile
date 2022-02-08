@@ -1132,41 +1132,44 @@ pipeline {
 					error 'Zenodo archive upload error on release--no recovery.'
 				    }
 				}
-				try {
+				// Commenting this out to bypass "Method code too large" error
+				// in issue-238-wormbase-test-pipeline - Seems like an OK thing
+				// to comment out since branch should never zenodo anything.
+				// try {
 
-				    // Do not attempt the "easy" path
-				    // if the hard one failed so we
-				    // can retry later at the stage
-				    // level.
-				    if( ZENODO_ARCHIVING_SUCCESSFUL == 'FALSE' ){
-					error "Pre-failing on reference after a failed archive so we can retry at the stage level."
-				    }
+				//     // Do not attempt the "easy" path
+				//     // if the hard one failed so we
+				//     // can retry later at the stage
+				//     // level.
+				//     if( ZENODO_ARCHIVING_SUCCESSFUL == 'FALSE' ){
+				// 	error "Pre-failing on reference after a failed archive so we can retry at the stage level."
+				//     }
 
-				    // Archive the holey bdbag for
-				    // this run.
-				    if( env.BRANCH_NAME == 'release' ){
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_PRODUCTION_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
-				    }else if( env.BRANCH_NAME == 'snapshot' ){
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
-				    }else if( env.BRANCH_NAME == 'master' ){
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
-				    }
-				    // Copy the referential metadata
-				    // files and DOI to skyhook
-				    // metadata/ for easy inspection.
-				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
-				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
-				    sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
-				} catch (exception) {
-				    // Something went bad with the
-				    // Zenodo reference upload.
-				    echo "There has been a failure in the reference upload to Zenodo."
-				    mail bcc: '', body: "There has been a failure in the reference upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo reference upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
-				    // Hard die if this is a release.
-				    if( env.BRANCH_NAME == 'release' ){
-					error 'Zenodo reference upload error on release--no recovery.'
-				    }
-				}
+				//     // Archive the holey bdbag for
+				//     // this run.
+				//     if( env.BRANCH_NAME == 'release' ){
+				// 	sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_PRODUCTION_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
+				//     }else if( env.BRANCH_NAME == 'snapshot' ){
+				// 	sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
+				//     }else if( env.BRANCH_NAME == 'master' ){
+				// 	sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
+				//     }
+				//     // Copy the referential metadata
+				//     // files and DOI to skyhook
+				//     // metadata/ for easy inspection.
+				//     sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
+				//     sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
+				//     sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
+				// } catch (exception) {
+				//     // Something went bad with the
+				//     // Zenodo reference upload.
+				//     echo "There has been a failure in the reference upload to Zenodo."
+				//     mail bcc: '', body: "There has been a failure in the reference upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo reference upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
+				//     // Hard die if this is a release.
+				//     if( env.BRANCH_NAME == 'release' ){
+				// 	error 'Zenodo reference upload error on release--no recovery.'
+				//     }
+				// }
 			    }
 			}
 		    }
