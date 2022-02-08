@@ -396,7 +396,12 @@ pipeline {
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
-		    git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
+		    // We're starting to run into problems with
+		    // ontology download taking too long for the
+		    // default 10m, so try and get into the guts of
+		    // the git commands a little. Issues #248.
+		    // git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
+		    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_GO_ONTOLOGY_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/go-ontology.git', refspec: "+refs/heads/${env.TARGET_GO_ONTOLOGY_BRANCH}:refs/remotes/origin/${env.TARGET_GO_ONTOLOGY_BRANCH}"]]]
 
 		    // Default namespace.
 		    sh 'env'
