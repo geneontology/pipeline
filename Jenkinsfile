@@ -1259,9 +1259,10 @@ pipeline {
 
 			    // Version locking for boto3 / botocore
 			    // upgrade that is incompatible with
-			    // python3.5. See issue #250.
+			    // python3.5. See issues #250 and #271.
 			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
 			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
+			    sh 'python3 ./mypyenv/bin/pip3 install s3transfer==0.5.0'
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
