@@ -1056,11 +1056,12 @@ pipeline {
 			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
 			    // Extra package for the indexer.
-			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
+			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall pystache==0.5.4'
 
 			    // Correct for (possibly) bad boto3,
 			    // as mentioned above.
-			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
+			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
+			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
 
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
@@ -1246,7 +1247,7 @@ pipeline {
 			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
 			    // Extra package for the indexer.
-			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
+			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall pystache==0.5.4'
 
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
@@ -1258,9 +1259,10 @@ pipeline {
 
 			    // Version locking for boto3 / botocore
 			    // upgrade that is incompatible with
-			    // python3.5. See issue #250.
+			    // python3.5. See issues #250 and #271.
 			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
 			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
+			    sh 'python3 ./mypyenv/bin/pip3 install s3transfer==0.5.0'
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
