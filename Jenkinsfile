@@ -133,6 +133,7 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/fb.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/genedb_lmajor.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/genedb_tbrucei.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/genedb_pfalciparum.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_chicken.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_chicken_complex.gaf.gz",
 	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_chicken_rna.gaf.gz",
