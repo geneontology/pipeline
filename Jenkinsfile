@@ -61,7 +61,8 @@ pipeline {
 	MAKECMD = 'make'
 	// GOlr load profile.
 	GOLR_SOLR_MEMORY = "128G"
-	GOLR_LOADER_MEMORY = "192G"
+	//GOLR_LOADER_MEMORY = "192G"
+	GOLR_LOADER_MEMORY = "320G"
 	GOLR_INPUT_ONTOLOGIES = [
 	    //"http://purl.obolibrary.org/obo/go/snapshot/extensions/go-lego.owl",
 	    //"http://purl.obolibrary.org/obo/eco.owl",
@@ -75,9 +76,9 @@ pipeline {
 	    //"http://purl.obolibrary.org/obo/wbbt.owl",
 	    //"http://purl.obolibrary.org/obo/go/extensions/go-modules-annotations.owl",
 	    //"http://purl.obolibrary.org/obo/go/extensions/go-taxon-subsets.owl"
-            //"http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/neo.owl"
-            "http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/extensions/go-lego.owl",
-            "http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/neo.owl"
+            //"http://skyhook.berkeleybop.org/issue-neo-82-all-reviewed/ontology/neo.owl"
+            "http://skyhook.berkeleybop.org/issue-neo-82-all-reviewed/ontology/extensions/go-lego.owl",
+            "http://skyhook.berkeleybop.org/issue-neo-82-all-reviewed/ontology/neo.owl"
 	].join(" ")
     }
     options{
