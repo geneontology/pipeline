@@ -201,10 +201,14 @@ pipeline {
 
 		    sh './scripts/combine-datasets-metadata.py metadata/datasets/*.yaml > metadata/datasets.json'
 
-		    // Deploy to S3 location for pickup in next stage.
-		    withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-			sh 's3cmd -c $S3CMD_JSON --acl-public --reduced-redundancy --mime-type=application/json put metadata/datasets.json s3://go-build/metadata/'
-		    }
+		    ///
+		    /// Do not push out--get from "main" NEO pipeline.
+		    /// https://github.com/geneontology/neo/issues/86
+		    ///
+		    // // Deploy to S3 location for pickup in next stage.
+		    // withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+		    // 	sh 's3cmd -c $S3CMD_JSON --acl-public --reduced-redundancy --mime-type=application/json put metadata/datasets.json s3://go-build/metadata/'
+		    // }
 		}
 	    }
 	}
@@ -242,18 +246,22 @@ pipeline {
 			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY neo.obo neo.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
 		    }
 
-		    // WARNING/BUG: This occurs "early" as we need NEO
-		    // in the proper location before building GO (for
-		    // testing, solr loading, etc.). Once we have
-		    // ubiquitous ontology catalogs, publishing can
-		    // occur properly at the end and after testing.
-		    // See commented out section below.
-		    //
-		    // Deploy to S3 location for pickup by PURL via CF.
-		    withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-			sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.owl s3://go-build/build-noctua-entity-ontology/latest/'
-			sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.obo s3://go-build/build-noctua-entity-ontology/latest/'
-		    }
+		    ///
+		    /// Do not push out--get from "main" NEO pipeline.
+		    /// https://github.com/geneontology/neo/issues/86
+		    ///
+		    // // WARNING/BUG: This occurs "early" as we need NEO
+		    // // in the proper location before building GO (for
+		    // // testing, solr loading, etc.). Once we have
+		    // // ubiquitous ontology catalogs, publishing can
+		    // // occur properly at the end and after testing.
+		    // // See commented out section below.
+		    // //
+		    // // Deploy to S3 location for pickup by PURL via CF.
+		    // withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+		    // 	sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.owl s3://go-build/build-noctua-entity-ontology/latest/'
+		    // 	sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.obo s3://go-build/build-noctua-entity-ontology/latest/'
+		    // }
 		}
 	    }
 	}
