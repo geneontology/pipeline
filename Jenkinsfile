@@ -28,6 +28,8 @@ pipeline {
         // The branch of geneontology/go-stats to use.
         TARGET_GO_STATS_BRANCH = 'master'
         // The branch of go-ontology to use.
+        TARGET_GO_NEO_BRANCH = 'master'
+        // The branch of go-ontology to use.
         TARGET_GO_ONTOLOGY_BRANCH = 'master'
         // The branch of minerva to use.
         TARGET_MINERVA_BRANCH = 'master'
@@ -59,7 +61,8 @@ pipeline {
 	MAKECMD = 'make'
 	// GOlr load profile.
 	GOLR_SOLR_MEMORY = "128G"
-	GOLR_LOADER_MEMORY = "192G"
+	//GOLR_LOADER_MEMORY = "192G"
+	GOLR_LOADER_MEMORY = "320G"
 	GOLR_INPUT_ONTOLOGIES = [
 	    //"http://purl.obolibrary.org/obo/go/snapshot/extensions/go-lego.owl",
 	    //"http://purl.obolibrary.org/obo/eco.owl",
@@ -214,7 +217,7 @@ pipeline {
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./neo') {
-		    git 'https://github.com/geneontology/neo.git'
+		    git branch: TARGET_GO_NEO_BRANCH, url: 'https://github.com/geneontology/neo'
 
 		    // Default namespace.
 		    sh 'OBO=http://purl.obolibrary.org/obo'
@@ -229,7 +232,8 @@ pipeline {
 		    //
 		    withEnv(['PATH+EXTRA=:bin:./bin', 'JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G']){
 			retry(3){
-			    sh 'make clean all'
+			    sh 'make clean'
+			    sh 'make all'
 			}
 		    }
 
