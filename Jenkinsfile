@@ -337,13 +337,13 @@ pipeline {
 		    },
 		    "Ready Gaferencer": {
 			dir('./gaferencer') {
-			    sh 'wget -N https://github.com/geneontology/gaferencer/releases/download/v0.4.1/gaferencer-0.4.1.tgz'
-			    sh 'tar -xvf gaferencer-0.4.1.tgz'
+			    sh 'wget -N https://github.com/geneontology/gaferencer/releases/download/v0.5/gaferencer-0.5.tgz'
+			    sh 'tar -xvf gaferencer-0.5.tgz'
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 				// Attempt to rsync bin into bin/.
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.4.1/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.5/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 				// Attempt to rsync libs into lib/.
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.4.1/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.5/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
 			    }
 			}
 		    }
@@ -387,7 +387,7 @@ pipeline {
 	stage('Produce ontology') {
 	    agent {
 		docker {
-		    image 'obolibrary/odkfull:v1.2.27'
+		    image 'obolibrary/odkfull:v1.2.32'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
@@ -397,7 +397,12 @@ pipeline {
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
-		    git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
+		    // We're starting to run into problems with
+		    // ontology download taking too long for the
+		    // default 10m, so try and get into the guts of
+		    // the git commands a little. Issues #248.
+		    // git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
+                    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_GO_ONTOLOGY_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/go-ontology.git', refspec: "+refs/heads/${env.TARGET_GO_ONTOLOGY_BRANCH}:refs/remotes/origin/${env.TARGET_GO_ONTOLOGY_BRANCH}"]]]
 
 		    // Default namespace.
 		    sh 'env'
@@ -438,8 +443,15 @@ pipeline {
 		// serve as input into into mega step.
 		script {
 
+		    // Create a relative working directory and setup our
+		    // data environment.
 		    dir('./noctua-models') {
-			git branch: TARGET_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
+
+			// Attempt to trim/prune/speed up noctua-models as
+			// we do for go-ontology for
+			// https://github.com/geneontology/pipeline/issues/278 .
+			checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
+
 
 			// Make all software products available in bin/
 			// (and lib/).
@@ -459,7 +471,7 @@ pipeline {
 			    // "Import" models.
 			    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
 			    // Convert GO-CAM to GPAD.
-			    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES -i blazegraph.jnl --gpad-output legacy/gpad'
+			    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES --ontojournal ontojournal.jnl -i blazegraph.jnl --gpad-output legacy/gpad'
 			}
 
 			// Collation.
@@ -742,7 +754,7 @@ pipeline {
 			// "External" packages required to run these
 			// scripts.
 			sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall click==7.1.2'
-			sh 'python3 ./mypyenv/bin/pip3 install pystache'
+			sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall pystache==0.5.4'
 			sh 'python3 ./mypyenv/bin/pip3 install yamldown'
 			sh 'python3 ./mypyenv/bin/pip3 install pypandoc'
 
@@ -890,7 +902,7 @@ pipeline {
 	stage('Produce derivatives') {
 	    agent {
 		docker {
-		    image 'geneontology/golr-autoindex:3d8d4ed9a33169af1304e359bf6c425e54d52383_2019-08-28T134514'
+		    image 'geneontology/golr-autoindex:28a693d28b37196d3f79acdea8c0406c9930c818_2022-03-17T171930_master'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
@@ -914,15 +926,15 @@ pipeline {
 		// from indexing--create stats products from running
 		// GOlr.
 		// Prepare a working directory based around go-site.
-		dir('./go-site') {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+		dir('./go-stats') {
+		    git branch: TARGET_GO_STATS_BRANCH, url: 'https://github.com/geneontology/go-stats.git'
 
 		    // Not much want or need here--simple
 		    // python3. However, using the information hidden
 		    // in run-indexer.sh to know where the Solr
 		    // instance is hiding.
 		    sh 'mkdir -p /tmp/stats/ || true'
-		    sh 'cp ./scripts/*.py /tmp'
+		    sh 'cp ./libraries/go-stats/*.py /tmp'
 		    // Needed as extra library.
 		    sh 'pip3 install --force-reinstall requests==2.19.1'
 		    sh 'pip3 install --force-reinstall networkx==2.2'
@@ -1024,11 +1036,12 @@ pipeline {
 			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
 			    // Extra package for the indexer.
-			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
+			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall pystache==0.5.4'
 
 			    // Correct for (possibly) bad boto3,
 			    // as mentioned above.
-			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
+			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
+			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
 
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
@@ -1206,11 +1219,7 @@ pipeline {
 			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
 			    // Extra package for the indexer.
-			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
-
-			    // Correct for (possibly) bad boto3,
-			    // as mentioned above.
-			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
+			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall pystache==0.5.4'
 
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
@@ -1219,6 +1228,13 @@ pipeline {
 			    //
 			    sh 'python3 ./mypyenv/bin/pip3 install rsa'
 			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
+
+			    // Version locking for boto3 / botocore
+			    // upgrade that is incompatible with
+			    // python3.5. See issues #250 and #271.
+			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
+			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
+			    sh 'python3 ./mypyenv/bin/pip3 install s3transfer==0.5.0'
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
@@ -1296,85 +1312,6 @@ pipeline {
 	    when { anyOf { branch 'release' } }
 	    steps {
 		parallel(
-		    "SVN Export": {
-			script {
-			    if( env.BRANCH_NAME == 'release' ){
-				///
-				/// Legacy SVN backport for release
-				/// only.
-				///
-				echo 'Backport to legacy SVN'
-
-				// Get a mount point ready
-				sh 'mkdir -p $WORKSPACE/mnt || true'
-				// Ninja in our file credentials from Jenkins.
-				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY'), file(credentialsId: 'go-svn-private-key', variable: 'GO_SVN_IDENTITY')]) {
-				    // Setup our svn+ssh to have the right credentials.
-				    withEnv(["SVN_SSH=ssh -l jenkins -i ${GO_SVN_IDENTITY}"]){
-
-					// // Try and debug connection issues on next run.
-					// sh 'echo $GO_SVN_IDENTITY > deploy-ident.txt'
-					// sh 'echo $SVN_SSH > deploy-svn-ssh.txt'
-					// sh 'cat deploy-ident.txt'
-					// sh 'cat deploy-svn-ssh.txt'
-
-					// Attach sshfs.
-					sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-
-					// Checkout the SVN for just the top-level
-					// gene-associations.
-					sh 'svn --non-interactive --ignore-externals --depth files checkout svn+ssh://ext.geneontology.org/share/go/svn/trunk/gene-associations $WORKSPACE/goannsvn'
-
-					// Copy the files over to the right spot.
-					// 39 items.
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/aspgd.gaf.gz $WORKSPACE/goannsvn/gene_association.aspgd.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/cgd.gaf.gz $WORKSPACE/goannsvn/gene_association.cgd.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/dictybase.gaf.gz $WORKSPACE/goannsvn/gene_association.dictyBase.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/ecocyc.gaf.gz $WORKSPACE/goannsvn/gene_association.ecocyc.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/fb.gaf.gz $WORKSPACE/goannsvn/gene_association.fb.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_lmajor.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_Lmajor.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/genedb_tbrucei.gaf.gz $WORKSPACE/goannsvn/gene_association.GeneDB_Tbrucei.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_chicken_complex.gaf.gz $WORKSPACE/goannsvn/goa_chicken_complex.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_chicken.gaf.gz $WORKSPACE/goannsvn/goa_chicken.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_chicken_isoform.gaf.gz $WORKSPACE/goannsvn/goa_chicken_isoform.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_chicken_rna.gaf.gz $WORKSPACE/goannsvn/goa_chicken_rna.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_cow_complex.gaf.gz $WORKSPACE/goannsvn/goa_cow_complex.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_cow.gaf.gz $WORKSPACE/goannsvn/goa_cow.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_cow_isoform.gaf.gz $WORKSPACE/goannsvn/goa_cow_isoform.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_cow_rna.gaf.gz $WORKSPACE/goannsvn/goa_cow_rna.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_dog_complex.gaf.gz $WORKSPACE/goannsvn/goa_dog_complex.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_dog.gaf.gz $WORKSPACE/goannsvn/goa_dog.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_dog_isoform.gaf.gz $WORKSPACE/goannsvn/goa_dog_isoform.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_dog_rna.gaf.gz $WORKSPACE/goannsvn/goa_dog_rna.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_human_complex.gaf.gz $WORKSPACE/goannsvn/goa_human_complex.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_human.gaf.gz $WORKSPACE/goannsvn/goa_human.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_human_isoform.gaf.gz $WORKSPACE/goannsvn/goa_human_isoform.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_human_rna.gaf.gz $WORKSPACE/goannsvn/goa_human_rna.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_pig_complex.gaf.gz $WORKSPACE/goannsvn/goa_pig_complex.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_pig.gaf.gz $WORKSPACE/goannsvn/goa_pig.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_pig_isoform.gaf.gz $WORKSPACE/goannsvn/goa_pig_isoform.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_pig_rna.gaf.gz $WORKSPACE/goannsvn/goa_pig_rna.gaf.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/mgi.gaf.gz $WORKSPACE/goannsvn/gene_association.mgi.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/pombase.gaf.gz $WORKSPACE/goannsvn/gene_association.pombase.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/pseudocap.gaf.gz $WORKSPACE/goannsvn/gene_association.pseudocap.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/reactome.gaf.gz $WORKSPACE/goannsvn/gene_association.reactome.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/rgd.gaf.gz $WORKSPACE/goannsvn/gene_association.rgd.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/sgd.gaf.gz $WORKSPACE/goannsvn/gene_association.sgd.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/sgn.gaf.gz $WORKSPACE/goannsvn/gene_association.sgn.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/tair.gaf.gz $WORKSPACE/goannsvn/gene_association.tair.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/wb.gaf.gz $WORKSPACE/goannsvn/gene_association.wb.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/zfin.gaf.gz $WORKSPACE/goannsvn/gene_association.zfin.gz'
-					sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gaf.gz $WORKSPACE/goannsvn/goa_uniprot_all_noiea.gaf.gz'
-
-					// Descend and commit (all files).
-					dir('./goannsvn') {
-					    sh 'svn commit -m "Jenkins pipeline backport from $BRANCH_NAME"'
-					}
-				    }
-				}
-			    }
-			}
-		    },
 		    "AmiGO": {
 
 			// Ninja in our file credentials from Jenkins.
