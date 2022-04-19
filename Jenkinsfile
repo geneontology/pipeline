@@ -471,8 +471,15 @@ pipeline {
 		// serve as input into into mega step.
 		script {
 
+		    // Create a relative working directory and setup our
+		    // data environment.
 		    dir('./noctua-models') {
-			git branch: TARGET_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
+
+			// Attempt to trim/prune/speed up noctua-models as
+			// we do for go-ontology for
+			// https://github.com/geneontology/pipeline/issues/278 .
+			checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
+
 
 			// Make all software products available in bin/
 			// (and lib/).
