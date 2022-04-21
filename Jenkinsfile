@@ -126,7 +126,6 @@ pipeline {
 	].join(" ")
 	GOLR_INPUT_GAFS = [
 	    "http://skyhook.berkeleybop.org/release/products/annotations/paint_other.gaf.gz",
-	    "http://skyhook.berkeleybop.org/release/annotations/aspgd.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/cgd.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/dictybase.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/ecocyc.gaf.gz",
