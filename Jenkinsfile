@@ -32,6 +32,8 @@ pipeline {
 
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'issue-1434-add-xenbase'
+	// The branch of geneontology/go-stats to use.
+	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
