@@ -41,7 +41,7 @@ pipeline {
 	// The branch of ROBOT to use in one silly section.
 	// Necessary due to java version jump.
 	// https://github.com/ontodev/robot/issues/997
-	TARGET_ROBOT_BRANCH = 'check-obo-fix'
+	TARGET_ROBOT_BRANCH = 'master'
 	// The branch of noctua-models to use.
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
