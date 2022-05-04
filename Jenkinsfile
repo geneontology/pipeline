@@ -38,6 +38,10 @@ pipeline {
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
+	// The branch of ROBOT to use in one silly section.
+	// Necessary due to java version jump.
+	// https://github.com/ontodev/robot/issues/997
+	TARGET_ROBOT_BRANCH = 'v1.8.3'
 	// The branch of noctua-models to use.
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
@@ -293,7 +297,8 @@ pipeline {
 		    "Ready robot": {
 			// Legacy: build 'robot-build'
 			dir('./robot') {
-			    git 'https://github.com/ontodev/robot.git'
+			    // Remember that git lays out into CWD.
+			    git branch: TARGET_ROBOT_BRANCH, url:'https://github.com/ontodev/robot.git'
 			    // Update the POMs by replacing "SNAPSHOT"
 			    // with the current Git hash. First make
 			    // sure maven-help-plugin is installed
