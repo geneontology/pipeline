@@ -299,7 +299,7 @@ pipeline {
 			dir('./robot') {
 			    // Remember that git lays out into CWD.
 			    //git branch: TARGET_ROBOT_BRANCH, url:'https://github.com/ontodev/robot.git'
-			    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_ROBOT_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/ontodev/robot.git', refspec: "+refs/heads/${env.TARGET_ROBOT_BRANCH}:refs/remotes/origin/${env.TARGET_BRANCH_BRANCH}"]]]
+			    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: ${TARGET_ROBOT_BRANCH}]], extensions: [], userRemoteConfigs: [[url: 'https://github.com/ontodev/robot.git']]]
 
 			    // Update the POMs by replacing "SNAPSHOT"
 			    // with the current Git hash. First make
