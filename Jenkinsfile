@@ -41,7 +41,7 @@ pipeline {
 	// The branch of ROBOT to use in one silly section.
 	// Necessary due to java version jump.
 	// https://github.com/ontodev/robot/issues/997
-	TARGET_ROBOT_BRANCH = '55efde92'
+	TARGET_ROBOT_BRANCH = 'master'
 	// The branch of noctua-models to use.
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
@@ -298,8 +298,7 @@ pipeline {
 			// Legacy: build 'robot-build'
 			dir('./robot') {
 			    // Remember that git lays out into CWD.
-			    //git branch: TARGET_ROBOT_BRANCH, url:'https://github.com/ontodev/robot.git'
-			    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_ROBOT_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/ontodev/robot.git', refspec: "+refs/heads/${env.TARGET_ROBOT_BRANCH}:refs/remotes/origin/${env.TARGET_ROBOT_BRANCH}"]]]
+			    git branch: TARGET_ROBOT_BRANCH, url:'https://github.com/kltm/robot-old.git'
 
 			    // Update the POMs by replacing "SNAPSHOT"
 			    // with the current Git hash. First make
