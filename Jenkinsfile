@@ -320,7 +320,9 @@ pipeline {
 		    "Ready robot": {
 			// Legacy: build 'robot-build'
 			dir('./robot') {
-			    git 'https://github.com/ontodev/robot.git'
+			    // Remember that git lays out into CWD.
+			    git branch: TARGET_ROBOT_BRANCH, url:'https://github.com/kltm/robot-old.git'
+
 			    // Update the POMs by replacing "SNAPSHOT"
 			    // with the current Git hash. First make
 			    // sure maven-help-plugin is installed
