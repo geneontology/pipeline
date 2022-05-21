@@ -4,11 +4,13 @@ pipeline {
     // give us the max time in a day to get things right.
     triggers {
 	// Master never runs--Feb 31st.
-	cron('0 0 31 2 *')
+	//cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
 	//cron('0 0 2-31/2 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
+	// Every third hour, at the top.
+	//cron('0 */3 * * *')
     }
     environment {
 	///
@@ -32,15 +34,23 @@ pipeline {
 
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'master'
+	// The branch of geneontology/go-stats to use.
+	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
-	TARGET_GO_ONTOLOGY_BRANCH = 'dev'
+	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
+	// The branch of ROBOT to use in one silly section.
+	// Necessary due to java version jump.
+	// https://github.com/ontodev/robot/issues/997
+	TARGET_ROBOT_BRANCH = 'master'
+	// The branch of noctua-models to use.
+	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu'
-	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu,suzia@stanford.edu'
-	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,edouglass@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss'
+	TARGET_ADMIN_EMAILS = 'balhoff@renci.org,cjmungall@lbl.gov,sjcarbon@lbl.gov,debert@usc.edu'
+	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov'
+	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'null'
 	// The URL prefix to use when creating site indices.
@@ -290,7 +300,9 @@ pipeline {
 		    "Ready robot": {
 			// Legacy: build 'robot-build'
 			dir('./robot') {
-			    git 'https://github.com/ontodev/robot.git'
+			    // Remember that git lays out into CWD.
+			    git branch: TARGET_ROBOT_BRANCH, url:'https://github.com/kltm/robot-old.git'
+
 			    // Update the POMs by replacing "SNAPSHOT"
 			    // with the current Git hash. First make
 			    // sure maven-help-plugin is installed
@@ -334,13 +346,13 @@ pipeline {
 		    },
 		    "Ready Gaferencer": {
 			dir('./gaferencer') {
-			    sh 'wget -N https://github.com/geneontology/gaferencer/releases/download/v0.4.1/gaferencer-0.4.1.tgz'
-			    sh 'tar -xvf gaferencer-0.4.1.tgz'
+			    sh 'wget -N https://github.com/geneontology/gaferencer/releases/download/v0.5/gaferencer-0.5.tgz'
+			    sh 'tar -xvf gaferencer-0.5.tgz'
 			    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 				// Attempt to rsync bin into bin/.
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.4.1/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.5/bin/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/'
 				// Attempt to rsync libs into lib/.
-				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.4.1/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
+				sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" gaferencer-0.5/lib/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/'
 			    }
 			}
 		    }
@@ -354,7 +366,7 @@ pipeline {
 	stage('Produce ontology') {
 	    agent {
 		docker {
-		    image 'obolibrary/odkfull:v1.2.22'
+		    image 'obolibrary/odkfull:v1.2.32'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
@@ -364,7 +376,12 @@ pipeline {
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
-		    git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
+		    // We're starting to run into problems with
+		    // ontology download taking too long for the
+		    // default 10m, so try and get into the guts of
+		    // the git commands a little. Issues #248.
+		    // git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
+                    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_GO_ONTOLOGY_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/go-ontology.git', refspec: "+refs/heads/${env.TARGET_GO_ONTOLOGY_BRANCH}:refs/remotes/origin/${env.TARGET_GO_ONTOLOGY_BRANCH}"]]]
 
 		    // Default namespace.
 		    sh 'env'
