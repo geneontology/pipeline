@@ -10,7 +10,7 @@ pipeline {
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
 	// Every third hour, at the top.
-	//cron('0 */3 * * *')
+	cron('0 */3 * * *')
     }
     environment {
 	///
