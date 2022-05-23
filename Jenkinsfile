@@ -38,6 +38,10 @@ pipeline {
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
+	// The branch of ROBOT to use in one silly section.
+	// Necessary due to java version jump.
+	// https://github.com/ontodev/robot/issues/997
+	TARGET_ROBOT_BRANCH = 'master'
 	// The branch of noctua-models to use.
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
@@ -126,7 +130,6 @@ pipeline {
 	].join(" ")
 	GOLR_INPUT_GAFS = [
 	    //"http://skyhook.berkeleybop.org/issue-265-go-cam-products/products/annotations/paint_other.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-265-go-cam-products/annotations/aspgd.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-265-go-cam-products/annotations/goa_chicken.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-265-go-cam-products/annotations/goa_chicken_complex.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-265-go-cam-products/annotations/goa_uniprot_all_noiea.gaf.gz",
@@ -157,7 +160,7 @@ pipeline {
 	//GORULE_TAGS_TO_SUPPRESS="silent"
 
 	// Optional. Groups to run.
-	RESOURCE_GROUPS="aspgd ecocyc goa mgi paint pseudocap wb"
+	RESOURCE_GROUPS="ecocyc goa mgi paint pseudocap wb"
 	// Optional. Datasets to skip within the resources that we
 	// will run (defined in the line above).
 	DATASET_EXCLUDES="goa_uniprot_gcrp goa_pdb goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human goa_human goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
@@ -295,7 +298,9 @@ pipeline {
 		    "Ready robot": {
 			// Legacy: build 'robot-build'
 			dir('./robot') {
-			    git 'https://github.com/ontodev/robot.git'
+			    // Remember that git lays out into CWD.
+			    git branch: TARGET_ROBOT_BRANCH, url:'https://github.com/kltm/robot-old.git'
+
 			    // Update the POMs by replacing "SNAPSHOT"
 			    // with the current Git hash. First make
 			    // sure maven-help-plugin is installed
@@ -361,6 +366,7 @@ pipeline {
 		    args "-u root:root --tmpfs /opt:exec -w /opt"
 		}
 	    }
+
 	    steps {
 		dir("./go-graphstore") {
 		    // Note: I currently cannot imagine a reason not
