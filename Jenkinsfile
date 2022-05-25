@@ -1076,15 +1076,15 @@ pipeline {
 			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
 			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
 
+			    // Needed to work around new incompatibility:
+			    // https://github.com/geneontology/pipeline/issues/286
+			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall certifi==2021.10.8'
+
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
 
 			    // Grab BDBag.
 			    sh 'python3 ./mypyenv/bin/pip3 install bdbag'
-
-			    // Needed to work around new incompatibility:
-			    // https://github.com/geneontology/pipeline/issues/286
-			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall certifi==2021.10.8'
 
 			    // Need for large uploads in requests.
 			    sh 'python3 ./mypyenv/bin/pip3 install requests-toolbelt'
