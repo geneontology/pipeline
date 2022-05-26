@@ -405,7 +405,7 @@ pipeline {
 
 		    // Create local config for runtime.
 		    sh 'cp -f ./conf/readonly_cors.xml ./conf/readonly_cors.xml.bak'
-		    sh 'cat ./conf/readonly_cors.xml.bak | sed \'s:30000:600000:g\' > ./conf/readonly_cors.xml'
+		    sh 'cat ./conf/readonly_cors.xml.bak | sed \'s:30000:1200000:g\' > ./conf/readonly_cors.xml'
 		    sh 'cat ./conf/readonly_cors.xml'
 
 		    // Run runtime, sleep to give it a chance.
@@ -445,7 +445,7 @@ pipeline {
 
 			// Increase utility timeout for newapp.
 			sh 'cp -f utils.js utils.js.bak'
-			sh 'cat utils.js.bak | sed \'s:60000:600000:g\' > utils.js'
+			sh 'cat utils.js.bak | sed \'s:60000:1200000:g\' > utils.js'
 			sh 'cat utils.js'
 
 			// Run newapp.
