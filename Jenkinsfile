@@ -444,9 +444,9 @@ pipeline {
 			sh 'cat config.json'
 
 			// Increase utility timeout for newapp.
-			sh 'cp -f util.js util.js.bak'
-			sh 'cat util.js.bak | sed \'s:60000:120000:g\' > util.js'
-			sh 'cat util.js'
+			sh 'cp -f utils.js utils.js.bak'
+			sh 'cat utils.js.bak | sed \'s:60000:120000:g\' > utils.js'
+			sh 'cat utils.js'
 
 			// Run newapp.
 			sh 'bash newapp.sh'
