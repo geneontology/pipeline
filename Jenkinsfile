@@ -403,6 +403,11 @@ pipeline {
 		    sh 'ls -AlF ./run.sh'
 		    sh 'cat ./run.sh'
 
+		    // Create local config for runtime.
+		    sh 'cp -f ./conf/readonly_cors.xml ./conf/readonly_cors.xml.bak'
+		    sh 'cat ./conf/readonly_cors.xml.bak | sed \'s:30000:60000:g\' > ./conf/readonly_cors.xml'
+		    sh 'cat ./conf/readonly_cors.xml'
+
 		    // Run runtime, sleep to give it a chance.
 		    sh 'bash ./run.sh'
 		    sh 'sleep 10'
