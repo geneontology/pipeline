@@ -397,7 +397,7 @@ pipeline {
 		    // Setup runtime.
 		    sh 'echo \'#!/bin/bash\' > run.sh'
 		    sh 'echo \'set -x\' >> run.sh'
-		    sh 'echo \'java -server -Djetty.port=9876 -Xmx2G -Djetty.overrideWebXml=./conf/readonly_cors.xml -Dbigdata.propertyFile=./conf/blazegraph.properties -cp jars/blazegraph-jar.jar:jars/jetty-servlets.jar com.bigdata.rdf.sail.webapp.StandaloneNanoSparqlServer &\' >> run.sh'
+		    sh 'echo \'java -server -Djetty.port=9876 -Xmx4G -Djetty.overrideWebXml=./conf/readonly_cors.xml -Dbigdata.propertyFile=./conf/blazegraph.properties -cp jars/blazegraph-jar.jar:jars/jetty-servlets.jar com.bigdata.rdf.sail.webapp.StandaloneNanoSparqlServer &\' >> run.sh'
 
 		    // Check runtime.
 		    sh 'ls -AlF ./run.sh'
@@ -405,7 +405,7 @@ pipeline {
 
 		    // Create local config for runtime.
 		    sh 'cp -f ./conf/readonly_cors.xml ./conf/readonly_cors.xml.bak'
-		    sh 'cat ./conf/readonly_cors.xml.bak | sed \'s:30000:60000:g\' > ./conf/readonly_cors.xml'
+		    sh 'cat ./conf/readonly_cors.xml.bak | sed \'s:30000:120000:g\' > ./conf/readonly_cors.xml'
 		    sh 'cat ./conf/readonly_cors.xml'
 
 		    // Run runtime, sleep to give it a chance.
@@ -442,6 +442,11 @@ pipeline {
 			sh 'cp -f config.json config.json.bak'
 			sh 'cat config.json.bak | sed \'s:rdf.geneontology.org:localhost\\:9876:g\' > config.json'
 			sh 'cat config.json'
+
+			// Increase utility timeout for newapp.
+			sh 'cp -f util.js util.js.bak'
+			sh 'cat util.js.bak | sed \'s:60000:120000:g\' > util.js'
+			sh 'cat util.js'
 
 			// Run newapp.
 			sh 'bash newapp.sh'
