@@ -281,7 +281,7 @@ pipeline {
 		)
 	    }
 	}
-	stage('Make Noctua GPAD') {
+	stage('Noctua Migrations') {
 	    steps {
 		// May be parallelized in the future, but may need to
 		// serve as input into into mega step.
@@ -299,12 +299,8 @@ pipeline {
 			// Make all software products available in bin/
 			// (and lib/).
 			sh 'mkdir -p bin/'
-			sh 'mkdir -p lib/'
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-			    // WARNING/BUG: needed for blazegraph-runner
-			    // to run at this point.
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
 			}
 			sh 'chmod +x bin/*'
 
