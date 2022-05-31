@@ -37,7 +37,8 @@ pipeline {
 	// The branch of go-ontology to use.
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
-	TARGET_MINERVA_BRANCH = 'master'
+	//TARGET_MINERVA_BRANCH = 'master'
+	TARGET_MINERVA_BRANCH = 'issue-465'
 	// The branch of ROBOT to use in one silly section.
 	// Necessary due to java version jump.
 	// https://github.com/ontodev/robot/issues/997
@@ -328,14 +329,20 @@ pipeline {
 			// 3) Relation updates.
 			withEnv(['MINERVA_CLI_MEMORY=8G']){
 
+			    // Clenaup from previous runs.
+			    sh 'rm -f class_replacements.tsv || true'
+			    sh 'rm -f replace_relations.tsv || true'
+
 			    // Get the most up-to-date version of the
 			    // file off of master.
-			    sh 'rm -f replace_relations.tsv || true' // remove old
 			    sh 'wget https://raw.githubusercontent.com/geneontology/noctua-models-migrations/main/replace_relations.tsv' // get "newest"
 
 			    // Put fake class replacements onto the
-			    // filesystem.
+			    // filesystem (until we actually have one).
 			    sh 'touch class_replacements.tsv'
+
+			    // Check.
+			    sh 'ls -AlF'
 
 			    // Update journal ontology terms.
 			    sh './bin/minerva-cli.sh --replace-terms -j blazegraph.jnl --replacement-classes class_replacements.tsv --replacement-properties replace_relations.tsv'
