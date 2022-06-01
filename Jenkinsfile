@@ -388,11 +388,22 @@ pipeline {
 		    sh 'env'
 
 		    dir('./src/ontology') {
-			retry(3){
-			    sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
-			}
-			retry(3){
-			    sh 'make prepare_release'
+			script {
+			    try {
+				retry(1){
+				    sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
+				}
+				retry(1){
+				    sh 'make prepare_release'
+				}
+			    } catch (exception) {
+				// On failure, try and run robot and
+				// get the report out.
+				sh 'robot --catalog ./catalog-v001.xml explain -i ./extensions/go-lego-edit.ofn -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations.md'
+				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY unsatisfiable_explanations.md skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+				}
+			    }
 			}
 		    }
 
