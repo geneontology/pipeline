@@ -403,6 +403,8 @@ pipeline {
 				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY unsatisfiable_explanations.md skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 				}
+				// Make sure we don't complete.
+				error "Exception in ontology build: see report at http://skyhook.berkeleybop.org/go-ontology-dev/reports/"
 			    }
 			}
 		    }
