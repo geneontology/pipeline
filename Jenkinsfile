@@ -400,10 +400,20 @@ pipeline {
 				// On failure, try and run robot and
 				// get the report out.
 				sh 'robot --catalog ./catalog-v001.xml explain -i ./extensions/go-lego-edit.ofn -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations.md'
+				// Copy out to usual reports location.
 				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY unsatisfiable_explanations.md skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 				}
-				// Make sure we don't complete.
+
+				// Copy out to S3, so we can actually get at it.
+				// Stolen from https://github.com/geneontology/pipeline/blob/15a94a077de9944474dad69e384f95b69fbbd52f/Jenkinsfile#L1223 .
+				withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON')]) {
+
+				    // Transfer to bucket.
+				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/plain put unsatisfiable_explanations.md s3://go-dropbox/unsatisfiable_explanations.md'
+				}
+
+				// Finally, make sure we don't complete.
 				error "Exception in ontology build: see report at http://skyhook.berkeleybop.org/go-ontology-dev/reports/"
 			    }
 			}
