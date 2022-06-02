@@ -313,7 +313,7 @@ pipeline {
 			    // Dump them back out from the journal.
 			    sh './bin/minerva-cli.sh --dump-owl-models -j blazegraph.jnl -f models/'
 			    // Commit.
-			    //sh 'git commit -m "automated commit from flush" models/*.ttl'
+			    sh 'git commit -m "automated commit from flush" models/*.ttl'
 			}
 
 			// 2) Ontology updates (replaced_by).
@@ -323,7 +323,7 @@ pipeline {
 			    // Dump them back out from the journal.
 			    sh './bin/minerva-cli.sh --dump-owl-models -j blazegraph.jnl -f models/'
 			    // Commit.
-			    //sh 'git commit -m "automated commit replacing obsolete ontology terms" models/*.ttl'
+			    sh 'git commit -m "automated commit replacing obsolete ontology terms" models/*.ttl'
 			}
 
 			// 3) Relation updates.
@@ -351,7 +351,7 @@ pipeline {
 			    sh './bin/minerva-cli.sh --dump-owl-models -j blazegraph.jnl -f models/'
 
 			    // Commit.
-			    //sh 'git commit -m "automated commit replacing relations" models/*.ttl'
+			    sh 'git commit -m "automated commit replacing relations" models/*.ttl'
 			}
 
 			// Move journal to skyhook.
