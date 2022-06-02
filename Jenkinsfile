@@ -305,6 +305,9 @@ pipeline {
 			}
 			sh 'chmod +x bin/*'
 
+			// Cleanup from previous runs
+			sh 'rm -f blazegraph.jnl || true'
+
 			// 1) Flush models again to make clean commits
 			// later.
 			withEnv(['MINERVA_CLI_MEMORY=8G']){
@@ -313,7 +316,7 @@ pipeline {
 			    // Dump them back out from the journal.
 			    sh './bin/minerva-cli.sh --dump-owl-models -j blazegraph.jnl -f models/'
 			    // Commit.
-			    sh 'git commit -m "automated commit from flush" models/*.ttl'
+			    sh 'git commit -a -m "automated commit from flush"'
 			}
 
 			// 2) Ontology updates (replaced_by).
@@ -323,36 +326,36 @@ pipeline {
 			    // Dump them back out from the journal.
 			    sh './bin/minerva-cli.sh --dump-owl-models -j blazegraph.jnl -f models/'
 			    // Commit.
-			    sh 'git commit -m "automated commit replacing obsolete ontology terms" models/*.ttl'
+			    sh 'git commit -a -m "automated commit replacing obsolete ontology terms"'
 			}
 
-			// 3) Relation updates.
-			withEnv(['MINERVA_CLI_MEMORY=8G']){
+			// // 3) Relation updates.
+			// withEnv(['MINERVA_CLI_MEMORY=8G']){
 
-			    // Clenaup from previous runs.
-			    sh 'rm -f class_replacements.tsv || true'
-			    sh 'rm -f replace_relations.tsv || true'
+			//     // Cleanup from previous runs.
+			//     sh 'rm -f class_replacements.tsv || true'
+			//     sh 'rm -f replace_relations.tsv || true'
 
-			    // Get the most up-to-date version of the
-			    // file off of master.
-			    sh 'wget https://raw.githubusercontent.com/geneontology/noctua-models-migrations/main/replace_relations.tsv' // get "newest"
+			//     // Get the most up-to-date version of the
+			//     // file off of master.
+			//     sh 'wget https://raw.githubusercontent.com/geneontology/noctua-models-migrations/main/replace_relations.tsv' // get "newest"
 
-			    // Put fake class replacements onto the
-			    // filesystem (until we actually have one).
-			    sh 'touch class_replacements.tsv'
+			//     // Put fake class replacements onto the
+			//     // filesystem (until we actually have one).
+			//     sh 'touch class_replacements.tsv'
 
-			    // Check.
-			    sh 'ls -AlF'
+			//     // Check.
+			//     sh 'ls -AlF'
 
-			    // Update journal ontology terms.
-			    sh './bin/minerva-cli.sh --replace-terms -j blazegraph.jnl --replacement-classes class_replacements.tsv --replacement-properties replace_relations.tsv'
+			//     // Update journal ontology terms.
+			//     sh './bin/minerva-cli.sh --replace-terms -j blazegraph.jnl --replacement-classes class_replacements.tsv --replacement-properties replace_relations.tsv'
 
-			    // Dump them back out from the journal.
-			    sh './bin/minerva-cli.sh --dump-owl-models -j blazegraph.jnl -f models/'
+			//     // Dump them back out from the journal.
+			//     sh './bin/minerva-cli.sh --dump-owl-models -j blazegraph.jnl -f models/'
 
-			    // Commit.
-			    sh 'git commit -m "automated commit replacing relations" models/*.ttl'
-			}
+			//     // Commit.
+			//     sh 'git commit -m "automated commit replacing relations" models/*.ttl'
+			// }
 
 			// Move journal to skyhook.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
