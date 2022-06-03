@@ -308,6 +308,11 @@ pipeline {
 			// Cleanup from previous runs
 			sh 'rm -f blazegraph.jnl || true'
 
+			// Get the repo back into a known
+			// state--origin master at head.
+			sh 'git reset --hard origin/master'
+			sh 'git pull origin master'
+
 			// 1) Flush models again to make clean commits
 			// later.
 			withEnv(['MINERVA_CLI_MEMORY=8G']){
