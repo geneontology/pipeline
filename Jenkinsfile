@@ -374,6 +374,7 @@ pipeline {
 		}
 	    }
 	    steps {
+
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
@@ -408,6 +409,10 @@ pipeline {
 				// Copy out to S3, so we can actually get at it.
 				// Stolen from https://github.com/geneontology/pipeline/blob/15a94a077de9944474dad69e384f95b69fbbd52f/Jenkinsfile#L1223 .
 				withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON')]) {
+
+				    // Install s3cmd
+				    sh 'apt-get update'
+				    sh 'apt-get -y -f install s3cmd'
 
 				    // Transfer to bucket.
 				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/plain put unsatisfiable_explanations.md s3://go-dropbox/unsatisfiable_explanations.md'
