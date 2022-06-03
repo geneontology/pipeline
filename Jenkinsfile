@@ -330,8 +330,9 @@ pipeline {
 			    sh './bin/minerva-cli.sh --replace-obsolete -j blazegraph.jnl --ontology http://snapshot.geneontology.org/ontology/extensions/go-lego-reacto.owl'
 			    // Dump them back out from the journal.
 			    sh './bin/minerva-cli.sh --dump-owl-models -j blazegraph.jnl -f models/'
-			    // Commit.
-			    sh 'git commit -a -m "automated commit replacing obsolete ontology terms"'
+			    // Commit, but there may not be any
+			    // updates of note, so protect.
+			    sh 'git commit -a -m "automated commit replacing obsolete ontology terms" || true'
 			}
 
 			// // 3) Relation updates.
