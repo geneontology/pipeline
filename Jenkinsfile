@@ -312,6 +312,7 @@ pipeline {
 			// state--origin master at head.
 			sh 'git reset --hard origin/master'
 			sh 'git pull origin master'
+			sh 'git log | head -15'
 
 			// 1) Flush models again to make clean commits
 			// later.
