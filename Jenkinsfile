@@ -62,7 +62,8 @@ pipeline {
 	// very exotic cases where these check may need to be skipped
 	// for a run, in that case this variable is set to 'FALSE'.
 	WE_ARE_BEING_SAFE_P = 'TRUE'
-	ONTOLOGY_ERROR_P = 'FALSE'
+	ONTOLOGY_ERROR_BUILD_P = 'FALSE'
+	ONTOLOGY_ERROR_FULL_P = 'FALSE'
 	// Variable to check if the "hard" ZENODO archive stage was passed.
 	ZENODO_ARCHIVING_SUCCESSFUL = 'FALSE'
 	// Control make to get through our loads faster if
@@ -400,27 +401,55 @@ pipeline {
 				    sh 'make prepare_release'
 				}
 			    } catch (exception) {
-				ONTOLOGY_ERROR_P = 'TRUE'
+				ONTOLOGY_ERROR_BUILD_P = 'TRUE'
+				sh 'robot --catalog ./catalog-v001.xml explain -i ./extensions/go-lego-edit.ofn -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations.md'
 			    }
 
-			    // Try and run robot no matter what, as
-			    // sometimes the ontology can build but
-			    // there are still errors.
-			    //sh 'robot --catalog ./catalog-v001.xml explain -i ./extensions/go-lego-edit.ofn -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations.md'
-			    sh 'robot --catalog ./catalog-v001.xml explain -i ./extensions/go-lego.owl -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations.md'
+			    // Only continue with the "deep" check if
+			    // there was not a surface issue.
+			    if( ONTOLOGY_ERROR_BUILD_P == 'FALSE' ){
+				// Try and run robot no matter what, as
+				// sometimes the ontology can build but
+				// there are still errors.
+				sh 'rm -f eco-basic.owl || true'
+				sh 'rm -f taxslim.owl || true'
+				sh 'rm -f cl-basic.owl || true'
+				sh 'rm -f pato.owl || true'
+				sh 'rm -f po.owl || true'
+				sh 'rm -f chebi.owl || true'
+				sh 'rm -f basic.owl || true'
+				sh 'rm -f wbbt.owl || true'
+				sh 'wget http://purl.obolibrary.org/obo/eco/eco-basic.owl'
+				sh 'wget http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl'
+				sh 'wget http://purl.obolibrary.org/obo/cl/cl-basic.owl'
+				sh 'wget http://purl.obolibrary.org/obo/pato.owl'
+				sh 'wget http://purl.obolibrary.org/obo/po.owl'
+				sh 'wget http://purl.obolibrary.org/obo/chebi.owl'
+				sh 'wget http://purl.obolibrary.org/obo/uberon/basic.owl'
+				sh 'wget http://purl.obolibrary.org/obo/wbbt.owl'
+				sh 'rm -f merged.owl || true'
+				sh 'robot merge -i eco-basic.owl -i taxslim.owl -i cl-basic.owl -i pato.owl -i po.owl -i chebi.owl -i basic.owl -i wbbt.owl -i ./extensions/go-gaf.owl -i ./extensions/gorel.owl -i ./extensions/go-modules-annotations.owl -i ./extensions/go-taxon-subsets.owl -o merged.owl'
+				sh 'robot explain -i ./merged.owl -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations_full.md'
 
-			    // Check explanations.
-			    try {
-				sh 'grep "No explanations found" ./unsatisfiable_explanations.md'
-			    } catch (exception) {
-				ONTOLOGY_ERROR_P = 'TRUE'
+				// Check explanations.
+				try {
+				    sh 'grep "No explanations found" ./unsatisfiable_explanations_full.md'
+				} catch (exception) {
+				    ONTOLOGY_ERROR_FULL_P = 'TRUE'
+				}
 			    }
 
-			    if( ONTOLOGY_ERROR_P == 'TRUE' ){
+			    if( ONTOLOGY_ERROR_BUILD_P == 'TRUE' || ONTOLOGY_ERROR_FULL_P == 'TRUE' ){
 
 				// Copy out to usual reports location.
 				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY unsatisfiable_explanations.md skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+
+				    if( ONTOLOGY_ERROR_BUILD_P == 'TRUE' ){
+					sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY unsatisfiable_explanations.md skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+				    }
+				    if( ONTOLOGY_ERROR_FULL_P == 'TRUE' ){
+					sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY unsatisfiable_explanations_full.md skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+				    }
 				}
 
 				// Copy out to S3, so we can actually get at it.
@@ -432,7 +461,12 @@ pipeline {
 				    sh 'apt-get -y -f install s3cmd'
 
 				    // Transfer to bucket.
-				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/plain put unsatisfiable_explanations.md s3://go-dropbox/unsatisfiable_explanations.md'
+				    if( ONTOLOGY_ERROR_BUILD_P == 'TRUE' ){
+					sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/plain put unsatisfiable_explanations.md s3://go-dropbox/unsatisfiable_explanations.md'
+				    }
+				    if( ONTOLOGY_ERROR_FULL_P == 'TRUE' ){
+					sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/plain put unsatisfiable_explanations.md s3://go-dropbox/unsatisfiable_explanations_full.md'
+				    }
 				}
 
 				// Finally, make sure we don't complete.
