@@ -61,6 +61,7 @@ pipeline {
 	// very exotic cases where these check may need to be skipped
 	// for a run, in that case this variable is set to 'FALSE'.
 	WE_ARE_BEING_SAFE_P = 'TRUE'
+	ONTOLOGY_ERROR_P = 'FALSE'
 	// Variable to check if the "hard" ZENODO archive stage was passed.
 	ZENODO_ARCHIVING_SUCCESSFUL = 'FALSE'
 	// Control make to get through our loads faster if
@@ -398,9 +399,24 @@ pipeline {
 				    sh 'make prepare_release'
 				}
 			    } catch (exception) {
-				// On failure, try and run robot and
-				// get the report out.
-				sh 'robot --catalog ./catalog-v001.xml explain -i ./extensions/go-lego-edit.ofn -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations.md'
+				ONTOLOGY_ERROR_P = 'TRUE'
+			    }
+
+			    // Try and run robot no matter what, as
+			    // sometimes the ontology can build but
+			    // there are still errors.
+			    //sh 'robot --catalog ./catalog-v001.xml explain -i ./extensions/go-lego-edit.ofn -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations.md'
+			    sh 'robot --catalog ./catalog-v001.xml explain -i ./extensions/go-lego.owl -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations.md'
+
+			    // Check explanations.
+			    try {
+				sh 'grep "No explanations found" ./unsatisfiable_explanations.md'
+			    } catch (exception) {
+				ONTOLOGY_ERROR_P = 'TRUE'
+			    }
+
+			    if( ONTOLOGY_ERROR_P == 'TRUE' ){
+
 				// Copy out to usual reports location.
 				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY unsatisfiable_explanations.md skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
