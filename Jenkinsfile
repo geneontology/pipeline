@@ -125,7 +125,10 @@ pipeline {
 	    "http://purl.obolibrary.org/obo/pato.owl",
 	    "http://purl.obolibrary.org/obo/po.owl",
 	    "http://purl.obolibrary.org/obo/chebi.owl",
-	    "http://purl.obolibrary.org/obo/uberon/basic.owl",
+	    // BUG: Temporarily lock in uberon version; see:
+	    // https://github.com/geneontology/go-ontology/issues/23468
+	    //"http://purl.obolibrary.org/obo/uberon/basic.owl",
+	    "http://purl.obolibrary.org/obo/uberon/releases/2022-05-17/uberon-basic.owl",
 	    "http://purl.obolibrary.org/obo/wbbt.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
