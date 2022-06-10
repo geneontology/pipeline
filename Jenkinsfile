@@ -4,13 +4,13 @@ pipeline {
     // give us the max time in a day to get things right.
     triggers {
 	// Master never runs--Feb 31st.
-	//cron('0 0 31 2 *')
+	cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
 	//cron('0 0 2-31/2 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
 	// Every third hour, at the top.
-	cron('0 */3 * * *')
+	//cron('0 */3 * * *')
     }
     environment {
 	///
@@ -48,7 +48,8 @@ pipeline {
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_CHANGE_EMAILS = 'balhoff@renci.org,cjmungall@lbl.gov,sjcarbon@lbl.gov,debert@usc.edu'
+	//TARGET_CHANGE_EMAILS = 'balhoff@renci.org,cjmungall@lbl.gov,sjcarbon@lbl.gov,debert@usc.edu'
+	TARGET_CHANGE_EMAILS = 'sjcarbon@lbl.gov'
 	TARGET_FAIL_EMAILS = 'sjcarbon@lbl.gov'
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov'
