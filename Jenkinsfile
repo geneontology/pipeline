@@ -32,10 +32,16 @@ pipeline {
 
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'issue-pipeline-238-wormbase-test-pipeline'
+	// The branch of geneontology/go-stats to use.
+	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'dev'
+	// The branch of ROBOT to use in one silly section.
+	// Necessary due to java version jump.
+	// https://github.com/ontodev/robot/issues/997
+	TARGET_ROBOT_BRANCH = 'master'
 	// The branch of noctua-models to use.
 	TARGET_NOCTUA_MODELS_BRANCH = 'dev'
 	// The people to call when things go bad. It is a comma-space
@@ -124,7 +130,6 @@ pipeline {
 	].join(" ")
 	GOLR_INPUT_GAFS = [
 	    //"http://skyhook.berkeleybop.org/issue-238-wormbase-test-pipeline/products/annotations/paint_other.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-238-wormbase-test-pipeline/annotations/aspgd.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-238-wormbase-test-pipeline/annotations/goa_chicken.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-238-wormbase-test-pipeline/annotations/goa_chicken_complex.gaf.gz",
 	    "http://skyhook.berkeleybop.org/issue-238-wormbase-test-pipeline/annotations/goa_uniprot_all_noiea.gaf.gz",
@@ -155,7 +160,7 @@ pipeline {
 	//GORULE_TAGS_TO_SUPPRESS="silent"
 
 	// Optional. Groups to run.
-	RESOURCE_GROUPS="aspgd goa mgi paint wb pseudocap wb"
+	RESOURCE_GROUPS="goa mgi paint wb pseudocap wb"
 	// Optional. Datasets to skip within the resources that we
 	// will run (defined in the line above).
 	DATASET_EXCLUDES="goa_uniprot_gcrp goa_pdb goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human goa_human goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_ecocyc paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
@@ -292,7 +297,8 @@ pipeline {
 		    "Ready robot": {
 			// Legacy: build 'robot-build'
 			dir('./robot') {
-			    git 'https://github.com/ontodev/robot.git'
+			    // Remember that git lays out into CWD.
+			    git branch: TARGET_ROBOT_BRANCH, url:'https://github.com/kltm/robot-old.git'
 			    // Update the POMs by replacing "SNAPSHOT"
 			    // with the current Git hash. First make
 			    // sure maven-help-plugin is installed
@@ -386,7 +392,7 @@ pipeline {
 	stage('Produce ontology') {
 	    agent {
 		docker {
-		    image 'obolibrary/odkfull:v1.2.27'
+		    image 'obolibrary/odkfull:v1.2.32'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
@@ -442,8 +448,11 @@ pipeline {
 		// serve as input into into mega step.
 		script {
 
-		    dir('./noctua-models') {
-			git branch: TARGET_NOCTUA_MODELS_BRANCH, url: 'https://github.com/geneontology/noctua-models.git'
+		    dir('./noctua-models') {    
+			// Attempt to trim/prune/speed up noctua-models as
+			// we do for go-ontology for
+			// https://github.com/geneontology/pipeline/issues/278 .
+			checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
 
 			// Make all software products available in bin/
 			// (and lib/).
@@ -894,7 +903,7 @@ pipeline {
 	stage('Produce derivatives') {
 	    agent {
 		docker {
-		    image 'geneontology/golr-autoindex:3d8d4ed9a33169af1304e359bf6c425e54d52383_2019-08-28T134514'
+		    image 'geneontology/golr-autoindex:28a693d28b37196d3f79acdea8c0406c9930c818_2022-03-17T171930_master'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
@@ -918,15 +927,15 @@ pipeline {
 		// from indexing--create stats products from running
 		// GOlr.
 		// Prepare a working directory based around go-site.
-		dir('./go-site') {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+		dir('./go-stats') {
+		    git branch: TARGET_GO_STATS_BRANCH, url: 'https://github.com/geneontology/go-stats.git'
 
 		    // Not much want or need here--simple
 		    // python3. However, using the information hidden
 		    // in run-indexer.sh to know where the Solr
 		    // instance is hiding.
 		    sh 'mkdir -p /tmp/stats/ || true'
-		    sh 'cp ./scripts/*.py /tmp'
+		    sh 'cp ./libraries/go-stats/*.py /tmp'
 		    // Needed as extra library.
 		    sh 'pip3 install --force-reinstall requests==2.19.1'
 		    sh 'pip3 install --force-reinstall networkx==2.2'
@@ -1032,7 +1041,12 @@ pipeline {
 
 			    // Correct for (possibly) bad boto3,
 			    // as mentioned above.
-			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
+			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
+			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
+				
+			    // Needed to work around new incompatibility:
+			    // https://github.com/geneontology/pipeline/issues/286
+			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall certifi==2021.10.8'
 
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
@@ -1050,6 +1064,14 @@ pipeline {
 			    // version; error like
 			    // https://stackoverflow.com/questions/45821085/awshttpsconnection-object-has-no-attribute-ssl-context
 			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
+				
+			    // A temporary workaround for
+			    // https://github.com/geneontology/pipeline/issues/247,
+			    // forcing requests used by bdbags to a
+			    // verion that is usable by python 3.5
+			    // (our current raw machine default
+			    // version of python3).
+			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall requests==2.25.1'
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
@@ -1213,11 +1235,7 @@ pipeline {
 			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
 			    // Extra package for the indexer.
-			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
-
-			    // Correct for (possibly) bad boto3,
-			    // as mentioned above.
-			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
+			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall pystache==0.5.4'
 
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
@@ -1226,6 +1244,13 @@ pipeline {
 			    //
 			    sh 'python3 ./mypyenv/bin/pip3 install rsa'
 			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
+				
+			    // Version locking for boto3 / botocore
+			    // upgrade that is incompatible with
+			    // python3.5. See issues #250 and #271.
+			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
+			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
+			    sh 'python3 ./mypyenv/bin/pip3 install s3transfer==0.5.0'
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
