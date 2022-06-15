@@ -4,13 +4,14 @@ pipeline {
     // give us the max time in a day to get things right.
     triggers {
 	// Master never runs--Feb 31st.
-	cron('0 0 31 2 *')
+	//cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
 	//cron('0 0 2-31/2 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
-	// Every third hour, at the top.
-	//cron('0 */3 * * *')
+	// Every sixth hour, at the top--enough time to do reports if
+	// necessary.
+	cron('0 */6 * * *')
     }
     environment {
 	///
@@ -131,7 +132,10 @@ pipeline {
 	    "http://purl.obolibrary.org/obo/pato.owl",
 	    "http://purl.obolibrary.org/obo/po.owl",
 	    "http://purl.obolibrary.org/obo/chebi.owl",
-	    "http://purl.obolibrary.org/obo/uberon/basic.owl",
+	    // BUG: Temporarily lock in uberon version; see:
+	    // https://github.com/geneontology/go-ontology/issues/23468
+	    //"http://purl.obolibrary.org/obo/uberon/basic.owl",
+	    "http://purl.obolibrary.org/obo/uberon/releases/2022-05-17/uberon-basic.owl",
 	    "http://purl.obolibrary.org/obo/wbbt.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
