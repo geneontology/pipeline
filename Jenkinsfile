@@ -410,6 +410,8 @@ pipeline {
 			    } catch (exception) {
 				ONTOLOGY_ERROR_BUILD_P = 'TRUE'
 				sh 'robot --catalog ./catalog-v001.xml explain -i ./extensions/go-lego-edit.ofn -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations.md'
+				sh 'echo $BUILD_ID | cat - ./unsatisfiable_explanations.md > ./unsatisfiable_explanations.md.tmp && mv -f ./unsatisfiable_explanations.md.tmp ./unsatisfiable_explanations.md'
+				sh 'echo `date` | cat - ./unsatisfiable_explanations.md > ./unsatisfiable_explanations.md.tmp && mv -f ./unsatisfiable_explanations.md.tmp ./unsatisfiable_explanations.md'
 			    }
 
 			    // Only continue with the "deep" check if
@@ -437,6 +439,8 @@ pipeline {
 				sh 'rm -f merged.owl || true'
 				sh 'robot merge -i eco-basic.owl -i taxslim.owl -i cl-basic.owl -i pato.owl -i po.owl -i chebi.owl -i basic.owl -i wbbt.owl -i ./extensions/go-gaf.owl -i ./extensions/gorel.owl -i ./extensions/go-modules-annotations.owl -i ./extensions/go-taxon-subsets.owl -o merged.owl'
 				sh 'robot explain -i ./merged.owl -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations_full.md'
+				sh 'echo $BUILD_ID | cat - ./unsatisfiable_explanations_full.md > ./unsatisfiable_explanations_full.md.tmp && mv -f ./unsatisfiable_explanations_full.md.tmp ./unsatisfiable_explanations_full.md'
+				sh 'echo `date` | cat - ./unsatisfiable_explanations_full.md > ./unsatisfiable_explanations_full.md.tmp && mv -f ./unsatisfiable_explanations_full.md.tmp ./unsatisfiable_explanations_full.md'
 
 				// Check explanations.
 				try {
