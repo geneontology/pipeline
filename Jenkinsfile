@@ -121,7 +121,10 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-taxon-subsets.owl",
 	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
-	    "http://purl.obolibrary.org/obo/cl/cl-basic.owl",
+	    // BUG: Temporarily lock in CL version; see:
+	    // https://github.com/geneontology/go-ontology/issues/23510
+	    //"http://purl.obolibrary.org/obo/cl/cl-basic.owl",
+	    "http://purl.obolibrary.org/obo/cl/releases/2022-02-16/cl-basic.owl",
 	    "http://purl.obolibrary.org/obo/pato.owl",
 	    "http://purl.obolibrary.org/obo/po.owl",
 	    "http://purl.obolibrary.org/obo/chebi.owl",
