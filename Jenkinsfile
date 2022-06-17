@@ -409,6 +409,7 @@ pipeline {
 				}
 			    } catch (exception) {
 				ONTOLOGY_ERROR_BUILD_P = 'TRUE'
+				echo "Exception: ONTOLOGY_ERROR_BUILD_P is now TRUE"
 				sh 'robot --catalog ./catalog-v001.xml explain -i ./extensions/go-lego-edit.ofn -M unsatisfiability --unsatisfiable all --explanation ./unsatisfiable_explanations.md'
 				sh 'echo $BUILD_ID | cat - ./unsatisfiable_explanations.md > ./unsatisfiable_explanations.md.tmp && mv -f ./unsatisfiable_explanations.md.tmp ./unsatisfiable_explanations.md'
 				sh 'echo `date` | cat - ./unsatisfiable_explanations.md > ./unsatisfiable_explanations.md.tmp && mv -f ./unsatisfiable_explanations.md.tmp ./unsatisfiable_explanations.md'
@@ -447,6 +448,7 @@ pipeline {
 				    sh 'grep "No explanations found" ./unsatisfiable_explanations_full.md'
 				} catch (exception) {
 				    ONTOLOGY_ERROR_FULL_P = 'TRUE'
+				    echo "Exception: ONTOLOGY_ERROR_FULL_P is now TRUE"
 				}
 			    }
 
@@ -474,14 +476,15 @@ pipeline {
 				    // Transfer to bucket.
 				    if( ONTOLOGY_ERROR_BUILD_P == 'TRUE' ){
 					sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/plain put unsatisfiable_explanations.md s3://go-dropbox/unsatisfiable_explanations.md'
-				    }
-				    if( ONTOLOGY_ERROR_FULL_P == 'TRUE' ){
-					sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/plain put unsatisfiable_explanations.md s3://go-dropbox/unsatisfiable_explanations_full.md'
+					error "BUILD exception in ontology build: see report at http://skyhook.berkeleybop.org/go-ontology-dev/reports/"
+				    }else if( ONTOLOGY_ERROR_FULL_P == 'TRUE' ){
+					sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/plain put unsatisfiable_explanations_full.md s3://go-dropbox/unsatisfiable_explanations_full.md'
+					error "FULL exception in ontology build: see report at http://skyhook.berkeleybop.org/go-ontology-dev/reports/"
+				    }else{
+					// Finally, make sure we don't complete.
+					error "Unknown exception in ontology build: see report at http://skyhook.berkeleybop.org/go-ontology-dev/reports/"
 				    }
 				}
-
-				// Finally, make sure we don't complete.
-				error "Exception in ontology build: see report at http://skyhook.berkeleybop.org/go-ontology-dev/reports/"
 			    }
 			}
 		    }
@@ -520,8 +523,16 @@ pipeline {
 	}
 	// Let's let our internal people know if things change.
 	changed {
-	    echo "There has been a change in the ${env.BRANCH_NAME} pipeline."
-	    mail bcc: '', body: "There has been a pipeline status change in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+	    if( ONTOLOGY_ERROR_BUILD_P == 'TRUE' ){
+		echo "Problem! There has been a negative change in the ${env.BRANCH_NAME} pipeline."
+		mail bcc: '', body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations.md", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+	    }else if( ONTOLOGY_ERROR_FULL_P == 'TRUE' ){
+		echo "Problem! There has been a negative change in the ${env.BRANCH_NAME} pipeline."
+		mail bcc: '', body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations_full.md", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+	    }else{
+		echo "Fixed! There has been a positive change in the ${env.BRANCH_NAME} pipeline."
+		mail bcc: '', body: "Fixed! There has been a positive pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+	    }
 	}
 	// Let's let our internal people know if things go badly.
 	failure {
