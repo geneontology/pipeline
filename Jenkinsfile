@@ -523,15 +523,17 @@ pipeline {
 	}
 	// Let's let our internal people know if things change.
 	changed {
-	    if( ONTOLOGY_ERROR_BUILD_P == 'TRUE' ){
-		echo "Problem! There has been a negative change in the ${env.BRANCH_NAME} pipeline."
-		mail bcc: '', body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations.md", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
-	    }else if( ONTOLOGY_ERROR_FULL_P == 'TRUE' ){
-		echo "Problem! There has been a negative change in the ${env.BRANCH_NAME} pipeline."
-		mail bcc: '', body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations_full.md", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
-	    }else{
-		echo "Fixed! There has been a positive change in the ${env.BRANCH_NAME} pipeline."
-		mail bcc: '', body: "Fixed! There has been a positive pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+	    script {
+		if( ONTOLOGY_ERROR_BUILD_P == 'TRUE' ){
+		    echo "Problem! There has been a negative change in the ${env.BRANCH_NAME} pipeline."
+		    mail bcc: '', body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations.md", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+		}else if( ONTOLOGY_ERROR_FULL_P == 'TRUE' ){
+		    echo "Problem! There has been a negative change in the ${env.BRANCH_NAME} pipeline."
+		    mail bcc: '', body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations_full.md", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+		}else{
+		    echo "Fixed! There has been a positive change in the ${env.BRANCH_NAME} pipeline."
+		    mail bcc: '', body: "Fixed! There has been a positive pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+		}
 	    }
 	}
 	// Let's let our internal people know if things go badly.
