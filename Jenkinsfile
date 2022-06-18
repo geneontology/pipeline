@@ -521,7 +521,7 @@ pipeline {
 		}
 	    }
 	}
-	// Let's let our internal people know if things change.
+	// Let's let our ontology people know if things change.
 	changed {
 	    script {
 		if( ONTOLOGY_ERROR_BUILD_P == 'TRUE' ){
@@ -532,14 +532,15 @@ pipeline {
 		    mail bcc: '', body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations_full.md", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
 		}else{
 		    echo "Fixed! There has been a positive change in the ${env.BRANCH_NAME} pipeline."
-		    mail bcc: '', body: "Fixed! There has been a positive pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+		    mail bcc: '', body: "Fixed! There has been a positive pipeline status change in ${env.BRANCH_NAME}. You can congratulate it at:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
 		}
 	    }
 	}
-	// Let's let our internal people know if things go badly.
+	// Let's let our internal dev people know if things go badly
+	// or are continuing bladly.
 	failure {
 	    echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
-	    mail bcc: '', body: "There has been a pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}", to: "${TARGET_FAIL_EMAILS}"
+	    mail bcc: '', body: "There has been a (continuing?) pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}", to: "${TARGET_FAIL_EMAILS}"
 	}
     }
 }
