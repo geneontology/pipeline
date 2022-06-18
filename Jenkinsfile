@@ -537,7 +537,7 @@ pipeline {
 	    }
 	}
 	// Let's let our internal dev people know if things go badly
-	// or are continuing bladly.
+	// or are continuing badly.
 	failure {
 	    echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
 	    mail bcc: '', body: "There has been a (continuing?) pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}", to: "${TARGET_FAIL_EMAILS}"
