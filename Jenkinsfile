@@ -49,8 +49,8 @@ pipeline {
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	//TARGET_CHANGE_EMAILS = 'balhoff@renci.org,cjmungall@lbl.gov,sjcarbon@lbl.gov,debert@usc.edu'
-	TARGET_CHANGE_EMAILS = 'sjcarbon@lbl.gov'
+	TARGET_CHANGE_EMAILS = 'balhoff@renci.org,cjmungall@lbl.gov,sjcarbon@lbl.gov,debert@usc.edu'
+	//TARGET_CHANGE_EMAILS = 'sjcarbon@lbl.gov'
 	TARGET_FAIL_EMAILS = 'sjcarbon@lbl.gov'
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov'
