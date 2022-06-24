@@ -331,6 +331,11 @@ pipeline {
 			    sh './bin/minerva-cli.sh --replace-obsolete -j blazegraph.jnl --ontology http://snapshot.geneontology.org/ontology/extensions/go-lego-reacto.owl'
 			    // Dump them back out from the journal.
 			    sh './bin/minerva-cli.sh --dump-owl-models -j blazegraph.jnl -f models/'
+
+			    // Create a diff for checking differences
+			    // after action.
+			    sh 'git diff > ./ontology-replaced-by.diff'
+
 			    // Commit, but there may not be any
 			    // updates of note, so protect.
 			    sh 'git commit -a -m "automated commit replacing obsolete ontology terms" || true'
@@ -364,9 +369,10 @@ pipeline {
 			//     sh 'git commit -m "automated commit replacing relations" models/*.ttl'
 			// }
 
-			// Move journal to skyhook.
+			// Move journal and diffs to skyhook.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY blazegraph.jnl skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./ontology-replaced-by.diff skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 			}
 
 			// TODO: Push back to GH.
