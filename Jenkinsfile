@@ -83,7 +83,7 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = '425664'
+	ZENODO_REFERENCE_CONCEPT = '1079824'
 	ZENODO_ARCHIVE_CONCEPT = '425666'
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
