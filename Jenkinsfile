@@ -421,6 +421,7 @@ pipeline {
 
 		    dir('./src/ontology') {
 			retry(3){
+			    sh 'ls -AlF'
 			    sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
 			}
 			retry(3){
