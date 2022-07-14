@@ -37,8 +37,7 @@ pipeline {
 	// The branch of go-ontology to use.
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
-	//TARGET_MINERVA_BRANCH = 'master'
-	TARGET_MINERVA_BRANCH = 'issue-465'
+	TARGET_MINERVA_BRANCH = 'master'
 	// The branch of ROBOT to use in one silly section.
 	// Necessary due to java version jump.
 	// https://github.com/ontodev/robot/issues/997
