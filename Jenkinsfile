@@ -38,6 +38,10 @@ pipeline {
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
+	// The branch of ROBOT to use in one silly section.
+	// Necessary due to java version jump.
+	// https://github.com/ontodev/robot/issues/997
+	TARGET_ROBOT_BRANCH = 'master'
 	// The branch of noctua-models to use.
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
@@ -117,11 +121,17 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/issue-go-site-1434-add-xenbase/ontology/extensions/go-taxon-subsets.owl",
 	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
-	    "http://purl.obolibrary.org/obo/cl/cl-basic.owl",
+	    // BUG: Temporarily lock in CL version; see:
+	    // https://github.com/geneontology/go-ontology/issues/23510
+	    //"http://purl.obolibrary.org/obo/cl/cl-basic.owl",
+	    "http://purl.obolibrary.org/obo/cl/releases/2022-02-16/cl-basic.owl",
 	    "http://purl.obolibrary.org/obo/pato.owl",
 	    "http://purl.obolibrary.org/obo/po.owl",
 	    "http://purl.obolibrary.org/obo/chebi.owl",
-	    "http://purl.obolibrary.org/obo/uberon/basic.owl",
+	    // BUG: Temporarily lock in uberon version; see:
+	    // https://github.com/geneontology/go-ontology/issues/23468
+	    //"http://purl.obolibrary.org/obo/uberon/basic.owl",
+	    "http://purl.obolibrary.org/obo/uberon/releases/2022-05-17/uberon-basic.owl",
 	    "http://purl.obolibrary.org/obo/wbbt.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
@@ -157,7 +167,7 @@ pipeline {
 	//GORULE_TAGS_TO_SUPPRESS="silent"
 
 	// Optional. Groups to run.
-	RESOURCE_GROUPS="goa mgi paint wb pseudocap wb xenbase"
+	RESOURCE_GROUPS="goa mgi paint pseudocap wb xenbase"
 	// Optional. Datasets to skip within the resources that we
 	// will run (defined in the line above).
 	DATASET_EXCLUDES="goa_uniprot_gcrp goa_pdb goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human goa_human goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_ecocyc paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
@@ -294,7 +304,9 @@ pipeline {
 		    "Ready robot": {
 			// Legacy: build 'robot-build'
 			dir('./robot') {
-			    git 'https://github.com/ontodev/robot.git'
+			    // Remember that git lays out into CWD.
+			    git branch: TARGET_ROBOT_BRANCH, url:'https://github.com/kltm/robot-old.git'
+
 			    // Update the POMs by replacing "SNAPSHOT"
 			    // with the current Git hash. First make
 			    // sure maven-help-plugin is installed
@@ -1044,6 +1056,10 @@ pipeline {
 			    sh 'python3 ./mypyenv/bin/pip3 install boto3==1.18.52'
 			    sh 'python3 ./mypyenv/bin/pip3 install botocore==1.21.52'
 
+			    // Needed to work around new incompatibility:
+			    // https://github.com/geneontology/pipeline/issues/286
+			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall certifi==2021.10.8'
+
 			    // Extra package for the uploader.
 			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
 
@@ -1060,6 +1076,14 @@ pipeline {
 			    // version; error like
 			    // https://stackoverflow.com/questions/45821085/awshttpsconnection-object-has-no-attribute-ssl-context
 			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
+
+			    // A temporary workaround for
+			    // https://github.com/geneontology/pipeline/issues/247,
+			    // forcing requests used by bdbags to a
+			    // verion that is usable by python 3.5
+			    // (our current raw machine default
+			    // version of python3).
+			    sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall requests==2.25.1'
 
 			    // Well, we need to do a couple of things here in
 			    // a structured way, so we'll go ahead and drop
