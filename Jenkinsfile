@@ -827,7 +827,7 @@ pipeline {
 			sh 'cp ./metadata/db-xrefs.legacy ./metadata/GO.xrf_abbs'
 
 			// Contraints for Alex.
-			sh 'yaml2json -p ./metadata/eco-usage-constraints.yaml > ./metadata/eco-usage-constraints.yaml'
+			sh 'yaml2json -p ./metadata/eco-usage-constraints.yaml > ./metadata/eco-usage-constraints.json'
 		    }
 
 		    // Carry everything we want to save over to
