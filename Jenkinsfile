@@ -326,7 +326,9 @@ pipeline {
 
 			// Pause on user input I.
 			echo 'Awaiting input for model cleanup.'
-			//mail bcc: '', body: "The ${env.BRANCH_NAME} pipeline is waiting on user input. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline waiting on input for ${env.BRANCH_NAME}", to: "${TARGET_RELEASE_HOLD_EMAILS}"
+			emailext to: "${TARGET_RELEASE_HOLD_EMAILS}",
+			    subject: "GO Pipeline waiting on input for ${env.BRANCH_NAME}",
+			    body: "The ${env.BRANCH_NAME} pipeline is waiting on user input. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
 			lock(resource: 'migration-run', inversePrecedence: true){
 			    echo "Holding lock after model cleanup."
 			    timeout(time:1, unit:'HOURS') {
@@ -353,7 +355,9 @@ pipeline {
 
 			// Pause on user input II.
 			echo 'Awaiting input for ontology update.'
-			//mail bcc: '', body: "The ${env.BRANCH_NAME} pipeline is waiting on user input. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline waiting on input for ${env.BRANCH_NAME}", to: "${TARGET_RELEASE_HOLD_EMAILS}"
+			emailext to: "${TARGET_RELEASE_HOLD_EMAILS}",
+			    subject: "GO Pipeline waiting on input for ${env.BRANCH_NAME}",
+			    body: "The ${env.BRANCH_NAME} pipeline is waiting on user input. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
 			lock(resource: 'migration-run', inversePrecedence: true){
 			    echo "Holding lock after ontology update."
 			    timeout(time:1, unit:'HOURS') {
@@ -409,19 +413,25 @@ pipeline {
 	    script {
 		if( env.BRANCH_NAME == 'release' ){
 		    echo "There has been a successful run of the ${env.BRANCH_NAME} pipeline."
-		    mail bcc: '', body: "There has been successful run of the ${env.BRANCH_NAME} pipeline. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline success for ${env.BRANCH_NAME}", to: "${TARGET_SUCCESS_EMAILS}"
+		    emailext to: "${TARGET_SUCCESS_EMAILS}",
+			subject: "GO Pipeline success for ${env.BRANCH_NAME}",
+			body: "There has been successful run of the ${env.BRANCH_NAME} pipeline. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
 		}
 	    }
 	}
 	// Let's let our internal people know if things change.
 	changed {
 	    echo "There has been a change in the ${env.BRANCH_NAME} pipeline."
-	    mail bcc: '', body: "There has been a pipeline status change in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
+	    emailext to: "${TARGET_ADMIN_EMAILS}",
+		subject: "GO Pipeline change for ${env.BRANCH_NAME}",
+		body: "There has been a pipeline status change in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
 	}
 	// Let's let our internal people know if things go badly.
 	failure {
 	    echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
-	    mail bcc: '', body: "There has been a pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
+	    emailext to: "${TARGET_ADMIN_EMAILS}",
+		subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}",
+		body: "There has been a pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
 	}
     }
 }
