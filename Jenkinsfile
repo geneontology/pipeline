@@ -533,7 +533,7 @@ pipeline {
 			body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations.md"
 		}else if( ONTOLOGY_ERROR_FULL_P == 'TRUE' ){
 		    echo "Problem! There has been a negative change in the ${env.BRANCH_NAME} pipeline."
-		    emailext bcc: to: "${TARGET_CHANGE_EMAILS}",
+		    emailext to: "${TARGET_CHANGE_EMAILS}",
 			subject: "GO Pipeline change for ${env.BRANCH_NAME}",
 			body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations_full.md"
 		}else{
