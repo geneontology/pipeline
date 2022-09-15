@@ -517,7 +517,9 @@ pipeline {
 	    script {
 		if( env.BRANCH_NAME == 'release' ){
 		    echo "There has been a successful run of the ${env.BRANCH_NAME} pipeline."
-		    mail bcc: '', body: "There has been successful run of the ${env.BRANCH_NAME} pipeline. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline success for ${env.BRANCH_NAME}", to: "${TARGET_SUCCESS_EMAILS}"
+		    emailext to: "${TARGET_SUCCESS_EMAILS}",
+			subject: "GO Pipeline success for ${env.BRANCH_NAME}",
+			body: "There has been successful run of the ${env.BRANCH_NAME} pipeline. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
 		}
 	    }
 	}
@@ -526,13 +528,19 @@ pipeline {
 	    script {
 		if( ONTOLOGY_ERROR_BUILD_P == 'TRUE' ){
 		    echo "Problem! There has been a negative change in the ${env.BRANCH_NAME} pipeline."
-		    mail bcc: '', body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations.md", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+		    emailext to: "${TARGET_CHANGE_EMAILS}",
+			subject: "GO Pipeline change for ${env.BRANCH_NAME}",
+			body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations.md"
 		}else if( ONTOLOGY_ERROR_FULL_P == 'TRUE' ){
 		    echo "Problem! There has been a negative change in the ${env.BRANCH_NAME} pipeline."
-		    mail bcc: '', body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations_full.md", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+		    emailext bcc: to: "${TARGET_CHANGE_EMAILS}",
+			subject: "GO Pipeline change for ${env.BRANCH_NAME}",
+			body: "Problem! There has been a negative pipeline status change in ${env.BRANCH_NAME}. Please see:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}\nhttps://go-dropbox.s3.amazonaws.com/unsatisfiable_explanations_full.md"
 		}else{
 		    echo "Fixed! There has been a positive change in the ${env.BRANCH_NAME} pipeline."
-		    mail bcc: '', body: "Fixed! There has been a positive pipeline status change in ${env.BRANCH_NAME}. You can congratulate it at:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline change for ${env.BRANCH_NAME}", to: "${TARGET_CHANGE_EMAILS}"
+		    emailext to: "${TARGET_CHANGE_EMAILS}",
+			subject: "GO Pipeline change for ${env.BRANCH_NAME}",
+			body: "Fixed! There has been a positive pipeline status change in ${env.BRANCH_NAME}. You can congratulate it at:\nhttps://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
 		}
 	    }
 	}
@@ -540,7 +548,9 @@ pipeline {
 	// or are continuing badly.
 	failure {
 	    echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
-	    mail bcc: '', body: "There has been a (continuing?) pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}", to: "${TARGET_FAIL_EMAILS}"
+	    emailext to: "${TARGET_FAIL_EMAILS}",
+		subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}",
+		body: "There has been a (continuing?) pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
 	}
     }
 }
