@@ -42,7 +42,8 @@ pipeline {
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
-	TARGET_GO_SUMMARY_EMAILS = 'go-consortium@mailman.stanford.edu'
+	//TARGET_GO_SUMMARY_EMAILS = 'go-consortium@mailman.stanford.edu'
+	TARGET_GO_SUMMARY_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'null'
@@ -266,12 +267,19 @@ pipeline {
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-			// Create summaries; needs python 3.6 for strings for now, should replace later.
+			// Create titles; needs python 3.6 for strings
+			// for now, should replace later.
+			sh 'python3.6 ./scripts/github_issue_summary.py geneontology/go-ontology 1 --summary_only true > ont-title.txt'
+			sh 'python3.6 ./scripts/github_issue_summary.py geneontology/go-annotation 1 --summary_only true > ann-title.txt'
+			// Create summaries; needs python 3.6 for
+			// strings for now, should replace later.
 			sh 'python3.6 scripts/github_issue_summary.py geneontology/go-ontology 1 > ontology-summary.html'
 			sh 'python3.6 scripts/github_issue_summary.py geneontology/go-annotation 1 > annotation-summary.html'
 
 			// Store on skyhook for examination.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ont-title.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ann-title.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ontology-summary.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY annotation-summary.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 			}
@@ -279,10 +287,18 @@ pipeline {
 			// Email to interested parties.
 			echo "Emailing..."
 			script {
+			    def ontsub = readFile "ont-title.txt"
+			    def annsub = readFile "ann-title.txt"
 			    def ontsum = readFile "ontology-summary.html"
 			    def annsum = readFile "annotation-summary.html"
-			    mail bcc: '', body: "${ontsum}", cc: '', from: '', mimeType: 'text/html', replyTo: '', subject: "GO Ontology Daily Summary", to: "${TARGET_GO_SUMMARY_EMAILS}"
-			    mail bcc: '', body: "${annsum}", cc: '', from: '', mimeType: 'text/html', replyTo: '', subject: "GO Annotation Daily Summary", to: "${TARGET_GO_SUMMARY_EMAILS}"
+			    emailext to: "${TARGET_GO_SUMMARY_EMAILS}",
+				subject: "${ontsub}",
+				mimeType: 'text/html',
+				body: "${ontsum}"
+			    emailext to: "${TARGET_GO_SUMMARY_EMAILS}",
+				subject: "${annsub}",
+				mimeType: 'text/html',
+				body: "${annsum}"
 			}
 			echo "...completed."
 		    }
