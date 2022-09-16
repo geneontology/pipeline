@@ -192,7 +192,7 @@ pipeline {
 		}
 
 		// Give us a minute to cancel if we want.
-		sleep time: 15, unit: 'MINUTES'
+		//sleep time: 15, unit: 'MINUTES'
 		cleanWs deleteDirs: true, disableDeferredWipeout: true
 	    }
 	}
