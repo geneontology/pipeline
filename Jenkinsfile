@@ -42,8 +42,7 @@ pipeline {
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
-	//TARGET_GO_SUMMARY_EMAILS = 'go-consortium@mailman.stanford.edu'
-	TARGET_GO_SUMMARY_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu'
+	TARGET_GO_SUMMARY_EMAILS = 'go-consortium@mailman.stanford.edu'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'null'
@@ -192,7 +191,7 @@ pipeline {
 		}
 
 		// Give us a minute to cancel if we want.
-		//sleep time: 15, unit: 'MINUTES'
+		sleep time: 15, unit: 'MINUTES'
 		cleanWs deleteDirs: true, disableDeferredWipeout: true
 	    }
 	}
