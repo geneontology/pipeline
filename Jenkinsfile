@@ -37,7 +37,8 @@ pipeline {
 	// The branch of go-ontology to use.
 	TARGET_GO_ONTOLOGY_BRANCH = 'master'
 	// The branch of minerva to use.
-	TARGET_MINERVA_BRANCH = 'master'
+	//TARGET_MINERVA_BRANCH = 'master'
+	TARGET_MINERVA_BRANCH = 'issue-500'
 	// The branch of ROBOT to use in one silly section.
 	// Necessary due to java version jump.
 	// https://github.com/ontodev/robot/issues/997
@@ -233,6 +234,7 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/lib || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/ttl || true'
+			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/json || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/blazegraph || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/pages || true'
@@ -446,54 +448,108 @@ pipeline {
 		}
 	    }
 	}
-	stage('Make Noctua GPAD') {
+	stage('Minerva generations') {
 	    steps {
-		// May be parallelized in the future, but may need to
-		// serve as input into into mega step.
-		script {
+		parallel(
+		    "Make Noctua GPAD": {
 
-		    // Create a relative working directory and setup our
-		    // data environment.
-		    dir('./noctua-models') {
+			// May be parallelized in the future, but may need to
+			// serve as input into into mega step.
+			script {
 
-			// Attempt to trim/prune/speed up noctua-models as
-			// we do for go-ontology for
-			// https://github.com/geneontology/pipeline/issues/278 .
-			checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
+			    // Create a relative working directory and setup our
+			    // data environment.
+			    dir('./noctua-models') {
+
+				// Attempt to trim/prune/speed up
+				// noctua-models as we do for
+				// go-ontology for
+				// https://github.com/geneontology/pipeline/issues/278
+				// .
+				checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
 
 
-			// Make all software products available in bin/
-			// (and lib/).
-			sh 'mkdir -p bin/'
-			sh 'mkdir -p lib/'
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-			    // WARNING/BUG: needed for blazegraph-runner
-			    // to run at this point.
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+				// Make all software products
+				// available in bin/ (and lib/).
+				sh 'mkdir -p bin/'
+				sh 'mkdir -p lib/'
+				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+				    // WARNING/BUG: needed for blazegraph-runner
+				    // to run at this point.
+				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+				}
+				sh 'chmod +x bin/*'
+
+				// Compile models.
+				sh 'mkdir -p legacy/gpad'
+				withEnv(['MINERVA_CLI_MEMORY=128G']){
+				    // "Import" models.
+				    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
+				    // Convert GO-CAM to GPAD.
+				    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES --ontojournal ontojournal.jnl -i blazegraph.jnl --gpad-output legacy/gpad'
+				}
+
+				// Collation.
+				sh 'perl ./util/collate-gpads.pl legacy/gpad/*.gpad'
+
+				// Rename, compress, and move to skyhook.
+				sh 'mcp "legacy/*.gpad" "legacy/noctua_#1-src.gpad"'
+				sh 'gzip -vk legacy/noctua_*.gpad'
+				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+				}
+			    }
 			}
-			sh 'chmod +x bin/*'
+		    },
+		    "JSON model generation": {
 
-			// Compile models.
-			sh 'mkdir -p legacy/gpad'
-			withEnv(['MINERVA_CLI_MEMORY=128G']){
-			    // "Import" models.
-			    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
-			    // Convert GO-CAM to GPAD.
-			    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES --ontojournal ontojournal.jnl -i blazegraph.jnl --gpad-output legacy/gpad'
-			}
+			// May be parallelized in the future, but may need to
+			// serve as input into into mega step.
+			script {
 
-			// Collation.
-			sh 'perl ./util/collate-gpads.pl legacy/gpad/*.gpad'
+			    // Create a relative working directory and setup our
+			    // data environment.
+			    dir('./noctua-models') {
 
-			// Rename, compress, and move to skyhook.
-			sh 'mcp "legacy/*.gpad" "legacy/noctua_#1-src.gpad"'
-			sh 'gzip -vk legacy/noctua_*.gpad'
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+				// Attempt to trim/prune/speed up
+				// noctua-models as we do for
+				// go-ontology for
+				// https://github.com/geneontology/pipeline/issues/278
+				// .
+				checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
+
+
+				// Make all software products
+				// available in bin/ (and lib/).
+				sh 'mkdir -p bin/'
+				sh 'mkdir -p lib/'
+				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+				    // WARNING/BUG: needed for blazegraph-runner
+				    // to run at this point.
+				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+				}
+				sh 'chmod +x bin/*'
+
+				// Compile models.
+				sh 'mkdir -p jsonout'
+				withEnv(['MINERVA_CLI_MEMORY=128G']){
+				    // "Import" models.
+				    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
+				    // JSON out to directory.
+				    sh './bin/minerva-cli.sh --dump-owl-json --journal blazegraph.jnl --ontojournal blazegraph-go-lego-reacto-neo.jnl --folder jsonout'
+				}
+
+				// Compress and out.
+				sh 'tar --use-compress-program=pigz -cvf noctua-models-json.tgz -C jsonout .'
+				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY noctua-models-json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/'
+				}
+			    }
 			}
 		    }
-		}
+		)
 	    }
 	}
 
