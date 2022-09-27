@@ -165,6 +165,7 @@ pipeline {
 	    "http://skyhook.berkeleybop.org/release/annotations/sgn.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/tair.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/wb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/release/annotations/xenbase.gaf.gz",
 	    "http://skyhook.berkeleybop.org/release/annotations/zfin.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
