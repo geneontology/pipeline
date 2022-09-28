@@ -462,7 +462,7 @@ pipeline {
 			// Run commands.
 			sh 'wget http://localhost:8888/models/go -O gocam-goterms.json'
 			sh 'wget http://localhost:8888/models/gp -O gocam-gps.json'
-			sh 'wget http://localhost:8888/models -O gocam-models.json'
+			sh 'wget http://localhost:8888/models?causalmf=2 -O gocam-models.json'
 			sh 'wget http://localhost:8888/models/pmid -O gocam-pmids.json'
 
 			// Upload to skyhook to the expected location.
