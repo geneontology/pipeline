@@ -487,6 +487,30 @@ pipeline {
 		}
 	    }
 	}
+	// Download GAFs from datasets.yaml in go-site and then upload
+	// to skyhook in their appropriate locations.
+	stage("Deploy released GO-CAM models") {
+	    steps {
+		dir("./deploy-go-cam-models-to-s3") {
+
+		    // WARNING/TEMP: Get the models, get them setup in
+		    // the right spot.
+		    sh 'ls -AlF'
+		    sh 'rm -f noctua-models-json.tgz || true'
+		    retry(3) {
+			sh 'wget -N http://current.geneontology.org/products/json/noctua-models-json.tgz'
+		    }
+		    sh 'tar -zxvf noctua-models-json.tgz'
+
+		    // WARNING/TEMP: Upload to a temporary working
+		    // location in S3. Grab tools needed.
+		    withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+			// Standard.
+			sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put *.json s3://go-public/files/go-cam/'
+		    }
+		}
+	    }
+	}
     }
     post {
 	// Let's let our people know if things go well.
