@@ -96,7 +96,7 @@ pipeline {
 	///
 	/// Ontobio Validation
 	///
-	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/master/ontology/go.json"
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/issue-307-panther-17/ontology/go.json"
 
 	///
 	/// Minerva input.
