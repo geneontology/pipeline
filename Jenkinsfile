@@ -72,10 +72,7 @@ pipeline {
 	/// PANTHER/PAINT metadata.
 	///
 
-	PANTHER_VERSION = '15.0'
-	// Currently unused, but see:
-	// https://github.com/geneontology/pipeline/issues/86
-	PAINT_RELEASE = 'XXXX-YY-ZZ'
+	PANTHER_VERSION = '17.0'
 
 	///
 	/// Application tokens.
