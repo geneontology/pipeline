@@ -50,9 +50,9 @@ pipeline {
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,suzia@stanford.edu,smoxon@lbl.gov'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss,pgaudet1@gmail.com,smoxon@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-experimental'
+	TARGET_BUCKET = 'null'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	TARGET_INDEXER_PREFIX = 'null'
 	// This variable should typically be 'TRUE', which will cause
 	// some additional basic checks to be made. There are some
 	// very exotic cases where these check may need to be skipped
@@ -80,15 +80,15 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = '425671'
-	ZENODO_ARCHIVE_CONCEPT = '425674'
+	ZENODO_REFERENCE_CONCEPT = 'null'
+	ZENODO_ARCHIVE_CONCEPT = 'null'
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
 	// need this as it is always a new location and the index
 	// upload already has an invalidation on it. For current,
 	// snapshot, and experimental.
-	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
-	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'null'
+	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'null'
 
 	///
 	/// Ontobio Validation
@@ -200,6 +200,8 @@ pipeline {
 			sh 'cat branch.txt'
 			sh 'echo $START_DAY > dow.txt'
 			sh 'echo "$START_DAY"'
+			sh 'echo $START_DATE > date.txt'
+			sh 'echo "$START_DATE"'
 		    },
 		    "Reset base": {
 			initialize();
@@ -212,6 +214,10 @@ pipeline {
 	    steps {
 		parallel(
 		    "Ready owltools": {
+			recover_environment();
+			echo "${env.TEST_DOW}"
+			echo "${env.TEST_DATE}"
+
 			// Legacy: build 'owltools-build'
 			dir('./owltools') {
 			    // Remember that git lays out into CWD.
@@ -1492,11 +1498,30 @@ void initialize() {
     sh 'echo "Branch: $BRANCH_NAME" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
     sh 'echo "Start day: $START_DAY" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
     sh 'echo "Start date: $START_DATE" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+    sh 'echo "$START_DAY" > $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt'
+    sh 'echo "$START_DATE" > $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt'
 
     sh 'echo "Official release date: metadata/release-date.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
     sh 'echo "Official Zenodo archive DOI: metadata/release-archive-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
     sh 'echo "Official Zenodo archive DOI: metadata/release-reference-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
     sh 'echo "TODO: Note software versions." >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+    // TODO: This should be wrapped in exception
+    // handling. In fact, this whole thing should be.
+    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+}
+
+// Recover written environment variables to help with restarts.
+void recover_environment() {
+
+    // Ninja in our file credentials from Jenkins.
+    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// Try and ssh fuse skyhook onto our local system.
+	sh 'sshfs -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+    }
+
+    env.TEST_DOW = sh(script: 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
+    env.TEST_DATE = sh(script: 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
+
     // TODO: This should be wrapped in exception
     // handling. In fact, this whole thing should be.
     sh 'fusermount -u $WORKSPACE/mnt/ || true'
