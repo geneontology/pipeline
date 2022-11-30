@@ -9,8 +9,8 @@ pipeline {
 	//cron('0 0 2-31/2 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
-	// Second and fourth Tuesday (lit. second and fourth week, Tues).
-	cron('00 12 8-14,22-28 * 2')
+	// Second and fourth Wednesday (lit. second and fourth week, Wed).
+	cron('00 12 8-14,22-28 * 3')
     }
     environment {
 	///
