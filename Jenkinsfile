@@ -215,8 +215,12 @@ pipeline {
 		parallel(
 		    "Ready owltools": {
 			recover_environment();
+			sh 'env > env.txt'
+			sh 'cat env.txt'
 			echo "${env.TEST_DOW}"
 			echo "${env.TEST_DATE}"
+			sh 'env > env.txt'
+			sh 'cat env.txt'
 
 			// Legacy: build 'owltools-build'
 			dir('./owltools') {
