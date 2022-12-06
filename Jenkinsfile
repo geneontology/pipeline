@@ -214,7 +214,6 @@ pipeline {
 	    steps {
 		parallel(
 		    "Ready owltools": {
-			recover_environment();
 			sh 'env > env.txt'
 			sh 'cat env.txt'
 			echo "${env.TEST_DOW}"
@@ -314,6 +313,7 @@ pipeline {
 	// to skyhook in their appropriate locations.
 	stage("Download annotation data") {
 	    steps {
+
 		dir("./go-site") {
 		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
@@ -354,6 +354,10 @@ pipeline {
 		}
 	    }
 	    steps {
+
+		// Recover environment.
+		recover_environment();
+
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
@@ -702,6 +706,9 @@ pipeline {
 	stage('Produce metadata') {
 	    steps {
 
+		// Recover environment.
+		recover_environment();
+
 		// Prep a copyover point, as the overhead for doing
 		// large i/o over sshfs seems /really/ high.
 		sh 'mkdir -p $WORKSPACE/copyover/ || true'
@@ -925,6 +932,9 @@ pipeline {
 	    }
 	    steps {
 
+		// Recover environment.
+		recover_environment();
+
 		// Build index into tmpfs.
 		sh 'bash /tmp/run-indexer.sh'
 
@@ -1022,6 +1032,10 @@ pipeline {
 	stage('Archive') {
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
+
+		// Recover environment.
+		recover_environment();
+
 		// Experimental stanza to support mounting the sshfs
 		// using the "hidden" skyhook identity.
 		sh 'mkdir -p $WORKSPACE/mnt/ || true'
@@ -1526,8 +1540,8 @@ void recover_environment() {
 	sh 'sshfs -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
     }
 
-    env.TEST_DOW = sh(script: 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
-    env.TEST_DATE = sh(script: 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
+    env.START_DOW = sh(script: 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
+    env.START_DATE = sh(script: 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
 
     // TODO: This should be wrapped in exception
     // handling. In fact, this whole thing should be.
