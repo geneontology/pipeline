@@ -1517,6 +1517,9 @@ void initialize() {
 // Recover written environment variables to help with restarts.
 void recover_environment() {
 
+    // Mount the remote filesystem.
+    sh 'mkdir -p $WORKSPACE/mnt/ || true'
+
     // Ninja in our file credentials from Jenkins.
     withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 	// Try and ssh fuse skyhook onto our local system.
