@@ -355,9 +355,6 @@ pipeline {
 	    }
 	    steps {
 
-		// Recover environment.
-		recover_environment();
-
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
@@ -502,6 +499,11 @@ pipeline {
 		    }
 		)
 	    }
+	}
+
+	// Recover environment.
+	stage('Checkpoint I') {
+	    recover_environment();
 	}
 
 	stage('Produce GAFs, TTLs, and journal (mega-step)') {
@@ -705,9 +707,6 @@ pipeline {
 	// A new step to think about. What is our core metadata?
 	stage('Produce metadata') {
 	    steps {
-
-		// Recover environment.
-		recover_environment();
 
 		// Prep a copyover point, as the overhead for doing
 		// large i/o over sshfs seems /really/ high.
@@ -920,6 +919,12 @@ pipeline {
 		}
 	    }
 	}
+
+	// Recover environment.
+	stage('Checkpoint II') {
+	    recover_environment();
+	}
+
 	//...
 	stage('Produce derivatives') {
 	    agent {
@@ -931,9 +936,6 @@ pipeline {
 		}
 	    }
 	    steps {
-
-		// Recover environment.
-		recover_environment();
 
 		// Build index into tmpfs.
 		sh 'bash /tmp/run-indexer.sh'
@@ -1029,12 +1031,15 @@ pipeline {
 		}
 	    }
 	}
+
+	// Recover environment.
+	stage('Checkpoint III') {
+	    recover_environment();
+	}
+
 	stage('Archive') {
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
-
-		// Recover environment.
-		recover_environment();
 
 		// Experimental stanza to support mounting the sshfs
 		// using the "hidden" skyhook identity.
