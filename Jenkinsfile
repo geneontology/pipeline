@@ -503,7 +503,9 @@ pipeline {
 
 	// Recover environment.
 	stage('Checkpoint I') {
-	    recover_environment();
+	    steps {
+		recover_environment();
+	    }
 	}
 
 	stage('Produce GAFs, TTLs, and journal (mega-step)') {
@@ -922,7 +924,9 @@ pipeline {
 
 	// Recover environment.
 	stage('Checkpoint II') {
-	    recover_environment();
+	    steps {
+		recover_environment();
+	    }
 	}
 
 	//...
@@ -1034,7 +1038,9 @@ pipeline {
 
 	// Recover environment.
 	stage('Checkpoint III') {
-	    recover_environment();
+	    steps {
+		recover_environment();
+	    }
 	}
 
 	stage('Archive') {
