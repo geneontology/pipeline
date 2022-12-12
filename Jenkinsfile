@@ -48,6 +48,8 @@ pipeline {
 	// very exotic cases where these check may need to be skipped
 	// for a run, in that case this variable is set to 'FALSE'.
 	WE_ARE_BEING_SAFE_P = 'TRUE'
+	// Sanity check for solr inde being built.
+	SANITY_SOLR_DOC_COUNT_MIN = 3800000
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '0'
@@ -333,6 +335,11 @@ pipeline {
 
 		// Build index into tmpfs.
 		sh 'bash /tmp/run-indexer.sh'
+
+		// Immediately check to see if it looks like we have
+		// enough docs. SANITY_SOLR_DOC_COUNT_MIN must be
+		// greater than what we seen in the index.
+		sh 'if [ ${env.SANITY_SOLR_DOC_COUNT_MIN} -gt $(curl "http://noctua-golr.berkeleybop.org/select?q=*:*&rows=0&wt=json" | jq ".response.numFound") ]; then exit 1; else echo "We seem to be clear wrt doc count"; fi'
 
 		// Copy tmpfs Solr contents onto skyhook.
 		sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
