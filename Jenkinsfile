@@ -1551,8 +1551,10 @@ void recover_environment() {
 	sh 'sshfs -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
     }
 
+    sh 'env'
     env.START_DOW = sh(script: 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
     env.START_DATE = sh(script: 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
+    sh 'env'
 
     // TODO: This should be wrapped in exception
     // handling. In fact, this whole thing should be.
