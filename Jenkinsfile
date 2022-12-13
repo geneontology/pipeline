@@ -339,9 +339,9 @@ pipeline {
 		// Immediately check to see if it looks like we have
 		// enough docs. SANITY_SOLR_DOC_COUNT_MIN must be
 		// greater than what we seen in the index.
-		sh 'echo "SANITY_SOLR_DOC_COUNT_MIN: ${env.SANITY_SOLR_DOC_COUNT_MIN}"'
+		echo "SANITY_SOLR_DOC_COUNT_MIN:${env.SANITY_SOLR_DOC_COUNT_MIN}"
 		sh 'curl "http://noctua-golr.berkeleybop.org/select?q=*:*&rows=0&wt=json"'
-		sh 'if [ ${env.SANITY_SOLR_DOC_COUNT_MIN} -gt $(curl "http://noctua-golr.berkeleybop.org/select?q=*:*&rows=0&wt=json" | jq ".response.numFound") ]; then exit 1; else echo "We seem to be clear wrt doc count"; fi'
+		sh 'if [ $SANITY_SOLR_DOC_COUNT_MIN -gt $(curl "http://noctua-golr.berkeleybop.org/select?q=*:*&rows=0&wt=json" | jq ".response.numFound") ]; then exit 1; else echo "We seem to be clear wrt doc count"; fi'
 
 		// Copy tmpfs Solr contents onto skyhook.
 		sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
