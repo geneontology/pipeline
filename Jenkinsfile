@@ -21,7 +21,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'issue-pipeline-204-go-reference-set-test'
+	TARGET_GO_SITE_BRANCH = 'master'
 	// The branch of minerva to use.
 	TARGET_MINERVA_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
@@ -104,7 +104,12 @@ pipeline {
 	    "http://purl.obolibrary.org/obo/wbbt.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
-	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/go_reference_set.gaf.gz"
+	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken.gaf.gz",
+	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/master/annotations/mgi.gaf.gz",
+	    "http://skyhook.berkeleybop.org/master/annotations/pombase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
 	    "http://skyhook.berkeleybop.org/master/products/panther/arbre.tgz"
