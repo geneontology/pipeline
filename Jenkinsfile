@@ -92,7 +92,7 @@ pipeline {
 	///
 	/// Ontobio Validation
 	///
-	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/master/ontology/go.json"
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/issue-204-new-species-set/ontology/go.json"
 
 	///
 	/// Minerva input.
@@ -100,7 +100,7 @@ pipeline {
 
 	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/ontology/extensions/go-lego.owl"
 	].join(" ")
 
 	///
@@ -111,10 +111,10 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/gorel.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-modules-annotations.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-taxon-subsets.owl",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/ontology/extensions/go-gaf.owl",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/ontology/extensions/gorel.owl",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/ontology/extensions/go-modules-annotations.owl",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/ontology/extensions/go-taxon-subsets.owl",
 	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
 	    // BUG: Temporarily lock in CL version; see:
@@ -128,16 +128,44 @@ pipeline {
 	    "http://purl.obolibrary.org/obo/wbbt.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
-	    //"http://skyhook.berkeleybop.org/master/products/annotations/paint_other.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken_complex.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/mgi.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/pombase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz"
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/products/annotations/paint_other.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/cgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/dictybase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/ecocyc.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/fb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/genedb_lmajor.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/genedb_tbrucei.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/genedb_pfalciparum.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_chicken.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_chicken_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_chicken_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_cow.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_cow_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_cow_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_dog.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_dog_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_dog_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_human.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_human_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_human_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_pig.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_pig_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_pig_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/japonicusdb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/mgi.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/pombase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/pseudocap.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/rgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/sgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/sgn.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/tair.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/wb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/xenbase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/annotations/zfin.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
-	    "http://skyhook.berkeleybop.org/master/products/panther/arbre.tgz"
+	    "http://skyhook.berkeleybop.org/issue-204-new-species-set/products/panther/arbre.tgz"
 	].join(" ")
 
 	///
