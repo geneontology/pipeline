@@ -954,45 +954,45 @@ pipeline {
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		}
 
-		// Solr should still be running in the background here
-		// from indexing--create stats products from running
-		// GOlr.
-		// Prepare a working directory based around go-site.
-		dir('./go-stats') {
-		    git branch: TARGET_GO_STATS_BRANCH, url: 'https://github.com/geneontology/go-stats.git'
+		// // Solr should still be running in the background here
+		// // from indexing--create stats products from running
+		// // GOlr.
+		// // Prepare a working directory based around go-site.
+		// dir('./go-stats') {
+		//     git branch: TARGET_GO_STATS_BRANCH, url: 'https://github.com/geneontology/go-stats.git'
 
-		    // Not much want or need here--simple
-		    // python3. However, using the information hidden
-		    // in run-indexer.sh to know where the Solr
-		    // instance is hiding.
-		    sh 'mkdir -p /tmp/stats/ || true'
-		    sh 'cp ./libraries/go-stats/*.py /tmp'
-		    // Needed as extra library.
-		    sh 'pip3 install --force-reinstall requests==2.19.1'
-		    sh 'pip3 install --force-reinstall networkx==2.2'
+		//     // Not much want or need here--simple
+		//     // python3. However, using the information hidden
+		//     // in run-indexer.sh to know where the Solr
+		//     // instance is hiding.
+		//     sh 'mkdir -p /tmp/stats/ || true'
+		//     sh 'cp ./libraries/go-stats/*.py /tmp'
+		//     // Needed as extra library.
+		//     sh 'pip3 install --force-reinstall requests==2.19.1'
+		//     sh 'pip3 install --force-reinstall networkx==2.2'
 
-		    // Final command, sealed into docker work
-		    // environment.
-		    echo "Check that results have been stored properly"
-		    sh "curl 'http://localhost:8080/solr/select?q=*:*&rows=0'"
-		    echo "End of results"
-		    retry(3){
-			sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s http://current.geneontology.org/release_stats/go-stats.json -n http://current.geneontology.org/release_stats/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p http://current.geneontology.org/ontology/go.obo -r http://current.geneontology.org/release_stats/go-references.tsv -o /tmp/stats/ -d $START_DATE'
-		    }
-		    retry(3) {
-		    	sh 'wget -N http://current.geneontology.org/release_stats/aggregated-go-stats-summaries.json'
-		    }
+		//     // Final command, sealed into docker work
+		//     // environment.
+		//     echo "Check that results have been stored properly"
+		//     sh "curl 'http://localhost:8080/solr/select?q=*:*&rows=0'"
+		//     echo "End of results"
+		//     retry(3){
+		// 	sh 'python3 /tmp/go_reports.py -g http://localhost:8080/solr/ -s http://current.geneontology.org/release_stats/go-stats.json -n http://current.geneontology.org/release_stats/go-stats-no-pb.json -c http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/go.obo -p http://current.geneontology.org/ontology/go.obo -r http://current.geneontology.org/release_stats/go-references.tsv -o /tmp/stats/ -d $START_DATE'
+		//     }
+		//     retry(3) {
+		//     	sh 'wget -N http://current.geneontology.org/release_stats/aggregated-go-stats-summaries.json'
+		//     }
 
-		    // Roll the stats forward.
-		    sh 'python3 /tmp/aggregate-stats.py -a aggregated-go-stats-summaries.json -b /tmp/stats/go-stats-summary.json -o /tmp/stats/aggregated-go-stats-summaries.json'
+		//     // Roll the stats forward.
+		//     sh 'python3 /tmp/aggregate-stats.py -a aggregated-go-stats-summaries.json -b /tmp/stats/go-stats-summary.json -o /tmp/stats/aggregated-go-stats-summaries.json'
 
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    	retry(3) {
-			    // Copy over stats files.
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/stats/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/release_stats/'
-			}
-		    }
-		}
+		//     withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		//     	retry(3) {
+		// 	    // Copy over stats files.
+		// 	    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/stats/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/release_stats/'
+		// 	}
+		//     }
+		// }
 	    }
 	}
 	//...
