@@ -344,6 +344,11 @@ pipeline {
 		}
 	    }
 	    steps {
+		// Try and force destruction of anything remaining on
+		// disk before starting build.
+		dir('./go-ontology') {
+		    deleteDir()
+		}
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
