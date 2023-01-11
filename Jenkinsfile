@@ -62,9 +62,11 @@ pipeline {
 	//MAKECMD = 'make --jobs 3 --max-load 10.0'
 	MAKECMD = 'make'
 	// GOlr load profile.
-	GOLR_SOLR_MEMORY = "128G"
+	//GOLR_SOLR_MEMORY = "128G"
+	GOLR_SOLR_MEMORY = "192G"
 	//GOLR_LOADER_MEMORY = "192G"
-	GOLR_LOADER_MEMORY = "320G"
+	//GOLR_LOADER_MEMORY = "320G"
+	GOLR_LOADER_MEMORY = "384G"
 	GOLR_INPUT_ONTOLOGIES = [
 	    //"http://purl.obolibrary.org/obo/go/snapshot/extensions/go-lego.owl",
 	    //"http://purl.obolibrary.org/obo/eco.owl",
