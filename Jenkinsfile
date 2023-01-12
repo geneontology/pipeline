@@ -344,11 +344,6 @@ pipeline {
 		}
 	    }
 	    steps {
-		// Try and force destruction of anything remaining on
-		// disk before starting build.
-		dir('./go-ontology') {
-		    deleteDir()
-		}
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
@@ -358,6 +353,10 @@ pipeline {
 		    // the git commands a little. Issues #248.
 		    // git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
                     checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_GO_ONTOLOGY_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/go-ontology.git', refspec: "+refs/heads/${env.TARGET_GO_ONTOLOGY_BRANCH}:refs/remotes/origin/${env.TARGET_GO_ONTOLOGY_BRANCH}"]]]
+
+		    // Try and force destruction of anything remaining
+		    // on disk before starting build.
+		    sh 'git clean -fx'
 
 		    // Default namespace.
 		    sh 'env'
