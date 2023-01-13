@@ -350,6 +350,8 @@ pipeline {
 
 		    // Try and force destruction of anything remaining
 		    // on disk before starting build.
+		    sh 'pwd'
+		    sh 'ls -AlF'
 		    sh 'git clean -fx || true'
 
 		    // We're starting to run into problems with
