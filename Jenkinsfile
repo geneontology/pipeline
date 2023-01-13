@@ -348,12 +348,6 @@ pipeline {
 		// data environment.
 		dir('./go-ontology') {
 
-		    // Try and force destruction of anything remaining
-		    // on disk before starting build.
-		    sh 'pwd'
-		    sh 'ls -AlF'
-		    sh 'git clean -fx || true'
-
 		    // We're starting to run into problems with
 		    // ontology download taking too long for the
 		    // default 10m, so try and get into the guts of
@@ -391,6 +385,10 @@ pipeline {
 			    }
 			}
 		    }
+
+		    // Try and force destruction of anything remaining
+		    // on disk after build as cleanup.
+		    sh 'git clean -fx || true'
 		}
 	    }
 	}
