@@ -1571,6 +1571,8 @@ void recover_environment() {
     sh 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt'
     env.START_DOW = sh(script: 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
     env.START_DATE = sh(script: 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
+    env.FOOBAR = 'foobar123'
+    sh 'env'
 
     // TODO: This should be wrapped in exception
     // handling. In fact, this whole thing should be.
