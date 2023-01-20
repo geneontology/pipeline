@@ -375,6 +375,7 @@ pipeline {
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
+
 		    // We're starting to run into problems with
 		    // ontology download taking too long for the
 		    // default 10m, so try and get into the guts of
@@ -412,6 +413,10 @@ pipeline {
 			    }
 			}
 		    }
+
+		    // Try and force destruction of anything remaining
+		    // on disk after build as cleanup.
+		    sh 'git clean -fx || true'
 		}
 	    }
 	}
