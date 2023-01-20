@@ -340,6 +340,16 @@ pipeline {
 		}
 	    }
 	}
+
+	// Recover environment.
+	stage('Checkpoint -0') {
+	    steps {
+		sh 'env'
+		recover_environment();
+		sh 'env'
+	    }
+	}
+
 	// See https://github.com/geneontology/go-ontology for details
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
@@ -1556,7 +1566,7 @@ void recover_environment() {
 	// Try and ssh fuse skyhook onto our local system.
 	sh 'sshfs -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
     }
-    sh 'ls -AlF WORKSPACE/mnt/$BRANCH_NAME/metadata/'
+    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/metadata/'
     sh 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt'
     sh 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt'
     env.START_DOW = sh(script: 'cat $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
