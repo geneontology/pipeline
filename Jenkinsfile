@@ -1026,6 +1026,14 @@ pipeline {
 		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
 		    sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/goa_uniprot_all-src.gaf.gz || true'
 		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
+
+		    // Try and remove /lib and /bin from getting into
+		    // the archives by removing them now that we're
+		    // done using them for product builds. Re: #268.
+		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/'
+		    sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME/bin'
+		    sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME/lib'
+		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/'
 		}
 		// Copy the product to the right location. As well,
 		// archive.
