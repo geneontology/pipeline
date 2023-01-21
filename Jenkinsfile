@@ -1020,8 +1020,9 @@ pipeline {
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 
-		    // Try to catch and prevent goa_uniprot_all-src from getting into zenodo archive, etc.
-		    // https://github.com/geneontology/pipeline/issues/207
+		    // Try to catch and prevent goa_uniprot_all-src
+		    // from getting into zenodo archive, etc. Re:
+		    // #207.
 		    sh 'pwd'
 		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
 		    sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/goa_uniprot_all-src.gaf.gz || true'
