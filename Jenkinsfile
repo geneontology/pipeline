@@ -185,15 +185,17 @@ pipeline {
 		///
 
 		// Pin dates and day to beginning of run.
-		env.START_DATE = sh (
-		    script: 'date +%Y-%m-%d',
-		    returnStdout: true
-		).trim()
+		script {
+		    env.START_DATE = sh (
+			script: 'date +%Y-%m-%d',
+			returnStdout: true
+		    ).trim()
 
-		env.START_DAY = sh (
-		    script: 'date +%A',
-		    returnStdout: true
-		).trim()
+		    env.START_DAY = sh (
+			script: 'date +%A',
+			returnStdout: true
+		    ).trim()
+		}
 
 		sh 'env > env.txt'
 		sh 'echo $BRANCH_NAME > branch.txt'
