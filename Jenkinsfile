@@ -11,20 +11,6 @@ pipeline {
 	//cron('0 0 1 * *')
     }
     environment {
-	///
-	/// Automatic run variables.
-	///
-
-	// Pin dates and day to beginning of run.
-	START_DATE = sh (
-	    script: 'date +%Y-%m-%d',
-	    returnStdout: true
-	).trim()
-
-	START_DAY = sh (
-	    script: 'date +%A',
-	    returnStdout: true
-	).trim()
 
 	///
 	/// Internal run variables.
@@ -190,23 +176,34 @@ pipeline {
 	}
 	stage('Initialize') {
 	    steps {
-		// Start preparing environment.
-		parallel(
-		    "Report": {
-			sh 'env > env.txt'
-			sh 'echo $BRANCH_NAME > branch.txt'
-			sh 'echo "$BRANCH_NAME"'
-			sh 'cat env.txt'
-			sh 'cat branch.txt'
-			sh 'echo $START_DAY > dow.txt'
-			sh 'echo "$START_DAY"'
-			sh 'echo $START_DATE > date.txt'
-			sh 'echo "$START_DATE"'
-		    },
-		    "Reset base": {
-			initialize();
-		    }
-		)
+
+		// Reset base.
+		initialize();
+
+		///
+		/// Automatic run variables.
+		///
+
+		// Pin dates and day to beginning of run.
+		env.START_DATE = sh (
+		    script: 'date +%Y-%m-%d',
+		    returnStdout: true
+		).trim()
+
+		env.START_DAY = sh (
+		    script: 'date +%A',
+		    returnStdout: true
+		).trim()
+
+		sh 'env > env.txt'
+		sh 'echo $BRANCH_NAME > branch.txt'
+		sh 'echo "$BRANCH_NAME"'
+		sh 'cat env.txt'
+		sh 'cat branch.txt'
+		sh 'echo $START_DAY > dow.txt'
+		sh 'echo "$START_DAY"'
+		sh 'echo $START_DATE > date.txt'
+		sh 'echo "$START_DATE"'
 	    }
 	}
 	// Build owltools and get it into the shared filesystem.
@@ -342,7 +339,7 @@ pipeline {
 	}
 
 	// Recover environment.
-	stage('Checkpoint -0') {
+	stage('Checkpoint I') {
 	    steps {
 		sh 'env'
 		recover_environment();
@@ -512,7 +509,7 @@ pipeline {
 	}
 
 	// Recover environment.
-	stage('Checkpoint I') {
+	stage('Checkpoint II') {
 	    steps {
 		sh 'env'
 		recover_environment();
@@ -935,7 +932,7 @@ pipeline {
 	}
 
 	// Recover environment.
-	stage('Checkpoint II') {
+	stage('Checkpoint III') {
 	    steps {
 		sh 'env'
 		recover_environment();
@@ -1051,7 +1048,7 @@ pipeline {
 	}
 
 	// Recover environment.
-	stage('Checkpoint III') {
+	stage('Checkpoint IV') {
 	    steps {
 		sh 'env'
 		recover_environment();
