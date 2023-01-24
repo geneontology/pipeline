@@ -365,6 +365,8 @@ pipeline {
 	    steps {
 
 		sh 'env'
+		recover_environment();
+		sh 'env'
 
 		// Create a relative working directory and setup our
 		// data environment.
