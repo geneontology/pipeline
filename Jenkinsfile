@@ -364,6 +364,8 @@ pipeline {
 	    }
 	    steps {
 
+		sh 'env'
+
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
