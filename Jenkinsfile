@@ -362,10 +362,12 @@ pipeline {
 		    args '-u root:root'
 		}
 	    }
+	    environment {
+		START_DOW = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
+		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
+	    }
 	    steps {
 
-		sh 'env'
-		recover_environment();
 		sh 'env'
 
 		// Create a relative working directory and setup our
@@ -1565,12 +1567,8 @@ void recover_environment() {
     // guarantee sshfs.
 
     // Try and ssh fuse skyhook onto our local system.
-    sh 'wget -N http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/dow.txt'
-    sh 'wget -N http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/date.txt'
 
     sh 'ls -AlF'
-    env.START_DOW = sh(script: 'cat dow.txt', , returnStdout: true).trim()
-    env.START_DATE = sh(script: 'cat date.txt', , returnStdout: true).trim()
     env.FOOBAR = 'foobar123'
     sh 'env'
 }
