@@ -79,7 +79,7 @@ pipeline {
 	///
 	/// Ontobio Validation
 	///
-	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/master/ontology/go.json"
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/issue-175-save-env-retry/ontology/go.json"
 
 	///
 	/// Minerva input.
@@ -87,7 +87,7 @@ pipeline {
 
 	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/ontology/extensions/go-lego.owl"
 	].join(" ")
 
 	///
@@ -98,10 +98,10 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/gorel.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-modules-annotations.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-taxon-subsets.owl",
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/ontology/extensions/go-gaf.owl",
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/ontology/extensions/gorel.owl",
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/ontology/extensions/go-modules-annotations.owl",
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/ontology/extensions/go-taxon-subsets.owl",
 	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
 	    // BUG: Temporarily lock in CL version; see:
@@ -115,16 +115,16 @@ pipeline {
 	    "http://purl.obolibrary.org/obo/wbbt.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
-	    //"http://skyhook.berkeleybop.org/master/products/annotations/paint_other.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken_complex.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/mgi.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/pombase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz"
+	    //"http://skyhook.berkeleybop.org/issue-175-save-env-retry/products/annotations/paint_other.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/annotations/goa_chicken.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/annotations/goa_chicken_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/annotations/mgi.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/annotations/pombase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/annotations/wb.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
-	    "http://skyhook.berkeleybop.org/master/products/panther/arbre.tgz"
+	    "http://skyhook.berkeleybop.org/issue-175-save-env-retry/products/panther/arbre.tgz"
 	].join(" ")
 
 	///
@@ -177,9 +177,6 @@ pipeline {
 	stage('Initialize') {
 	    steps {
 
-		// Reset base.
-		initialize();
-
 		///
 		/// Automatic run variables.
 		///
@@ -196,6 +193,9 @@ pipeline {
 			returnStdout: true
 		    ).trim()
 		}
+
+		// Reset base.
+		initialize();
 
 		sh 'env > env.txt'
 		sh 'echo $BRANCH_NAME > branch.txt'
