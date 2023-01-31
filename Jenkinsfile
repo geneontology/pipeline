@@ -431,6 +431,10 @@ pipeline {
 				}
 
 				// Collation.
+				// Hack for iterating quickly on
+				// https://github.com/geneontology/pipeline/issues/313 .
+		    		sh 'wget -N https://raw.githubusercontent.com/geneontology/go-site/$BRANCH/scripts/collate-gpads.pl'
+				sh 'mv collate-gpads.pl ./util/collate-gpads.pl'
 				sh 'perl ./util/collate-gpads.pl legacy/gpad/*.gpad'
 
 				// Rename, compress, and move to skyhook.
