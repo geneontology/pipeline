@@ -58,8 +58,6 @@ pipeline {
 	// very exotic cases where these check may need to be skipped
 	// for a run, in that case this variable is set to 'FALSE'.
 	WE_ARE_BEING_SAFE_P = 'TRUE'
-	// Variable to check if the "hard" ZENODO archive stage was passed.
-	ZENODO_ARCHIVING_SUCCESSFUL = 'FALSE'
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
@@ -80,7 +78,6 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_REFERENCE_CONCEPT = '1205159'
 	ZENODO_ARCHIVE_CONCEPT = '1205166'
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
@@ -462,6 +459,11 @@ pipeline {
 				}
 
 				// Collation.
+				// Hack for iterating quickly on
+				// https://github.com/geneontology/pipeline/issues/313 .
+		    		sh 'wget -N https://raw.githubusercontent.com/geneontology/go-site/$BRANCH_NAME/scripts/collate-gpads.pl'
+
+				sh 'mv collate-gpads.pl ./util/collate-gpads.pl'
 				sh 'perl ./util/collate-gpads.pl legacy/gpad/*.gpad'
 
 				// Rename, compress, and move to skyhook.
@@ -1051,12 +1053,21 @@ pipeline {
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
 
-		    // Try to catch and prevent goa_uniprot_all-src from getting into zenodo archive, etc.
-		    // https://github.com/geneontology/pipeline/issues/207
+		    // Try to catch and prevent goa_uniprot_all-src
+		    // from getting into zenodo archive, etc. Re:
+		    // #207.
 		    sh 'pwd'
 		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
 		    sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/goa_uniprot_all-src.gaf.gz || true'
 		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
+
+		    // Try and remove /lib and /bin from getting into
+		    // the archives by removing them now that we're
+		    // done using them for product builds. Re: #268.
+		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/'
+		    sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME/bin'
+		    sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME/lib'
+		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/'
 		}
 		// Copy the product to the right location. As well,
 		// archive.
@@ -1127,10 +1138,6 @@ pipeline {
 				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
 				}
 
-				// Make holey BDBag in fixed directory.
-				sh 'mkdir -p go-release-reference || true'
-				sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
-
 				// To make a full BDBag, we first need
 				// a copy of the data as BDBags change
 				// directory layout (e.g. data/).
@@ -1180,9 +1187,6 @@ pipeline {
 				    // space and already in Zenodo.
 				    sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
 
-				    // We were successful.
-				    ZENODO_ARCHIVING_SUCCESSFUL = 'TRUE'
-
 				} catch (exception) {
 				    // Something went bad with the
 				    // Zenodo archive upload.
@@ -1193,43 +1197,6 @@ pipeline {
 				    // Hard die if this is a release.
 				    if( env.BRANCH_NAME == 'release' ){
 					error 'Zenodo archive upload error on release--no recovery.'
-				    }
-				}
-				try {
-
-				    // Do not attempt the "easy" path
-				    // if the hard one failed so we
-				    // can retry later at the stage
-				    // level.
-				    if( ZENODO_ARCHIVING_SUCCESSFUL == 'FALSE' ){
-					error "Pre-failing on reference after a failed archive so we can retry at the stage level."
-				    }
-
-				    // Archive the holey bdbag for
-				    // this run.
-				    if( env.BRANCH_NAME == 'release' ){
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_PRODUCTION_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
-				    }else if( env.BRANCH_NAME == 'snapshot' ){
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
-				    }else if( env.BRANCH_NAME == 'master' ){
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_SANDBOX_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
-				    }
-				    // Copy the referential metadata
-				    // files and DOI to skyhook
-				    // metadata/ for easy inspection.
-				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
-				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
-				    sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
-				} catch (exception) {
-				    // Something went bad with the
-				    // Zenodo reference upload.
-				    echo "There has been a failure in the reference upload to Zenodo."
-				    emailext to: "${TARGET_ADMIN_EMAILS}",
-					subject: "GO Pipeline Zenodo reference upload fail for ${env.BRANCH_NAME}",
-					body: "There has been a failure in the reference upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
-				    // Hard die if this is a release.
-				    if( env.BRANCH_NAME == 'release' ){
-					error 'Zenodo reference upload error on release--no recovery.'
 				    }
 				}
 			    }
@@ -1525,7 +1492,6 @@ void initialize() {
 
     sh 'echo "Official release date: metadata/release-date.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
     sh 'echo "Official Zenodo archive DOI: metadata/release-archive-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    sh 'echo "Official Zenodo archive DOI: metadata/release-reference-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
     sh 'echo "TODO: Note software versions." >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
     // TODO: This should be wrapped in exception
     // handling. In fact, this whole thing should be.
