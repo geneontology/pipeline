@@ -11,20 +11,6 @@ pipeline {
 	//cron('0 0 1 * *')
     }
     environment {
-	///
-	/// Automatic run variables.
-	///
-
-	// Pin dates and day to beginning of run.
-	START_DATE = sh (
-	    script: 'date +%Y-%m-%d',
-	    returnStdout: true
-	).trim()
-
-	START_DAY = sh (
-	    script: 'date +%A',
-	    returnStdout: true
-	).trim()
 
 	///
 	/// Internal run variables.
@@ -187,21 +173,36 @@ pipeline {
 	}
 	stage('Initialize') {
 	    steps {
-		// Start preparing environment.
-		parallel(
-		    "Report": {
-			sh 'env > env.txt'
-			sh 'echo $BRANCH_NAME > branch.txt'
-			sh 'echo "$BRANCH_NAME"'
-			sh 'cat env.txt'
-			sh 'cat branch.txt'
-			sh 'echo $START_DAY > dow.txt'
-			sh 'echo "$START_DAY"'
-		    },
-		    "Reset base": {
-			initialize();
-		    }
-		)
+
+		///
+		/// Automatic run variables.
+		///
+
+		// Pin dates and day to beginning of run.
+		script {
+		    env.START_DATE = sh (
+			script: 'date +%Y-%m-%d',
+			returnStdout: true
+		    ).trim()
+
+		    env.START_DAY = sh (
+			script: 'date +%A',
+			returnStdout: true
+		    ).trim()
+		}
+
+		// Reset base.
+		initialize();
+
+		sh 'env > env.txt'
+		sh 'echo $BRANCH_NAME > branch.txt'
+		sh 'echo "$BRANCH_NAME"'
+		sh 'cat env.txt'
+		sh 'cat branch.txt'
+		sh 'echo $START_DAY > dow.txt'
+		sh 'echo "$START_DAY"'
+		sh 'echo $START_DATE > date.txt'
+		sh 'echo "$START_DATE"'
 	    }
 	}
 	// Build owltools and get it into the shared filesystem.
@@ -331,7 +332,7 @@ pipeline {
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
 	// a release, and deploys to S3.
-	stage('Produce ontology') {
+	stage('Produce ontology (*)') {
 	    agent {
 		docker {
 		    image 'obolibrary/odkfull:v1.2.32'
@@ -339,6 +340,11 @@ pipeline {
 		    // root.
 		    args '-u root:root'
 		}
+	    }
+	    // CHECKPOINT: Recover key environmental variables.
+	    environment {
+		START_DOW = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
+		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
 	    }
 	    steps {
 		// Create a relative working directory and setup our
@@ -497,12 +503,17 @@ pipeline {
 	    }
 	}
 
-	stage('Produce GAFs, TTLs, and journal (mega-step)') {
+	stage('Produce GAFs, TTLs, and journal (*)') {
 	    agent {
 		docker {
 		    image 'geneontology/dev-base:857fc148379e5afea6c27f798d4c62b2fadf3577_2021-04-27T182251'
 		    args "-u root:root --tmpfs /opt:exec -w /opt"
 		}
+	    }
+	    // CHECKPOINT: Recover key environmental variables.
+	    environment {
+		START_DOW = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
+		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
 	    }
 
 	    steps {
@@ -911,7 +922,7 @@ pipeline {
 	    }
 	}
 	//...
-	stage('Produce derivatives') {
+	stage('Produce derivatives (*)') {
 	    agent {
 		docker {
 		    image 'geneontology/golr-autoindex:28a693d28b37196d3f79acdea8c0406c9930c818_2022-03-17T171930_master'
@@ -920,6 +931,12 @@ pipeline {
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
 		}
 	    }
+	    // CHECKPOINT: Recover key environmental variables.
+	    environment {
+		START_DOW = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
+		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
+	    }
+
 	    steps {
 
 		// Build index into tmpfs.
@@ -1016,7 +1033,14 @@ pipeline {
 		}
 	    }
 	}
-	stage('Archive') {
+
+	stage('Archive (*)') {
+	    // CHECKPOINT: Recover key environmental variables.
+	    environment {
+		START_DOW = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
+		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
+	    }
+
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
 		// Experimental stanza to support mounting the sshfs
@@ -1464,6 +1488,8 @@ void initialize() {
     sh 'echo "Branch: $BRANCH_NAME" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
     sh 'echo "Start day: $START_DAY" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
     sh 'echo "Start date: $START_DATE" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+    sh 'echo "$START_DAY" > $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt'
+    sh 'echo "$START_DATE" > $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt'
 
     sh 'echo "Official release date: metadata/release-date.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
     sh 'echo "Official Zenodo archive DOI: metadata/release-archive-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
