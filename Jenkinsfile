@@ -529,7 +529,7 @@ pipeline {
 	    steps {
 
 		// Legacy: build 'gaf-production'
-		sh "mkdir -p $WORKSPACE/go-site"
+		//sh "mkdir -p $WORKSPACE/go-site"
 		sh "cd $WORKSPACE/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
 		// sh "pwd"
 		sh "mkdir -p $WORKSPACE/bin"
