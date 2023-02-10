@@ -548,31 +548,31 @@ pipeline {
 	    steps {
 
 		// Legacy: build 'gaf-production'
-		//sh "mkdir -p $WORKSPACE/go-site"
-		sh "cd $WORKSPACE/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
+		sh "mkdir -p $WORKSPACE/tmp"
+		sh "cd $WORKSPACE/tmp && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
 		// sh "pwd"
-		sh "mkdir -p $WORKSPACE/bin"
-		sh "mkdir -p $WORKSPACE/lib"
-		sh "mkdir -p $WORKSPACE/go-site/gaferencer-products"
-		sh "mkdir -p $WORKSPACE/go-site/gaferencer-products-tmp"
+		sh "mkdir -p $WORKSPACE/tmp/bin"
+		sh "mkdir -p $WORKSPACE/tmp/lib"
+		sh "mkdir -p $WORKSPACE/tmp/go-site/gaferencer-products"
+		sh "mkdir -p $WORKSPACE/tmp/go-site/gaferencer-products-tmp"
 		// git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* $WORKSPACE/bin/'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* $WORKSPACE/tmp/bin/'
 		    // WARNING/BUG: needed for blazegraph-runner
 		    // to run at this point.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* $WORKSPACE/lib/'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* $WORKSPACE/tmp/lib/'
 		    // Copy the sources we downloaded earlier to local.
 		    // We're grabbing anything that's gaf, zipped or unzipped. This leaves gpad or anything else behind since currently we only expect gafs
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/*.gaf*  $WORKSPACE/go-site/sources/'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/*.gaf*  $WORKSPACE/tmp/go-site/sources/'
 		}
-		sh "chmod +x $WORKSPACE/bin/*"
+		sh "chmod +x $WORKSPACE/tmp/bin/*"
 
-		sh "python3 $WORKSPACE/go-site/scripts/download_source_gafs.py organize --datasets $WORKSPACE/go-site/metadata/datasets --source $WORKSPACE/go-site/sources --target $WORKSPACE/go-site/pipeline/target/groups/"
-		sh "rm $WORKSPACE/go-site/sources/*"
+		sh "python3 $WORKSPACE/tmp/go-site/scripts/download_source_gafs.py organize --datasets $WORKSPACE/tmp/go-site/metadata/datasets --source $WORKSPACE/tmp/go-site/sources --target $WORKSPACE/tmp/go-site/pipeline/target/groups/"
+		sh "rm $WORKSPACE/tmp/go-site/sources/*"
 
 		// Make minimal GAF products.
-		// sh "cd $WORKSPACE/go-site/pipeline"
+		// sh "cd $WORKSPACE/tmp/go-site/pipeline"
 		// sh "pwd"
 		// Gunna need some memory.
 		// In addition to the memory, try and simulate
@@ -589,8 +589,8 @@ pipeline {
 		    sh 'env > env.txt'
 		    sh 'cat env.txt'
 
-		    sh 'cd $WORKSPACE/go-site/pipeline && pip3 install -r requirements.txt'
-		    sh 'cd $WORKSPACE/go-site/pipeline && pip3 install ../graphstore/rule-runner'
+		    sh 'cd $WORKSPACE/tmp/go-site/pipeline && pip3 install -r requirements.txt'
+		    sh 'cd $WORKSPACE/tmp/go-site/pipeline && pip3 install ../graphstore/rule-runner'
 		    // Ready, set...
 		    // Do this thing, but the watchdog sits
 		    // waiting.
@@ -599,7 +599,7 @@ pipeline {
 			    /// All branches now try to produce all
 			    /// targets in the go-site Makefile.
 			    try {
-				sh 'cd $WORKSPACE/go-site/pipeline && PATH=$WORKSPACE/bin:$PATH $MAKECMD PY_BIN=/usr/local/bin/ -e target/sparta-report.json'
+				sh 'cd $WORKSPACE/tmp/go-site/pipeline && PATH=$WORKSPACE/tmp/bin:$PATH $MAKECMD PY_BIN=/usr/local/bin/ -e target/sparta-report.json'
 				// Try and force progress.
 				if( fileExists('target/sparta-report.json') ){
 				    echo 'GOODGOODGOOD!'
@@ -621,7 +621,7 @@ pipeline {
 		    //  - all irregular gaffy files + anything paint-y
 		    //  - but not uniprot_all anything (elsewhere)
 		    //  - and not any of the ttls
-		    sh 'find $WORKSPACE/go-site/pipeline/target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\-src.gpi\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
+		    sh 'find $WORKSPACE/tmp/go-site/pipeline/target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\-src.gpi\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
 		    // No longer copy goa uniprot all source to products:
 		    // https://github.com/geneontology/pipeline/issues/207
 		    // // Now copy over the (single) uniprot
@@ -629,19 +629,19 @@ pipeline {
 		    // // (e.g. speed runs of master).
 		    // script {
 		    // 	try {
-		    // 	    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/go-site/pipeline/target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
+		    // 	    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/tmp/go-site/pipeline/target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
 		    // 	} catch (exception) {
 		    // 	    echo "NOTE: No goa_uniprot_all-src.gaf.gz found for this run to copy."
 		    // 	}
 		    // }
 		    // Finally, the non-zipped prediction files.
-		    sh 'find $WORKSPACE/go-site/pipeline/target/groups -type f -regex "^.*\\-prediction.gaf$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
+		    sh 'find $WORKSPACE/tmp/go-site/pipeline/target/groups -type f -regex "^.*\\-prediction.gaf$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
 		    // Flatten all GAFs and GAF-like products
 		    // onto skyhook. Basically:
 		    //  - all product-y files
 		    //  - but not uniprot_all anything (elsewhere)
 		    //  - and not anything "irregular", like src
-		    sh 'find $WORKSPACE/go-site/pipeline/target/groups -type f -regex "^.*.\\(gaf\\|gpad\\|gpi\\).gz$" -not -regex "^.*\\(\\-src.gaf\\|\\-src.gpi\\|\\_noiea.gaf\\|\\_valid.gaf\\|noctua_.*\\|paint_.*\\).gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
+		    sh 'find $WORKSPACE/tmp/go-site/pipeline/target/groups -type f -regex "^.*.\\(gaf\\|gpad\\|gpi\\).gz$" -not -regex "^.*\\(\\-src.gaf\\|\\-src.gpi\\|\\_noiea.gaf\\|\\_valid.gaf\\|noctua_.*\\|paint_.*\\).gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
 		    // Now copy over the four uniprot core
 		    // files, if they are in our run set
 		    // (e.g. may not be there on speed runs
@@ -650,39 +650,39 @@ pipeline {
 			try {
 			    // No longer copy goa uniprot all source to annotations:
 			    // https://github.com/geneontology/pipeline/issues/207
-			    //sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/go-site/pipeline/target/groups/goa/goa_uniprot_all.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gpi.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+			    //sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/tmp/go-site/pipeline/target/groups/goa/goa_uniprot_all.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/tmp/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/tmp/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gpi.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/tmp/go-site/pipeline/target/groups/goa/goa_uniprot_all_noiea.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			} catch (exception) {
 			    echo "NOTE: At least one uniprot core file not found for this run to copy."
 			}
 		    }
 		    // Find all {group}.gaferences.json files and combine into one JSON list in one file
-		    sh 'find $WORKSPACE/go-site/pipeline/target/groups -type f -regex "^.*.gaferences.json$" -exec cp {} $WORKSPACE/go-site/gaferencer-products-tmp/ \\;'
-		    sh 'python3 $WORKSPACE/go-site/scripts/json-concat-lists.py  $WORKSPACE/go-site/gaferencer-products-tmp/*.gaferences.json $WORKSPACE/go-site/gaferencer-products/all.gaferences.json'
+		    sh 'find $WORKSPACE/tmp/go-site/pipeline/target/groups -type f -regex "^.*.gaferences.json$" -exec cp {} $WORKSPACE/tmp/go-site/gaferencer-products-tmp/ \\;'
+		    sh 'python3 $WORKSPACE/tmp/go-site/scripts/json-concat-lists.py  $WORKSPACE/tmp/go-site/gaferencer-products-tmp/*.gaferences.json $WORKSPACE/tmp/go-site/gaferencer-products/all.gaferences.json'
 		    // DEBUG: remove debug line later
-		    sh 'ls -AlF $WORKSPACE/go-site/gaferencer-products'
-		    sh 'pigz $WORKSPACE/go-site/gaferencer-products/all.gaferences.json'
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer'
+		    sh 'ls -AlF $WORKSPACE/tmp/go-site/gaferencer-products'
+		    sh 'pigz $WORKSPACE/tmp/go-site/gaferencer-products/all.gaferences.json'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY $WORKSPACE/tmp/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer'
 		    // Flatten the TTLs into products/ttl/.
-		    sh 'find $WORKSPACE/go-site/pipeline/target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
+		    sh 'find $WORKSPACE/tmp/go-site/pipeline/target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
 		    // Compress the journals.
-		    sh 'pigz $WORKSPACE/go-site/pipeline/target/blazegraph-internal.jnl'
-		    sh 'pigz $WORKSPACE/go-site/pipeline/target/blazegraph-production.jnl'
+		    sh 'pigz $WORKSPACE/tmp/go-site/pipeline/target/blazegraph-internal.jnl'
+		    sh 'pigz $WORKSPACE/tmp/go-site/pipeline/target/blazegraph-production.jnl'
 		    // Copy the journals directly to products.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" $WORKSPACE/go-site/pipeline/target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" $WORKSPACE/go-site/pipeline/target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" $WORKSPACE/tmp/go-site/pipeline/target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" $WORKSPACE/tmp/go-site/pipeline/target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
 		    // Copy the reports into reports.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" $WORKSPACE/go-site/pipeline/target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" $WORKSPACE/tmp/go-site/pipeline/target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 		    // Plus: flatten product reports in json,
 		    // md reports, text files, etc.
-		    sh 'find $WORKSPACE/go-site/pipeline/target/groups -type f -regex "^.*\\.\\(json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports \\;'
+		    sh 'find $WORKSPACE/tmp/go-site/pipeline/target/groups -type f -regex "^.*\\.\\(json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports \\;'
 		    script {
 			try {
 			    // WARNING: This is a hacky fix for https://github.com/geneontology/go-site/issues/1253 .
 			    // It can (should) be removed with an overall flow change in https://github.com/geneontology/go-site/issues/1384 .
-			    sh 'find $WORKSPACE/go-site/pipeline/target/groups/paint -type f -regex "^.*\\.\\(json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports \\;'
+			    sh 'find $WORKSPACE/tmp/go-site/pipeline/target/groups/paint -type f -regex "^.*\\.\\(json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports \\;'
 			} catch (exception) {
 			    echo "NOTE: paint directory does not exist, so no reports to copy"
 			}
