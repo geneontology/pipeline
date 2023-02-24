@@ -44,6 +44,12 @@ pipeline {
 	// very exotic cases where these check may need to be skipped
 	// for a run, in that case this variable is set to 'FALSE'.
 	WE_ARE_BEING_SAFE_P = 'TRUE'
+	// Sanity check for solr index being built--overall min count.
+	// See https://github.com/geneontology/pipeline/issues/315 .
+	// Only used on release attempts (as it saves QC time and
+	// getting the number for all branches would be a trick).
+	SANITY_SOLR_DOC_COUNT_MIN = 11000000
+	SANITY_SOLR_BIOENTITY_DOC_COUNT_MIN = 1400000
 	// Control make to get through our loads faster if
 	// possible. Assuming we're cpu bound for some of these...
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
@@ -967,6 +973,25 @@ pipeline {
 
 		// Build index into tmpfs.
 		sh 'bash /tmp/run-indexer.sh'
+
+		// Immediately check to see if it looks like we have
+		// enough docs when trying a
+		// release. SANITY_SOLR_DOC_COUNT_MIN must be greater
+		// than what we seen in the index.
+		script {
+		    if( env.BRANCH_NAME == 'release' ){
+
+			// Test overall.
+			echo "SANITY_SOLR_DOC_COUNT_MIN:${env.SANITY_SOLR_DOC_COUNT_MIN}"
+			sh 'curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json"'
+			sh 'if [ $SANITY_SOLR_DOC_COUNT_MIN -gt $(curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json" | grep -oh \'"numFound":[[:digit:]]*\' | grep -oh [[:digit:]]*) ]; then exit 1; else echo "We seem to be clear wrt doc count"; fi'
+
+			// Test bioentity.
+			echo "SANITY_SOLR_BIOENTITY_DOC_COUNT_MIN:${env.SANITY_SOLR_BIOENTITY_DOC_COUNT_MIN}"
+			sh 'curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json&fq=document_category:bioentity"'
+			sh 'if [ $SANITY_SOLR_BIOENTITY_DOC_COUNT_MIN -gt $(curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json&fq=document_category:bioentity" | grep -oh \'"numFound":[[:digit:]]*\' | grep -oh [[:digit:]]*) ]; then exit 1; else echo "We seem to be clear wrt doc count"; fi'
+		    }
+		}
 
 		// Copy tmpfs Solr contents onto skyhook.
 		sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
