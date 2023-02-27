@@ -507,6 +507,17 @@ pipeline {
 			    }
 			}
 		    }
+
+		    // Try and force destruction of anything remaining
+		    // on disk after build as cleanup.
+		    sh 'git clean -fx || true'
+		}
+	    }
+	    post {
+		always {
+		    // Try and force destruction of anything remaining
+		    // on disk after build as cleanup.
+		    sh 'git clean -fx || true'
 		}
 	    }
 	}
