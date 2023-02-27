@@ -9,9 +9,9 @@ pipeline {
 	//cron('0 0 2-31/2 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
-	// Every sixth hour, at the top--enough time to do reports if
+	// Every eighth hour, at the top--enough time to do reports if
 	// necessary.
-	cron('0 */6 * * *')
+	cron('0 */8 * * *')
     }
     environment {
 	///
