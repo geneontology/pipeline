@@ -567,6 +567,13 @@ pipeline {
 
 		    sh 'cd /opt/go-site/pipeline && pip3 install -r requirements.txt'
 		    sh 'cd /opt/go-site/pipeline && pip3 install ../graphstore/rule-runner'
+
+		    // Get a final accounting of software versions for
+		    // run.
+		    // https://github.com/geneontology/pipeline/issues/208
+		    sh 'pip3 pip3 freeze --no-input > pip3_freeze.txt'
+		    sh 'cat pip3_freeze.txt'
+
 		    // Ready, set...
 		    // Do this thing, but the watchdog sits
 		    // waiting.
