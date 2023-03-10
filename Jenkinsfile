@@ -571,7 +571,7 @@ pipeline {
 		    // Get a final accounting of software versions for
 		    // run.
 		    // https://github.com/geneontology/pipeline/issues/208
-		    sh 'pip3 pip3 freeze --no-input > pip3_freeze.txt'
+		    sh 'pip3 freeze --no-input > pip3_freeze.txt'
 		    sh 'cat pip3_freeze.txt'
 
 		    // Ready, set...
