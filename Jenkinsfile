@@ -357,7 +357,7 @@ pipeline {
 
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			// Upload to skyhook to the expected location.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
 		    }
 		}
 	    }
@@ -370,7 +370,7 @@ pipeline {
 	    agent {
 		docker {
 		    // Upgrade test for: geneontology/go-ontology#25019, from v1.2.32
-	            image 'obolibrary/odkfull:v1.4'
+    		    image 'obolibrary/odkfull:v1.4'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
@@ -481,7 +481,7 @@ pipeline {
 				sh 'mcp "legacy/*.gpad" "legacy/noctua_#1-src.gpad"'
 				sh 'gzip -vk legacy/noctua_*.gpad'
 				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/'
+				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
 				}
 			    }
 			}
@@ -568,7 +568,7 @@ pipeline {
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* /opt/lib/'
 		    // Copy the sources we downloaded earlier to local.
 		    // We're grabbing anything that's gaf, zipped or unzipped. This leaves gpad or anything else behind since currently we only expect gafs
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/*.gaf*  /opt/go-site/sources/'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/*.gaf*  /opt/go-site/sources/'
 		}
 		sh "chmod +x /opt/bin/*"
 
@@ -595,6 +595,13 @@ pipeline {
 
 		    sh 'cd /opt/go-site/pipeline && pip3 install -r requirements.txt'
 		    sh 'cd /opt/go-site/pipeline && pip3 install ../graphstore/rule-runner'
+
+		    // Get a final accounting of software versions for
+		    // run.
+		    // https://github.com/geneontology/pipeline/issues/208
+		    sh 'pip3 freeze --no-input > pip3_freeze.txt'
+		    sh 'cat pip3_freeze.txt'
+
 		    // Ready, set...
 		    // Do this thing, but the watchdog sits
 		    // waiting.
@@ -613,7 +620,7 @@ pipeline {
 		    //  - all irregular gaffy files + anything paint-y
 		    //  - but not uniprot_all anything (elsewhere)
 		    //  - and not any of the ttls
-		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\-src.gpi\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
+		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\-src.gpi\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data \\;'
 		    // No longer copy goa uniprot all source to products:
 		    // https://github.com/geneontology/pipeline/issues/207
 		    // // Now copy over the (single) uniprot
@@ -621,13 +628,13 @@ pipeline {
 		    // // (e.g. speed runs of master).
 		    // script {
 		    // 	try {
-		    // 	    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
+		    // 	    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data'
 		    // 	} catch (exception) {
 		    // 	    echo "NOTE: No goa_uniprot_all-src.gaf.gz found for this run to copy."
 		    // 	}
 		    // }
 		    // Finally, the non-zipped prediction files.
-		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\-prediction.gaf$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
+		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\-prediction.gaf$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data \\;'
 		    // Flatten all GAFs and GAF-like products
 		    // onto skyhook. Basically:
 		    //  - all product-y files
@@ -723,8 +730,8 @@ pipeline {
 		    sh "mkdir -p /opt/go-site/noctua_sources /opt/go-site/noctua_target"
 
 		    // Download source noctua files from skyhook
-		    // Download noctua_*.gpad.gz from products/annotations/ in skyhook
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations/noctua_*-src.gpad.gz /opt/go-site/noctua_sources/'
+		    // Download noctua_*.gpad.gz from products/upstream_and_raw_data/ in skyhook
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/noctua_*-src.gpad.gz /opt/go-site/noctua_sources/'
 		    // Do we need GPI files for GO Rules? Maybe? Try and see if these are needed for GO Rules.
 
 		    // Run the noctua gpad through ontobio
@@ -734,7 +741,7 @@ pipeline {
 
 		    // Upload result files to skyhook
 		    // Upload noctua valid to skyhook
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/noctua*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/noctua*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data'
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/*.report.* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 		}
 	    }
@@ -758,7 +765,7 @@ pipeline {
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/reports/* $WORKSPACE/copyover/'
 		script {
 		    try {
-			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/paint_* $WORKSPACE/copyover/'
+			sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/paint_* $WORKSPACE/copyover/'
 		    } catch (exception) {
 			// No PAINT files this run? It could happen if
 			// on a limited run with only non-PAINT
@@ -928,7 +935,7 @@ pipeline {
 		// annotations/ and reports/ (which we separated
 		// earlier).
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/annotations/* $WORKSPACE/copyover/'
-		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/* $WORKSPACE/copyover/'
+		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/* $WORKSPACE/copyover/'
 		sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/reports/* $WORKSPACE/copyover/'
 		// Ready...
 		dir('./go-site') {
@@ -1105,9 +1112,9 @@ pipeline {
 		    // from getting into zenodo archive, etc. Re:
 		    // #207.
 		    sh 'pwd'
-		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
-		    sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/goa_uniprot_all-src.gaf.gz || true'
-		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/annotations/ || true'
+		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/ || true'
+		    sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/goa_uniprot_all-src.gaf.gz || true'
+		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/ || true'
 
 		    // Try and remove /lib and /bin from getting into
 		    // the archives by removing them now that we're
@@ -1520,7 +1527,7 @@ void initialize() {
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/ttl || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/json || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/blazegraph || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/annotations || true'
+    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/pages || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/solr || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/panther || true'
