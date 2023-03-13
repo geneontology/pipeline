@@ -269,7 +269,8 @@ pipeline {
 	stage('Produce GO') {
 	    agent {
 		docker {
-		    image 'obolibrary/odkfull:v1.2.27'
+		    // Upgrade test for: geneontology/go-ontology#25019, from v1.2.32
+    		    image 'obolibrary/odkfull:v1.4'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
