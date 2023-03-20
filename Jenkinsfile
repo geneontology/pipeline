@@ -472,6 +472,8 @@ pipeline {
 
 				    // Install s3cmd
 				    sh 'apt-get update'
+				    // Try and get ahead of https://github.com/geneontology/pipeline/issues/321.
+				    sh 'DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata'
 				    sh 'apt-get -y -f install s3cmd'
 
 				    // Transfer to bucket.
