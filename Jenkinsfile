@@ -122,24 +122,7 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/go-ontology-dev/ontology/extensions/go-gaf.owl",
-	    "http://skyhook.berkeleybop.org/go-ontology-dev/ontology/extensions/gorel.owl",
-	    "http://skyhook.berkeleybop.org/go-ontology-dev/ontology/extensions/go-modules-annotations.owl",
-	    "http://skyhook.berkeleybop.org/go-ontology-dev/ontology/extensions/go-taxon-subsets.owl",
-	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
-	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
-	    // BUG: Temporarily lock in CL version; see:
-	    // https://github.com/geneontology/go-ontology/issues/23510
-	    //"http://purl.obolibrary.org/obo/cl/cl-basic.owl",
-	    "http://purl.obolibrary.org/obo/cl/releases/2022-02-16/cl-basic.owl",
-	    "http://purl.obolibrary.org/obo/pato.owl",
-	    "http://purl.obolibrary.org/obo/po.owl",
-	    "http://purl.obolibrary.org/obo/chebi.owl",
-	    // BUG: Temporarily lock in uberon version; see:
-	    // https://github.com/geneontology/go-ontology/issues/23468
-	    //"http://purl.obolibrary.org/obo/uberon/basic.owl",
-	    "http://purl.obolibrary.org/obo/uberon/releases/2022-05-17/uberon-basic.owl",
-	    "http://purl.obolibrary.org/obo/wbbt.owl"
+	    "http://skyhook.berkeleybop.org/go-ontology-dev/ontology/extensions/go-amigo.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
 	    //"http://skyhook.berkeleybop.org/go-ontology-dev/products/annotations/paint_other.gaf.gz",
@@ -416,34 +399,11 @@ pipeline {
 				sh 'echo `date` | cat - ./unsatisfiable_explanations.md > ./unsatisfiable_explanations.md.tmp && mv -f ./unsatisfiable_explanations.md.tmp ./unsatisfiable_explanations.md'
 			    }
 
-			    // Only continue with the "deep" check if
-			    // there was not a surface issue.
+			    // Check go-amigo if there was not an issue with go-lego
 			    if( ONTOLOGY_ERROR_BUILD_P == 'FALSE' ){
-				// Try and run robot no matter what, as
-				// sometimes the ontology can build but
-				// there are still errors.
-				sh 'rm -f eco-basic.owl || true'
-				sh 'rm -f taxslim.owl || true'
-				sh 'rm -f cl-basic.owl || true'
-				sh 'rm -f pato.owl || true'
-				sh 'rm -f po.owl || true'
-				sh 'rm -f chebi.owl || true'
-				sh 'rm -f basic.owl || true'
-				sh 'rm -f wbbt.owl || true'
-				sh 'wget http://purl.obolibrary.org/obo/eco/eco-basic.owl'
-				sh 'wget http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl'
-				sh 'wget http://purl.obolibrary.org/obo/cl/cl-basic.owl'
-				sh 'wget http://purl.obolibrary.org/obo/pato.owl'
-				sh 'wget http://purl.obolibrary.org/obo/po.owl'
-				sh 'wget http://purl.obolibrary.org/obo/chebi.owl'
-				sh 'wget http://purl.obolibrary.org/obo/uberon/basic.owl'
-				sh 'wget http://purl.obolibrary.org/obo/wbbt.owl'
-				sh 'rm -f merged.owl || true'
-				sh 'robot merge -i eco-basic.owl -i taxslim.owl -i cl-basic.owl -i pato.owl -i po.owl -i chebi.owl -i basic.owl -i wbbt.owl -i ./extensions/go-gaf.owl -i ./extensions/gorel.owl -i ./extensions/go-modules-annotations.owl -i ./extensions/go-taxon-subsets.owl -o merged.owl'
-				sh 'robot explain -i ./merged.owl -M unsatisfiability --unsatisfiable random:2 --explanation ./unsatisfiable_explanations_full.md'
+				sh 'robot --catalog ./catalog-v001.xml explain -i ./extensions/go-amigo-edit.ofn -M unsatisfiability --unsatisfiable random:2 --explanation ./unsatisfiable_explanations.md'
 				sh 'echo $BUILD_ID | cat - ./unsatisfiable_explanations_full.md > ./unsatisfiable_explanations_full.md.tmp && mv -f ./unsatisfiable_explanations_full.md.tmp ./unsatisfiable_explanations_full.md'
 				sh 'echo `date` | cat - ./unsatisfiable_explanations_full.md > ./unsatisfiable_explanations_full.md.tmp && mv -f ./unsatisfiable_explanations_full.md.tmp ./unsatisfiable_explanations_full.md'
-
 				// Check explanations.
 				try {
 				    sh 'grep "No explanations found" ./unsatisfiable_explanations_full.md'
