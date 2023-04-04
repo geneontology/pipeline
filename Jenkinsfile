@@ -17,7 +17,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'issue-pipeline-319-new-prod-path'
+	TARGET_GO_SITE_BRANCH = 'master'
 	// The branch of geneontology/go-stats to use.
 	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
@@ -800,10 +800,10 @@ pipeline {
 			script {
 			    if( env.GORULE_TAGS_TO_SUPPRESS && env.GORULE_TAGS_TO_SUPPRESS != "" ){
 				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE --suppress-rule-tag $GORULE_TAGS_TO_SUPPRESS > gorule-report.html'
-				sh 'python3 ./scripts/reports-page-gen.py --report ./assigned-by-combined-report.json --template ./scripts/assigned-by-reports-page-template.html --date $START_DATE --suppress-rule-tag $GORULE_TAGS_TO_SUPPRESS > assigned-by-gorule-report.html'				
+				sh 'python3 ./scripts/reports-page-gen.py --report ./assigned-by-combined-report.json --template ./scripts/assigned-by-reports-page-template.html --date $START_DATE --suppress-rule-tag $GORULE_TAGS_TO_SUPPRESS > assigned-by-gorule-report.html'
 			    }else{
 				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
-				sh 'python3 ./scripts/reports-page-gen.py --report ./assigned-by-combined-report.json --template ./scripts/assigned-by-reports-page-template.html --date $START_DATE > assigned-by-gorule-report.html'				
+				sh 'python3 ./scripts/reports-page-gen.py --report ./assigned-by-combined-report.json --template ./scripts/assigned-by-reports-page-template.html --date $START_DATE > assigned-by-gorule-report.html'
 			    }
 			}
 
@@ -862,7 +862,7 @@ pipeline {
 			// Copy all of the reports to the reports
 			// directory.
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./combined.report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./assigned-by-combined-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'	
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./assigned-by-combined-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./users-and-groups-report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 
 			// Copy generated pages over to page output.
@@ -871,7 +871,7 @@ pipeline {
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./gorule-report.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 			// Copy overall assigned-by pages to the
 			// reports directory
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./assigned-by-*.* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'			
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./assigned-by-*.* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 		    }
 
 		    // Produce the slightly improved combined reports
