@@ -793,11 +793,11 @@ pipeline {
 		    sh 'tar --use-compress-program=pigz -cvf arbre.tgz -C arbre .'
 		    sh 'mv arbre.tgz $WORKSPACE/mnt/$BRANCH_NAME/products/panther'
 
-		    // Generate combined annotation report for driving
+		    // Generate combined annotation and assigned-by combined report for driving
 		    // annotation download pages and drop it into
 		    // reports/ for copyover.
 		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./combined.report.json'
-
+		    sh 'python3 ./scripts/combined_assigned_by.py -v --input ./combined.report.json --output ./assigned-by-combined-report.json'
 		    // Generate the static download page directly from
 		    // the metadata.
 		    sh 'python3 ./scripts/downloads-page-gen.py -v --report ./combined.report.json --date $START_DATE --inject ./scripts/downloads-page-template.html > ./downloads.html'
@@ -828,8 +828,10 @@ pipeline {
 			script {
 			    if( env.GORULE_TAGS_TO_SUPPRESS && env.GORULE_TAGS_TO_SUPPRESS != "" ){
 				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE --suppress-rule-tag $GORULE_TAGS_TO_SUPPRESS > gorule-report.html'
+				sh 'python3 ./scripts/reports-page-gen.py --report ./assigned-by-combined-report.json --template ./scripts/assigned-by-reports-page-template.html --date $START_DATE --suppress-rule-tag $GORULE_TAGS_TO_SUPPRESS > assigned-by-gorule-report.html'
 			    }else{
 				sh 'python3 ./scripts/reports-page-gen.py --report ./combined.report.json --template ./scripts/reports-page-template.html --date $START_DATE > gorule-report.html'
+				sh 'python3 ./scripts/reports-page-gen.py --report ./assigned-by-combined-report.json --template ./scripts/assigned-by-reports-page-template.html --date $START_DATE > assigned-by-gorule-report.html'
 			    }
 			}
 
@@ -888,12 +890,16 @@ pipeline {
 			// Copy all of the reports to the reports
 			// directory.
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./combined.report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./assigned-by-combined-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./users-and-groups-report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 
 			// Copy generated pages over to page output.
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./downloads.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/pages'
 			// Copy gorule report page to the reports directory
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./gorule-report.html skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
+			// Copy overall assigned-by pages to the
+			// reports directory
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./assigned-by-*.* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 		    }
 
 		    // Produce the slightly improved combined reports
