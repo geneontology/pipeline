@@ -1104,8 +1104,7 @@ pipeline {
 		    // Get annotation download directory prepped. From:
 		    // https://github.com/geneontology/go-site/issues/1971
 		    sh 'rm -f README-annotation-downloads.txt || true'
-		    sh 'wget -N https://raw.githubusercontent.com/geneontology/go
--site/$TARGET_GO_SITE_BRANCH/static/pages/README-annotation-downloads.txt'
+		    sh 'wget -N https://raw.githubusercontent.com/geneontology/go-site/$TARGET_GO_SITE_BRANCH/static/pages/README-annotation-downloads.txt'
 		    sh 'mv README-annotation-downloads.txt $WORKSPACE/mnt/$BRANCH_NAME/annotations/README.txt'
 
 		    // Try and remove /lib and /bin from getting into
