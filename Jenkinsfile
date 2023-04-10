@@ -1122,6 +1122,12 @@ pipeline {
 		    sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/goa_uniprot_all-src.gaf.gz || true'
 		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/ || true'
 
+		    // Get annotation download directory prepped. From:
+		    // https://github.com/geneontology/go-site/issues/1971
+		    sh 'rm -f README-annotation-downloads.txt || true'
+		    sh 'wget -N https://raw.githubusercontent.com/geneontology/go-site/$TARGET_GO_SITE_BRANCH/static/pages/README-annotation-downloads.txt'
+		    sh 'mv README-annotation-downloads.txt $WORKSPACE/mnt/$BRANCH_NAME/annotations/README.txt'
+
 		    // Try and remove /lib and /bin from getting into
 		    // the archives by removing them now that we're
 		    // done using them for product builds. Re: #268.
