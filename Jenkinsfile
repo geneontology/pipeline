@@ -1122,6 +1122,13 @@ pipeline {
 		    sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/goa_uniprot_all-src.gaf.gz || true'
 		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/ || true'
 
+		    // Redo goa_uniprot_all names for publication. From:
+		    // https://github.com/geneontology/go-site/issues/1984
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all.gaf.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all.gaf.gz'
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gaf.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gaf.gz'
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gpad.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gpad.gz'
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gpi.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gpi.gz'
+
 		    // Get annotation download directory prepped. From:
 		    // https://github.com/geneontology/go-site/issues/1971
 		    sh 'rm -f README-annotation-downloads.txt || true'
