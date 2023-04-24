@@ -17,7 +17,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'issue-844-ext-repair-obs-terms'
+	TARGET_GO_SITE_BRANCH = 'issue-go-site-844-ext-repair-obs'
 	// The branch of geneontology/go-stats to use.
 	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
@@ -82,7 +82,7 @@ pipeline {
 	///
 	/// Ontobio Validation
 	///
-	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/go.json"
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/ontology/go.json"
 
 	///
 	/// Minerva input.
@@ -90,7 +90,7 @@ pipeline {
 
 	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/extensions/go-lego.owl"
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/ontology/extensions/go-lego.owl"
 	].join(" ")
 
 	///
@@ -101,10 +101,10 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/extensions/go-gaf.owl",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/extensions/gorel.owl",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/extensions/go-modules-annotations.owl",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/extensions/go-taxon-subsets.owl",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/ontology/extensions/go-gaf.owl",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/ontology/extensions/gorel.owl",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/ontology/extensions/go-modules-annotations.owl",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/ontology/extensions/go-taxon-subsets.owl",
 	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
 	    // BUG: Temporarily lock in CL version; see:
@@ -119,44 +119,44 @@ pipeline {
 	].join(" ")
 	GOLR_INPUT_GAFS = [
 	    //"http://skyhook.berkeleybop.org/master/products/upstream_and_raw_data/paint_other.gaf.gz",
-		"http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/products/upstream_and_raw_data/paint_other.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/cgd.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/dictybase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/ecocyc.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/fb.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/genedb_lmajor.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/genedb_tbrucei.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/genedb_pfalciparum.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_chicken.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_chicken_complex.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_chicken_rna.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_cow.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_cow_complex.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_cow_rna.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_dog.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_dog_complex.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_dog_rna.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_human.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_human_complex.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_human_rna.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_pig.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_pig_complex.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_pig_rna.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_uniprot_all_noiea.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/japonicusdb.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/mgi.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/pombase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/pseudocap.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/rgd.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/sgd.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/sgn.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/tair.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/wb.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/xenbase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/zfin.gaf.gz"
+		"http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/products/upstream_and_raw_data/paint_other.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/cgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/dictybase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/ecocyc.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/fb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/genedb_lmajor.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/genedb_tbrucei.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/genedb_pfalciparum.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_chicken.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_chicken_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_chicken_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_cow.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_cow_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_cow_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_dog.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_dog_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_dog_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_human.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_human_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_human_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_pig.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_pig_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_pig_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/japonicusdb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/mgi.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/pombase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/pseudocap.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/rgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/sgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/sgn.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/tair.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/wb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/xenbase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/annotations/zfin.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
-	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/products/panther/arbre.tgz"
+	    "http://skyhook.berkeleybop.org/issue-go-site-844-ext-repair-obs/products/panther/arbre.tgz"
 	].join(" ")
 
 	///
