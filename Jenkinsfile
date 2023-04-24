@@ -17,7 +17,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'issue-go-site-844-ext-repair-obs'
+	TARGET_GO_SITE_BRANCH = 'issue-844-ext-repair-obs-terms'
 	// The branch of geneontology/go-stats to use.
 	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
