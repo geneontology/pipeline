@@ -17,7 +17,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'master'
+	TARGET_GO_SITE_BRANCH = 'issue-844-ext-repair-obs-terms'
 	// The branch of geneontology/go-stats to use.
 	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
@@ -32,8 +32,8 @@ pipeline {
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,smoxon@lbl.gov'
-	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,suzia@stanford.edu,smoxon@lbl.gov'
+	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,muruganu@usc.edu'
+	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,muruganu@usc.edu'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss,pgaudet1@gmail.com,smoxon@lbl.gov'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'go-data-product-experimental'
@@ -70,19 +70,19 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_ARCHIVE_CONCEPT = '1170314'
+	ZENODO_ARCHIVE_CONCEPT = 'null'
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
 	// need this as it is always a new location and the index
 	// upload already has an invalidation on it. For current,
 	// snapshot, and experimental.
-	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
-	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'null'
+	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'null'
 
 	///
 	/// Ontobio Validation
 	///
-	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/master/ontology/go.json"
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/go.json"
 
 	///
 	/// Minerva input.
@@ -90,7 +90,7 @@ pipeline {
 
 	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/extensions/go-lego.owl"
 	].join(" ")
 
 	///
@@ -101,10 +101,10 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/gorel.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-modules-annotations.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-taxon-subsets.owl",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/extensions/go-gaf.owl",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/extensions/gorel.owl",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/extensions/go-modules-annotations.owl",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/ontology/extensions/go-taxon-subsets.owl",
 	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
 	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
 	    // BUG: Temporarily lock in CL version; see:
@@ -119,15 +119,44 @@ pipeline {
 	].join(" ")
 	GOLR_INPUT_GAFS = [
 	    //"http://skyhook.berkeleybop.org/master/products/upstream_and_raw_data/paint_other.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken_complex.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/mgi.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/pombase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz"
+		"http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/products/upstream_and_raw_data/paint_other.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/cgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/dictybase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/ecocyc.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/fb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/genedb_lmajor.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/genedb_tbrucei.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/genedb_pfalciparum.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_chicken.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_chicken_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_chicken_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_cow.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_cow_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_cow_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_dog.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_dog_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_dog_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_human.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_human_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_human_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_pig.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_pig_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_pig_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/japonicusdb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/mgi.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/pombase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/pseudocap.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/rgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/sgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/sgn.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/tair.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/wb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/xenbase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/annotations/zfin.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
-	    "http://skyhook.berkeleybop.org/master/products/panther/arbre.tgz"
+	    "http://skyhook.berkeleybop.org/issue-844-ext-repair-obs-terms/products/panther/arbre.tgz"
 	].join(" ")
 
 	///
@@ -146,12 +175,13 @@ pipeline {
 	// for no rule suppression (default behavior everything), or a
 	// single value (practically speaking pretty much always
 	// "silent")
-	//GORULE_TAGS_TO_SUPPRESS="silent"
+	GORULE_TAGS_TO_SUPPRESS="silent"
 
 	// Optional. Groups to run.
 	RESOURCE_GROUPS="ecocyc goa mgi paint pseudocap wb"
 	// Optional. Datasets to skip within the resources that we
 	// will run (defined in the line above).
+	//DATASET_EXCLUDES=""
 	DATASET_EXCLUDES="goa_uniprot_gcrp goa_pdb goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human goa_human goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
 	// Optional. This acts as an override, /if/ it's grabbed (as
 	// defined above).
@@ -1093,6 +1123,19 @@ pipeline {
 		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/ || true'
 		    sh 'rm -f $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/goa_uniprot_all-src.gaf.gz || true'
 		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/ || true'
+
+		    // Redo goa_uniprot_all names for publication. From:
+		    // https://github.com/geneontology/go-site/issues/1984
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all.gaf.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all.gaf.gz'
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gaf.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gaf.gz'
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gpad.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gpad.gz'
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gpi.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gpi.gz'
+
+		    // Get annotation download directory prepped. From:
+		    // https://github.com/geneontology/go-site/issues/1971
+		    sh 'rm -f README-annotation-downloads.txt || true'
+		    sh 'wget -N https://raw.githubusercontent.com/geneontology/go-site/$TARGET_GO_SITE_BRANCH/static/pages/README-annotation-downloads.txt'
+		    sh 'mv README-annotation-downloads.txt $WORKSPACE/mnt/$BRANCH_NAME/annotations/README.txt'
 
 		    // Redo goa_uniprot_all names for publication. From:
 		    // https://github.com/geneontology/go-site/issues/1984
