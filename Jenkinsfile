@@ -1124,23 +1124,23 @@ pipeline {
 
 		    // Redo goa_uniprot_all names for publication. From:
 		    // https://github.com/geneontology/go-site/issues/1984
-		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all.gaf.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all.gaf.gz'
-		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gaf.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gaf.gz'
-		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gpad.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gpad.gz'
-		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gpi.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gpi.gz'
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all.gaf.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all.gaf.gz || true'
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gaf.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gaf.gz || true'
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gpad.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gpad.gz || true'
+		    sh 'mv $WORKSPACE/mnt/$BRANCH_NAME/annotations/goa_uniprot_all_noiea.gpi.gz $WORKSPACE/mnt/$BRANCH_NAME/annotations/filtered_goa_uniprot_all_noiea.gpi.gz || true'
 
 		    // Get annotation download directory prepped. From:
 		    // https://github.com/geneontology/go-site/issues/1971
 		    sh 'rm -f README-annotation-downloads.txt || true'
 		    sh 'wget -N https://raw.githubusercontent.com/geneontology/go-site/$TARGET_GO_SITE_BRANCH/static/pages/README-annotation-downloads.txt'
-		    sh 'mv README-annotation-downloads.txt $WORKSPACE/mnt/$BRANCH_NAME/annotations/README.txt'
+		    sh 'mv README-annotation-downloads.txt $WORKSPACE/mnt/$BRANCH_NAME/annotations/README.txt || true'
 
 		    // Try and remove /lib and /bin from getting into
 		    // the archives by removing them now that we're
 		    // done using them for product builds. Re: #268.
 		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/'
-		    sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME/bin'
-		    sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME/lib'
+		    sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
+		    sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME/lib || true'
 		    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME/'
 		}
 		// Copy the product to the right location. As well,
