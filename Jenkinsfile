@@ -101,21 +101,7 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-gaf.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/gorel.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-modules-annotations.owl",
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-taxon-subsets.owl",
-	    "http://purl.obolibrary.org/obo/eco/eco-basic.owl",
-	    "http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl",
-	    // BUG: Temporarily lock in CL version; see:
-	    // https://github.com/geneontology/go-ontology/issues/23510
-	    //"http://purl.obolibrary.org/obo/cl/cl-basic.owl",
-	    "http://purl.obolibrary.org/obo/cl/releases/2022-02-16/cl-basic.owl",
-	    "http://purl.obolibrary.org/obo/pato.owl",
-	    "http://purl.obolibrary.org/obo/po.owl",
-	    "http://purl.obolibrary.org/obo/chebi.owl",
-	    "http://purl.obolibrary.org/obo/uberon/basic.owl",
-	    "http://purl.obolibrary.org/obo/wbbt.owl"
+	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-amigo.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
 	    //"http://skyhook.berkeleybop.org/master/products/upstream_and_raw_data/paint_other.gaf.gz",
