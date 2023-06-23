@@ -422,25 +422,7 @@ pipeline {
 				// Try and run robot no matter what, as
 				// sometimes the ontology can build but
 				// there are still errors.
-				sh 'rm -f eco-basic.owl || true'
-				sh 'rm -f taxslim.owl || true'
-				sh 'rm -f cl-basic.owl || true'
-				sh 'rm -f pato.owl || true'
-				sh 'rm -f po.owl || true'
-				sh 'rm -f chebi.owl || true'
-				sh 'rm -f basic.owl || true'
-				sh 'rm -f wbbt.owl || true'
-				sh 'wget http://purl.obolibrary.org/obo/eco/eco-basic.owl'
-				sh 'wget http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl'
-				sh 'wget http://purl.obolibrary.org/obo/cl/cl-basic.owl'
-				sh 'wget http://purl.obolibrary.org/obo/pato.owl'
-				sh 'wget http://purl.obolibrary.org/obo/po.owl'
-				sh 'wget http://purl.obolibrary.org/obo/chebi.owl'
-				sh 'wget http://purl.obolibrary.org/obo/uberon/basic.owl'
-				sh 'wget http://purl.obolibrary.org/obo/wbbt.owl'
-				sh 'rm -f merged.owl || true'
-				sh 'robot merge -i eco-basic.owl -i taxslim.owl -i cl-basic.owl -i pato.owl -i po.owl -i chebi.owl -i basic.owl -i wbbt.owl -i ./extensions/go-gaf.owl -i ./extensions/gorel.owl -i ./extensions/go-modules-annotations.owl -i ./extensions/go-taxon-subsets.owl -o merged.owl'
-				sh 'robot explain -i ./merged.owl -M unsatisfiability --unsatisfiable random:2 --explanation ./unsatisfiable_explanations_full.md'
+				sh 'robot explain -i ./extensions/go-amigo.owl -M unsatisfiability --unsatisfiable random:2 --explanation ./unsatisfiable_explanations_full.md'
 				sh 'echo $BUILD_ID | cat - ./unsatisfiable_explanations_full.md > ./unsatisfiable_explanations_full.md.tmp && mv -f ./unsatisfiable_explanations_full.md.tmp ./unsatisfiable_explanations_full.md'
 				sh 'echo `date` | cat - ./unsatisfiable_explanations_full.md > ./unsatisfiable_explanations_full.md.tmp && mv -f ./unsatisfiable_explanations_full.md.tmp ./unsatisfiable_explanations_full.md'
 
