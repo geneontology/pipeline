@@ -159,61 +159,61 @@ pipeline {
 		cleanWs deleteDirs: true, disableDeferredWipeout: true
 	    }
 	}
-	stage('Initialize') {
-	    steps {
+	// stage('Initialize') {
+	//     steps {
 
-		///
-		/// Automatic run variables.
-		///
+	// 	///
+	// 	/// Automatic run variables.
+	// 	///
 
-		// Pin dates and day to beginning of run.
-		script {
-		    env.START_DATE = sh (
-			script: 'date +%Y-%m-%d',
-			returnStdout: true
-		    ).trim()
+	// 	// Pin dates and day to beginning of run.
+	// 	script {
+	// 	    env.START_DATE = sh (
+	// 		script: 'date +%Y-%m-%d',
+	// 		returnStdout: true
+	// 	    ).trim()
 
-		    env.START_DAY = sh (
-			script: 'date +%A',
-			returnStdout: true
-		    ).trim()
-		}
+	// 	    env.START_DAY = sh (
+	// 		script: 'date +%A',
+	// 		returnStdout: true
+	// 	    ).trim()
+	// 	}
 
-		// Reset base.
-		initialize();
+	// 	// Reset base.
+	// 	initialize();
 
-		sh 'env > env.txt'
-		sh 'echo $BRANCH_NAME > branch.txt'
-		sh 'echo "$BRANCH_NAME"'
-		sh 'cat env.txt'
-		sh 'cat branch.txt'
-		sh 'echo $START_DAY > dow.txt'
-		sh 'echo "$START_DAY"'
-		sh 'echo $START_DATE > date.txt'
-		sh 'echo "$START_DATE"'
-	    }
-	}
-	// Download GAFs from datasets.yaml in go-site and then upload
-	// to skyhook in their appropriate locations.
-	stage("Download annotation data") {
-	    steps {
-		dir("./go-site") {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+	// 	sh 'env > env.txt'
+	// 	sh 'echo $BRANCH_NAME > branch.txt'
+	// 	sh 'echo "$BRANCH_NAME"'
+	// 	sh 'cat env.txt'
+	// 	sh 'cat branch.txt'
+	// 	sh 'echo $START_DAY > dow.txt'
+	// 	sh 'echo "$START_DAY"'
+	// 	sh 'echo $START_DATE > date.txt'
+	// 	sh 'echo "$START_DATE"'
+	//     }
+	// }
+	// // Download GAFs from datasets.yaml in go-site and then upload
+	// // to skyhook in their appropriate locations.
+	// stage("Download annotation data") {
+	//     steps {
+	// 	dir("./go-site") {
+	// 	    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-		    script {
+	// 	    script {
 
-			sh "grep -r 'ftp.ebi.ac.uk' ./metadata/datasets/ | grep -oh 'https:.*' > ./files.txt"
-			sh "sed -e 's/https/ftp/g' ./files.txt > ./files.txt.changed"
-			sh "time wget -i ./files.txt.changed -P ./copy"
-		    }
+	// 		sh "grep -r 'ftp.ebi.ac.uk' ./metadata/datasets/ | grep -oh 'https:.*' > ./files.txt"
+	// 		sh "sed -e 's/https/ftp/g' ./files.txt > ./files.txt.changed"
+	// 		sh "time wget -i ./files.txt.changed -P ./copy"
+	// 	    }
 
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			// Upload to skyhook to the expected location.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./copy/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
-		    }
-		}
-	    }
-	}
+	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	// 		// Upload to skyhook to the expected location.
+	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./copy/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+	// 	    }
+	// 	}
+	//     }
+	// }
 	stage('Publish') {
 	    when { anyOf { branch 'goa-copy-to-mirror' } }
 	    steps {
@@ -253,7 +253,7 @@ pipeline {
 			    sh 'python3 ./mypyenv/bin/pip3 install awscli'
 
 			    // ...and push it up to S3.
-			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/* s3://go-mirror/'
+			    sh 's3cmd -c $S3CMD_JSON --mime-type=text/html --cf-invalidate put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/* s3://go-mirror/'
 
 			    // files are up.
 			    sh 'echo "[preview]" > ./awscli_config.txt && echo "cloudfront=true" >> ./awscli_config.txt'
