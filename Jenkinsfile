@@ -159,61 +159,61 @@ pipeline {
 		cleanWs deleteDirs: true, disableDeferredWipeout: true
 	    }
 	}
-	// stage('Initialize') {
-	//     steps {
+	stage('Initialize') {
+	    steps {
 
-	// 	///
-	// 	/// Automatic run variables.
-	// 	///
+		///
+		/// Automatic run variables.
+		///
 
-	// 	// Pin dates and day to beginning of run.
-	// 	script {
-	// 	    env.START_DATE = sh (
-	// 		script: 'date +%Y-%m-%d',
-	// 		returnStdout: true
-	// 	    ).trim()
+		// Pin dates and day to beginning of run.
+		script {
+		    env.START_DATE = sh (
+			script: 'date +%Y-%m-%d',
+			returnStdout: true
+		    ).trim()
 
-	// 	    env.START_DAY = sh (
-	// 		script: 'date +%A',
-	// 		returnStdout: true
-	// 	    ).trim()
-	// 	}
+		    env.START_DAY = sh (
+			script: 'date +%A',
+			returnStdout: true
+		    ).trim()
+		}
 
-	// 	// Reset base.
-	// 	initialize();
+		// Reset base.
+		initialize();
 
-	// 	sh 'env > env.txt'
-	// 	sh 'echo $BRANCH_NAME > branch.txt'
-	// 	sh 'echo "$BRANCH_NAME"'
-	// 	sh 'cat env.txt'
-	// 	sh 'cat branch.txt'
-	// 	sh 'echo $START_DAY > dow.txt'
-	// 	sh 'echo "$START_DAY"'
-	// 	sh 'echo $START_DATE > date.txt'
-	// 	sh 'echo "$START_DATE"'
-	//     }
-	// }
-	// // Download GAFs from datasets.yaml in go-site and then upload
-	// // to skyhook in their appropriate locations.
-	// stage("Download annotation data") {
-	//     steps {
-	// 	dir("./go-site") {
-	// 	    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+		sh 'env > env.txt'
+		sh 'echo $BRANCH_NAME > branch.txt'
+		sh 'echo "$BRANCH_NAME"'
+		sh 'cat env.txt'
+		sh 'cat branch.txt'
+		sh 'echo $START_DAY > dow.txt'
+		sh 'echo "$START_DAY"'
+		sh 'echo $START_DATE > date.txt'
+		sh 'echo "$START_DATE"'
+	    }
+	}
+	// Download GAFs from datasets.yaml in go-site and then upload
+	// to skyhook in their appropriate locations.
+	stage("Download annotation data") {
+	    steps {
+		dir("./go-site") {
+		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-	// 	    script {
+		    script {
 
-	// 		sh "grep -r 'ftp.ebi.ac.uk' ./metadata/datasets/ | grep -oh 'https:.*' > ./files.txt"
-	// 		sh "sed -e 's/https/ftp/g' ./files.txt > ./files.txt.changed"
-	// 		sh "time wget -i ./files.txt.changed -P ./copy"
-	// 	    }
+			sh "grep -r 'ftp.ebi.ac.uk' ./metadata/datasets/ | grep -oh 'https:.*' > ./files.txt"
+			sh "sed -e 's/https/ftp/g' ./files.txt > ./files.txt.changed"
+			sh "time wget -i ./files.txt.changed -P ./copy"
+		    }
 
-	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-	// 		// Upload to skyhook to the expected location.
-	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./copy/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
-	// 	    }
-	// 	}
-	//     }
-	// }
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			// Upload to skyhook to the expected location.
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./copy/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+		    }
+		}
+	    }
+	}
 	stage('Publish') {
 	    when { anyOf { branch 'goa-copy-to-mirror' } }
 	    steps {
@@ -271,33 +271,22 @@ pipeline {
 	    }
 	}
     }
-    // post {
-    // 	// Let's let our people know if things go well.
-    // 	success {
-    // 	    script {
-    // 		if( env.BRANCH_NAME == 'release' ){
-    // 		    echo "There has been a successful run of the ${env.BRANCH_NAME} pipeline."
-    // 		    emailext to: "${TARGET_SUCCESS_EMAILS}",
-    // 			subject: "GO Pipeline success for ${env.BRANCH_NAME}",
-    // 			body: "There has been successful run of the ${env.BRANCH_NAME} pipeline. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
-    // 		}
-    // 	    }
-    // 	}
-    // 	// Let's let our internal people know if things change.
-    // 	changed {
-    // 	    echo "There has been a change in the ${env.BRANCH_NAME} pipeline."
-    // 	    emailext to: "${TARGET_ADMIN_EMAILS}",
-    // 		subject: "GO Pipeline change for ${env.BRANCH_NAME}",
-    // 		body: "There has been a pipeline status change in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
-    // 	}
-    // 	// Let's let our internal people know if things go badly.
-    // 	failure {
-    // 	    echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
-    // 	    emailext to: "${TARGET_ADMIN_EMAILS}",
-    // 		subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}",
-    // 		body: "There has been a pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
-    // 	    }
-    //   }
+    post {
+	// Let's let our internal people know if things change.
+	changed {
+	    echo "There has been a change in the ${env.BRANCH_NAME} pipeline."
+	    emailext to: "${TARGET_ADMIN_EMAILS}",
+		subject: "GO Pipeline change for ${env.BRANCH_NAME}",
+		body: "There has been a pipeline status change in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
+	}
+	// Let's let our internal people know if things go badly.
+	failure {
+	    echo "There has been a failure in the ${env.BRANCH_NAME} pipeline."
+	    emailext to: "${TARGET_ADMIN_EMAILS}",
+		subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}",
+		body: "There has been a pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
+	    }
+      }
 }
 
 // Check that we do not affect public targets on non-mainline runs.
