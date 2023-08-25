@@ -17,8 +17,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	//TARGET_GO_SITE_BRANCH = 'master'
-	TARGET_GO_SITE_BRANCH = 'issue-pipeline-305-goa-mirror'
+	TARGET_GO_SITE_BRANCH = 'master'
 	// The branch of geneontology/go-stats to use.
 	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
