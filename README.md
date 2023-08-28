@@ -28,12 +28,18 @@ The typical (and usually recommended) developmental flow would be to:
 - make a branch of `master`
 - remove "cron"
 - change or remove the variables: "ZENODO\_REFERENCE\_CONCEPT", "ZENODO\_ARCHIVE\_CONCEPT", "TARGET\_BUCKET", "AWS\_CLOUDFRONT\_DISTRIBUTION\_ID", and "AWS\_CLOUDFRONT\_RELEASE\_DISTRIBUTION\_ID"
+  - e.g. 	
+    - AWS_CLOUDFRONT_DISTRIBUTION_ID = 'null', 
+    - AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'null' 
+    - ZENODO_REFERENCE_CONCEPT = 'null' 
+    - ZENODO_ARCHIVE_CONCEPT = 'null'
+    - TARGET_BUCKET = 'nope'
 - leave the stages 'Ready and clean' and 'Initialize' in place (see: https://github.com/geneontology/pipeline/issues/145)
 - remove or alter as needed to run experiments
 
 Code that successfully goes through development on a branch will
 graduate to being added to `master`. Once successful there, graduate
-out the the other branches (see below).
+out the other branches (see below).
 
 For the sake of data safety, please check with the GO software group
 before undertaking pipeline development.
