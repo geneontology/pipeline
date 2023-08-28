@@ -25,7 +25,8 @@ availability of resources.
 
 The typical (and usually recommended) developmental flow would be to:
 
-- make a branch of `master`
+- make a branch of `master` including the issue number in the branch name
+  - if the branch name is formatted incorrectly (e.g. not ISSUE-NUMBER-DESCRIPTION), the Jenkins server (build.geneontology.org) will not pick up the branch automatically. 
 - remove "cron"
 - change or remove the variables: "ZENODO\_REFERENCE\_CONCEPT", "ZENODO\_ARCHIVE\_CONCEPT", "TARGET\_BUCKET", "AWS\_CLOUDFRONT\_DISTRIBUTION\_ID", and "AWS\_CLOUDFRONT\_RELEASE\_DISTRIBUTION\_ID"
   - e.g. 	
