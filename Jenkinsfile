@@ -573,10 +573,11 @@ pipeline {
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/*.gaf*  /opt/go-site/sources/'
 		}
 		sh "chmod +x /opt/bin/*"
-
-		sh "cd /opt/go-site/scripts && pip3 install -r requirements.txt' // install the python requirements 
-needed for the go-site/scripts python files. 
-		sh "cd /opt/" // re-establish location in the filesystem expected by steps below
+		
+		// Install the python requirements.
+		sh "cd /opt/go-site/scripts && pip3 install -r requirements.txt"
+		// Re-establish location in the filesystem expected by steps below.
+		sh "cd /opt/"
 		sh "python3 /opt/go-site/scripts/download_source_gafs.py organize --datasets /opt/go-site/metadata/datasets --source /opt/go-site/sources --target /opt/go-site/pipeline/target/groups/"
 		sh "rm /opt/go-site/sources/*"
 
