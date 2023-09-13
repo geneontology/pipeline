@@ -525,7 +525,7 @@ pipeline {
 	stage('Produce GAFs, TTLs, and journal (*)') {
 	    agent {
 		docker {
-		    image 'geneontology/dev-base:857fc148379e5afea6c27f798d4c62b2fadf3577_2021-04-27T182251'
+		    image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
 		    args "-u root:root --tmpfs /opt:exec -w /opt"
 		}
 	    }
@@ -558,6 +558,10 @@ pipeline {
 		}
 		sh "chmod +x /opt/bin/*"
 
+		// Install the python requirements.
+		sh "cd /opt/go-site/scripts && pip3 install -r requirements.txt"
+		// Re-establish location in the filesystem expected by steps below.
+		sh "cd /opt/"
 		sh "python3 /opt/go-site/scripts/download_source_gafs.py organize --datasets /opt/go-site/metadata/datasets --source /opt/go-site/sources --target /opt/go-site/pipeline/target/groups/"
 		sh "rm /opt/go-site/sources/*"
 
@@ -682,7 +686,7 @@ pipeline {
 	stage('Temporary post filter') {
 	    agent {
 		docker {
-		    image 'geneontology/dev-base:857fc148379e5afea6c27f798d4c62b2fadf3577_2021-04-27T182251'
+		    image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
 		    args "-u root:root --tmpfs /opt:exec -w /opt"
 		}
 	    }
