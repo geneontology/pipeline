@@ -4,7 +4,7 @@ pipeline {
     // give us the max time in a day to get things right.
     triggers {
 	// Nightly @12am, for "goa-copy-for-mirror", skip "release" night.
-	cron('0 0 2-31 * *')
+	cron('0 0 2-31/2 * *')
     }
     environment {
 
