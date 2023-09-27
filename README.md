@@ -34,7 +34,7 @@ The typical (and usually recommended) developmental flow would be to:
     - AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'null' 
     - ZENODO_REFERENCE_CONCEPT = 'null' 
     - ZENODO_ARCHIVE_CONCEPT = 'null'
-    - TARGET_BUCKET = 'nope'
+    - TARGET_BUCKET = 'null'
 - leave the stages 'Ready and clean' and 'Initialize' in place (see: https://github.com/geneontology/pipeline/issues/145)
 - remove or alter as needed to run experiments
 
