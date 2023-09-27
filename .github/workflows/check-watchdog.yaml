@@ -20,9 +20,9 @@ jobs:
     - name: Check for modifications in the watchdog function
       run: |
         set -x
-        if $(git diff --unified=0 master ${{ github.head_ref }} Jenkinsfile | grep 'void watchdog()'); then
-            echo "ERROR: The watchdog function in the Jenkinsfile has been modified."
-            exit 1
+        if git diff --unified=0 master ${{ github.head_ref }} Jenkinsfile | grep 'void watchdog()'; then
+          echo "ERROR: The watchdog function in the Jenkinsfile has been modified."
+          exit 1
         else
           echo "watchdog OK"
           exit 0
