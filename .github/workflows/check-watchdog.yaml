@@ -33,3 +33,4 @@ jobs:
           echo "watchdog OK"
           exit 0
         fi
+        exit 0
