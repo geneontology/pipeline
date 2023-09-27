@@ -125,7 +125,7 @@ pipeline {
 	// reports from during the megastep and during templating the
 	// reports after the megastep. The tags are currently
 	// respected at two times in the pipeline: the gorules report
-	// take the flag as a CLI argument, supressing it; ontobio
+	// take the flag as a CLI argument, suppressing it; ontobio
 	// takes it during the same stage as the JSON
 	// generation/parsing step, to supress the .md output. At this
 	// time, this variable can be either nothing or empty string
