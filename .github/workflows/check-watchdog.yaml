@@ -22,6 +22,6 @@ jobs:
         # Check if the watchdog function has been modified
         MODIFIED_LINES=$(MODIFIED_LINES=$(git diff --unified=0 master ${{ github.head_ref }} Jenkinsfile | grep 'void watchdog()'))
         if [[ ! -z "$MODIFIED_LINES" ]]; then
-          echo "ERROR: The watchdog function in the Jenkinsfile has been modified."
+          echo "ERROR: The watchdog function in the Jenkinsfile has been modified. $MODIFIED_LINES"
           exit 1
         fi
