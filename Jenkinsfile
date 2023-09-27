@@ -1487,10 +1487,10 @@ void watchdog() {
     }
 }
 
-jga;sfgkna;sgkfdasdg
 // Reset and initialize skyhook base.
 void initialize() {
     // Get a mount point ready
+    gsgasdfgsdfgsdfg
     sh 'mkdir -p $WORKSPACE/mnt || true'
     // Ninja in our file credentials from Jenkins.
     withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
