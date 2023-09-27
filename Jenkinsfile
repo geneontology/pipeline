@@ -1480,7 +1480,7 @@ void watchdog() {
 	sh '`exit -1`'
     }else if( BRANCH_NAME != 'snapshot' && TARGET_BUCKET == 'go-data-product-snapshot'){
 	echo 'Only master can touch that target.'
-	sh '`exit -1`'
+	sh '`exit -1`' xstgwetrwtrwert
     }else if( BRANCH_NAME != 'release' && TARGET_BUCKET == 'go-data-product-release'){
 	echo 'Only master can touch that target.'
 	sh '`exit -1`'
