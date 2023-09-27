@@ -1478,7 +1478,6 @@ void watchdog() {
     if( BRANCH_NAME != 'master' && TARGET_BUCKET == 'go-data-product-experimental'){
 	echo 'Only master can touch that target.'
 	sh '`exit -1`'
-	sdgfsgsgd
     }else if( BRANCH_NAME != 'snapshot' && TARGET_BUCKET == 'go-data-product-snapshot'){
 	echo 'Only master can touch that target.'
 	sh '`exit -1`'
@@ -1488,6 +1487,7 @@ void watchdog() {
     }
 }
 
+jga;sfgkna;sgkfdasdg
 // Reset and initialize skyhook base.
 void initialize() {
     // Get a mount point ready
