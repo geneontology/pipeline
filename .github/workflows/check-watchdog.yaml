@@ -20,9 +20,16 @@ jobs:
     - name: Check for modifications in the watchdog function
       run: |
         MODIFIED_LINES=$(git diff --unified=0 master issue-325-gopreprocess Jenkinsfile | grep 'void watchdog()')
+
+        # Debug: Print the entire git diff output for Jenkinsfile                                                                                             
+        echo "Full git diff output for Jenkinsfile:"
+        git diff --unified=0 master issue-325-gopreprocess Jenkinsfile
+        echo "-------------------------"
+
         if [[ ! -z "$MODIFIED_LINES" ]]; then
-          echo "ERROR: The watchdog function in the Jenkinsfile has been modified."
-          exit 1
+            echo "ERROR: The watchdog function in the Jenkinsfile has been modified."
+            exit 1
         else
+          echo "watchdog OK"
           exit 0
         fi
