@@ -530,6 +530,10 @@ pipeline {
 		}
 		sh "chmod +x /opt/bin/*"
 
+		// Install the python requirements.
+		sh "cd /opt/go-site/scripts && pip3 install -r requirements.txt"
+		// Re-establish location in the filesystem expected by steps below.
+		sh "cd /opt/"
 		sh "python3 /opt/go-site/scripts/download_source_gafs.py organize --datasets /opt/go-site/metadata/datasets --source /opt/go-site/sources --target /opt/go-site/pipeline/target/groups/"
 		sh "rm /opt/go-site/sources/*"
 
