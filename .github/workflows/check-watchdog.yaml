@@ -1,0 +1,22 @@
+name: Check Jenkins Watchdog Step
+
+on:
+  pull_request:
+    paths:
+      - 'Jenkinsfile'
+
+jobs:
+  check-modifications:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Check for modifications in the watchdog function
+      run: |
+        # Check if the watchdog function has been modified
+        MODIFIED_LINES=$(MODIFIED_LINES=$(git diff --unified=0 HEAD^ HEAD Jenkinsfile | grep 'void watchdog()')
+        if [[ ! -z "$MODIFIED_LINES" ]]; then
+          echo "ERROR: The watchdog function in the Jenkinsfile has been modified."
+          exit 1
+        fi
