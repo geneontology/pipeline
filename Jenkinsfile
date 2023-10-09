@@ -322,7 +322,6 @@ pipeline {
 	    }
 	}
 	stage("Download preprocessing data") {
-
 	    agent {
 		    docker {
 		        image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
@@ -333,16 +332,8 @@ pipeline {
             sh "cd /opt/ && git clone -b $TARGET_GO_PREPROCESS_BRANCH https://github.com/geneontology/gopreprocess.git"
             sh "poetry install"
             sh "make download_human"
-
-            script {
-                withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    // Upload to skyhook to the expected location.
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./data/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
-		        }
-		    }
 	    }
 	}
-
 	// See https://github.com/geneontology/go-ontology for details
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
