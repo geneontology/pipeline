@@ -328,11 +328,6 @@ pipeline {
 		        args "-u root:root --tmpfs /opt:exec -w /opt"
 		    }
 	    }
-	    steps {
-            sh "cd /opt/ && git clone -b $TARGET_GO_PREPROCESS_BRANCH https://github.com/geneontology/gopreprocess.git"
-            sh "poetry install"
-            sh "make download_human"
-	    }
 	}
 	// See https://github.com/geneontology/go-ontology for details
 	// on the ontology release pipeline. This ticket runs
