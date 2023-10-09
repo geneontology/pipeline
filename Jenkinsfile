@@ -32,9 +32,9 @@ pipeline {
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,smoxon@lbl.gov'
-	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,suzia@stanford.edu,smoxon@lbl.gov'
-	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss,pgaudet1@gmail.com,smoxon@lbl.gov'
+	TARGET_ADMIN_EMAILS = 'smoxon@lbl.gov'
+	TARGET_SUCCESS_EMAILS = 'smoxon@lbl.gov'
+	TARGET_RELEASE_HOLD_EMAILS = 'smoxon@lbl.gov'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = null
 	// The URL prefix to use when creating site indices.
