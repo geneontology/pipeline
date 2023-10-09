@@ -18,6 +18,7 @@ pipeline {
 
 	// The branch of geneontology/go-site to use.
 	TARGET_GO_SITE_BRANCH = 'gopreprocess'
+	TARGET_GO_PREPROCESS_BRANCH = 'main'
 	// The branch of geneontology/go-stats to use.
 	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
@@ -311,10 +312,7 @@ pipeline {
 			    goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
 			}
 			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
-			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type orthology ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
-			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gpi ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
-			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type cross_reference ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
-		    }
+			}
 
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			// Upload to skyhook to the expected location.
@@ -323,6 +321,28 @@ pipeline {
 		}
 	    }
 	}
+	stage("Download preprocessing data") {
+
+	    agent {
+		    docker {
+		        image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
+		        args "-u root:root --tmpfs /opt:exec -w /opt"
+		    }
+	    }
+	    steps {
+            sh "cd /opt/ && git clone -b $TARGET_GO_PREPROCESS_BRANCH https://github.com/geneontology/gopreprocess.git"
+            sh "poetry install"
+            sh "make download_human"
+
+            script {
+                withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    // Upload to skyhook to the expected location.
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./data/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+		        }
+		    }
+	    }
+	}
+
 	// See https://github.com/geneontology/go-ontology for details
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
