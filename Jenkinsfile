@@ -312,7 +312,10 @@ pipeline {
 			}
 			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
 		    }
-
+			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type cross_reference ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
+		    }
+		    sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type orthology ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
+		    }
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			// Upload to skyhook to the expected location.
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
