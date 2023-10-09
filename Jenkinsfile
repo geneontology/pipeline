@@ -321,14 +321,6 @@ pipeline {
 		}
 	    }
 	}
-	stage("Download preprocessing data") {
-	    agent {
-		    docker {
-		        image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
-		        args "-u root:root --tmpfs /opt:exec -w /opt"
-		    }
-	    }
-	}
 	// See https://github.com/geneontology/go-ontology for details
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
