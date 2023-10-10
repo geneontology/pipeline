@@ -294,31 +294,50 @@ pipeline {
 	// Download GAFs from datasets.yaml in go-site and then upload
 	// to skyhook in their appropriate locations.
 	stage("Download annotation data") {
+	    agent {
+		    docker {
+		        image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
+		        args "-u root:root --tmpfs /opt:exec -w /opt"
+		    }
 	    steps {
-		dir("./go-site") {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+		    dir("./go-site") {
+		        git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-		    script {
-			def excluded_datasets_args = ""
-			if ( env.DATASET_EXCLUDES ) {
-			    excluded_datasets_args = DATASET_EXCLUDES.split(" ").collect { "-x ${it}" }.join(" ")
-			}
-			def included_resources = ""
-			if (env.RESOURCE_GROUPS) {
-			    included_resources = RESOURCE_GROUPS.split(" ").collect { "-g ${it}" }.join(" ")
-			}
-			def goa_mapping_url = ""
-			if (env.GOA_UNIPROT_ALL_URL) {
-			    goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
-			}
-			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
-			}
+		        script {
+			        def excluded_datasets_args = ""
+			        if ( env.DATASET_EXCLUDES ) {
+			            excluded_datasets_args = DATASET_EXCLUDES.split(" ").collect { "-x ${it}" }.join(" ")
+			        }
+
+			        def included_resources = ""
+			        if (env.RESOURCE_GROUPS) {
+			            included_resources = RESOURCE_GROUPS.split(" ").collect { "-g ${it}" }.join(" ")
+			        }
+
+			        def goa_mapping_url = ""
+			        if (env.GOA_UNIPROT_ALL_URL) {
+			            goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
+			        }
+
+			        sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
+			    }
 
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			// Upload to skyhook to the expected location.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+			    // Upload to skyhook to the expected location.
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
 		    }
-		}
+		  }
+		  dir("./gopreprocess") {
+		    git branch: TARGET_GO_PREPROCESS_BRANCH, url: 'https://github.com/geneontology/gopreprocess.git'
+		    sh "pwd"
+		    sh "ls -lrt"
+		    sh "poetry install"
+		    sh "make download_human"
+
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ~/.data/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+		    }
 	    }
 	}
 	// See https://github.com/geneontology/go-ontology for details
@@ -1364,86 +1383,6 @@ pipeline {
 		}
 	    }
 	}
-	// Big things to do on major branches.
-	stage('Deploy') {
-	    // For exploration of #204, we'll hold back attempts to push out to AmiGO for master and snapshot
-	    // so we don't keep clobbering #204 trials out.
-	    //when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
-	    when { anyOf { branch 'release' } }
-	    steps {
-		parallel(
-		    "AmiGO": {
-
-			// Ninja in our file credentials from Jenkins.
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY'), file(credentialsId: 'go-svn-private-key', variable: 'GO_SVN_IDENTITY'), file(credentialsId: 'ansible-bbop-local-slave', variable: 'DEPLOY_LOCAL_IDENTITY'), file(credentialsId: 'go-aws-ec2-ansible-slave', variable: 'DEPLOY_REMOTE_IDENTITY')]) {
-
-			    // Get our operations code and decend into ansible
-			    // working directory.
-			    dir('./operations') {
-
-				git([branch: 'master',
-				     credentialsId: 'bbop-agent-github-user-pass',
-				     url: 'https://github.com/geneontology/operations.git'])
-				dir('./ansible') {
-				    ///
-				    /// Push out to an AmiGO.
-				    ///
-				    script {
-					if( env.BRANCH_NAME == 'release' ){
-
-					    echo 'No current public push on release to Blazegraph.'
-					    // retry(3){
-					    //	sh 'ansible-playbook update-endpoint.yaml --inventory=hosts.local-rdf-endpoint --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_user=bbop --extra-vars="pipeline=current build=production endpoint=production"'
-					    // }
-
-					    echo 'No current public push on release to GOlr.'
-					    // retry(3){
-					    //	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-aux -e target_user=bbop'
-					    // }
-					    // retry(3){
-					    //	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-production -e target_user=bbop'
-					    // }
-
-					}else if( env.BRANCH_NAME == 'snapshot' ){
-
-					    echo 'Push snapshot out internal Blazegraph'
-					    retry(3){
-						sh 'ansible-playbook update-endpoint.yaml --inventory=hosts.local-rdf-endpoint --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_user=bbop --extra-vars="pipeline=current build=internal endpoint=internal"'
-					    }
-
-					    echo 'Push snapshot out to experimental AmiGO'
-					    retry(3){
-						sh 'ansible-playbook ./update-golr-w-snap.yaml --inventory=hosts.amigo --private-key="$DEPLOY_REMOTE_IDENTITY" -e target_host=amigo-golr-exp -e target_user=ubuntu'
-					    }
-
-					}else if( env.BRANCH_NAME == 'master' ){
-
-					    echo 'Push master out to experimental AmiGO'
-					    retry(3){
-						sh 'ansible-playbook ./update-golr-w-exp.yaml --inventory=hosts.amigo --private-key="$DEPLOY_REMOTE_IDENTITY" -e target_host=amigo-golr-exp -e target_user=ubuntu'
-					    }
-
-					}
-				    }
-				}
-			    }
-			}
-		    }
-		)
-	    }
-	    // WARNING: Extra safety as I expect this to sometimes fail.
-	    post {
-		always {
-		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-		}
-	    }
-	}
-	// stage('TODO: Final status') {
-	//     steps {
-	//	echo 'TODO: final'
-	//     }
-	// }
     }
     post {
 	// Let's let our people know if things go well.
