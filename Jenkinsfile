@@ -319,7 +319,9 @@ pipeline {
 			        if (env.GOA_UNIPROT_ALL_URL) {
 			                goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
 			        }
-			        sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
+			        sh "cd scripts && pip3 install -r requirements.txt"
+			        sh "python3 ./download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
+			        sh "cd ../"
 			    }
 
 		        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
