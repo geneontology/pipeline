@@ -335,7 +335,9 @@ pipeline {
 		        sh "poetry install"
 		        sh "make download_human"
 		        sh "make download_rat"
-
+                sh "ls -lrt ~./data/HUMAN/"
+                sh "ls -lrt ~/.data/RGD"
+                sh "ls -lrt ~/.data/MGI"
 		        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			        // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
 			        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ~/.data/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
