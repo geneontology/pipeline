@@ -299,46 +299,47 @@ pipeline {
 		        image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
 		        args "-u root:root --tmpfs /opt:exec -w /opt"
 		    }
-	    steps {
-		    dir("./go-site") {
-		        git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+	        steps {
+		        dir("./go-site") {
+		            git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-		        script {
-			        def excluded_datasets_args = ""
-			        if ( env.DATASET_EXCLUDES ) {
-			            excluded_datasets_args = DATASET_EXCLUDES.split(" ").collect { "-x ${it}" }.join(" ")
+		            script {
+			            def excluded_datasets_args = ""
+			            if ( env.DATASET_EXCLUDES ) {
+			                excluded_datasets_args = DATASET_EXCLUDES.split(" ").collect { "-x ${it}" }.join(" ")
+			            }
+
+			            def included_resources = ""
+			            if (env.RESOURCE_GROUPS) {
+			                included_resources = RESOURCE_GROUPS.split(" ").collect { "-g ${it}" }.join(" ")
+			            }
+
+			            def goa_mapping_url = ""
+			            if (env.GOA_UNIPROT_ALL_URL) {
+			                goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
+			            }
+			            sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
 			        }
 
-			        def included_resources = ""
-			        if (env.RESOURCE_GROUPS) {
-			            included_resources = RESOURCE_GROUPS.split(" ").collect { "-g ${it}" }.join(" ")
-			        }
+		            withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			            // Upload to skyhook to the expected location.
+			            sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+		            }
+		        }
+		        dir("./gopreprocess") {
+		            git branch: TARGET_GO_PREPROCESS_BRANCH, url: 'https://github.com/geneontology/gopreprocess.git'
+		            sh "pwd"
+		            sh "ls -lrt"
+		            sh "poetry install"
+		            sh "make download_human"
+		            sh "make download_rat"
 
-			        def goa_mapping_url = ""
-			        if (env.GOA_UNIPROT_ALL_URL) {
-			            goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
-			        }
-
-			        sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
-			    }
-
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    // Upload to skyhook to the expected location.
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
-		    }
-		  }
-		  dir("./gopreprocess") {
-		    git branch: TARGET_GO_PREPROCESS_BRANCH, url: 'https://github.com/geneontology/gopreprocess.git'
-		    sh "pwd"
-		    sh "ls -lrt"
-		    sh "poetry install"
-		    sh "make download_human"
-		    sh "make download_rat"
-
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ~/.data/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
-		    }
+		            withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			            // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
+			            sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ~/.data/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+		            }
+		        }
+	        }
 	    }
 	}
 	// See https://github.com/geneontology/go-ontology for details
