@@ -333,6 +333,7 @@ pipeline {
 		    sh "ls -lrt"
 		    sh "poetry install"
 		    sh "make download_human"
+		    sh "make download_rat"
 
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			    // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
@@ -406,6 +407,24 @@ pipeline {
 		    // on disk after build as cleanup.
 		    sh 'git clean -fx || true'
 		}
+	    }
+	}
+	stage('Generate automated annotations'){
+		agent {
+		    docker {
+		        image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
+		        args "-u root:root --tmpfs /opt:exec -w /opt"
+		    }
+	    }
+	    steps {
+            dir("./gopreprocess") {
+                git branch: TARGET_GO_PREPROCESS_BRANCH, url: 'https://github.com/geneontology/gopreprocess.git'
+                sh "pwd"
+                sh "ls -lrt"
+                sh "poetry install"
+                sh "make convert_human"
+                sh "make convert_mouse"
+	        }
 	    }
 	}
 	stage('Minerva generations') {
