@@ -340,7 +340,6 @@ pipeline {
                 sh "ls -lrt ~/.data/MGI"
 		        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			        // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
-			        sh 'mkdir skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/preprocess_raw_files/'
 			        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ~/.data/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/preprocess_raw_files/'
 		        }
 		    }
@@ -434,7 +433,6 @@ pipeline {
                 sh "make merge_gafs"
                 withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			        // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
-			        sh 'mkdir skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/preprocessed_GAF_output/'
 			        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ~/.data/GAF_OUTPUT/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/preprocessed_GAF_output/'
 		        }
 
@@ -1483,6 +1481,8 @@ void initialize() {
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/json || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/blazegraph || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data || true'
+    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocess_raw_files || true'
+    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocessed_GAF_output || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/pages || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/solr || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/panther || true'
