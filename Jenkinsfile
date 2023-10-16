@@ -335,7 +335,7 @@ pipeline {
 		        sh "poetry install"
 		        sh "make download_human"
 		        sh "make download_rat"
-                sh "ls -lrt ~./data/HUMAN/"
+                sh "ls -lrt ~/.data/HUMAN/"
                 sh "ls -lrt ~/.data/RGD"
                 sh "ls -lrt ~/.data/MGI"
 		        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
