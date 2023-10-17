@@ -427,8 +427,8 @@ pipeline {
                 sh "pwd"
                 sh "ls -lrt"
                 sh "poetry install"
+                sh "make convert_rat"
                 sh "make convert_human"
-                sh "make convert_mouse"
                 sh "make get_goa_files"
                 sh "make merge_gafs"
                 withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
