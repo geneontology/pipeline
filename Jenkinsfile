@@ -36,7 +36,7 @@ pipeline {
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,muruganu@usc.edu'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss,pgaudet1@gmail.com,smoxon@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = ''
+	TARGET_BUCKET = 'null'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = ''
 	// This variable should typically be 'TRUE', which will cause
