@@ -81,6 +81,8 @@ pipeline {
 	    //"http://purl.obolibrary.org/obo/go/extensions/go-modules-annotations.owl",
 	    //"http://purl.obolibrary.org/obo/go/extensions/go-taxon-subsets.owl"
             //"http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/neo.owl"
+            "http://purl.obolibrary.org/obo/fbdv.owl",
+            "http://purl.obolibrary.org/obo/fbbt.owl",
             "http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/extensions/go-lego.owl",
             "http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/neo.owl"
 	].join(" ")
