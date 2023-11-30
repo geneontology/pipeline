@@ -2,14 +2,14 @@ pipeline {
     agent any
     // In additional to manual runs, trigger somewhere at midnight to
     // give us the max time in a day to get things right.
-    triggers {
+    //triggers {
 	// Master never runs--Feb 31st.
-	cron('0 0 31 2 *')
+	// cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
 	//cron('0 0 2-31/2 * *')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
-    }
+    //}
     environment {
 
 	///
@@ -17,7 +17,8 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'master'
+	TARGET_GO_SITE_BRANCH = 'gopreprocess'
+	TARGET_GO_PREPROCESS_BRANCH = 'main'
 	// The branch of geneontology/go-stats to use.
 	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
@@ -32,11 +33,11 @@ pipeline {
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,smoxon@lbl.gov'
-	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,suzia@stanford.edu,smoxon@lbl.gov'
-	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss,pgaudet1@gmail.com,smoxon@lbl.gov'
+	TARGET_ADMIN_EMAILS = 'smoxon@lbl.gov'
+	TARGET_SUCCESS_EMAILS = 'smoxon@lbl.gov'
+	TARGET_RELEASE_HOLD_EMAILS = 'smoxon@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-experimental'
+	TARGET_BUCKET = null
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
 	// This variable should typically be 'TRUE', which will cause
@@ -70,14 +71,14 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_ARCHIVE_CONCEPT = '1170314'
+	ZENODO_ARCHIVE_CONCEPT = null
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
 	// need this as it is always a new location and the index
 	// upload already has an invalidation on it. For current,
 	// snapshot, and experimental.
-	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
-	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = null
+	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = null
 
 	///
 	/// Ontobio Validation
@@ -125,7 +126,7 @@ pipeline {
 	// reports from during the megastep and during templating the
 	// reports after the megastep. The tags are currently
 	// respected at two times in the pipeline: the gorules report
-	// take the flag as a CLI argument, supressing it; ontobio
+	// take the flag as a CLI argument, suppressing it; ontobio
 	// takes it during the same stage as the JSON
 	// generation/parsing step, to supress the .md output. At this
 	// time, this variable can be either nothing or empty string
@@ -135,10 +136,10 @@ pipeline {
 	//GORULE_TAGS_TO_SUPPRESS="silent"
 
 	// Optional. Groups to run.
-	RESOURCE_GROUPS="ecocyc goa mgi paint pseudocap wb"
+	RESOURCE_GROUPS="ecocyc goa mgi rgd paint pseudocap wb"
 	// Optional. Datasets to skip within the resources that we
 	// will run (defined in the line above).
-	DATASET_EXCLUDES="goa_uniprot_gcrp goa_pdb goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human goa_human goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
+	DATASET_EXCLUDES="goa_pig_complex goa_pig_rna goa_pig_isoform goa_pig goa_uniprot_gcrp goa_pdb goa_chicken goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
 	// Optional. This acts as an override, /if/ it's grabbed (as
 	// defined above).
 	GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
@@ -293,32 +294,57 @@ pipeline {
 	// Download GAFs from datasets.yaml in go-site and then upload
 	// to skyhook in their appropriate locations.
 	stage("Download annotation data") {
-	    steps {
-		dir("./go-site") {
-		    git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
-
-		    script {
-			def excluded_datasets_args = ""
-			if ( env.DATASET_EXCLUDES ) {
-			    excluded_datasets_args = DATASET_EXCLUDES.split(" ").collect { "-x ${it}" }.join(" ")
-			}
-			def included_resources = ""
-			if (env.RESOURCE_GROUPS) {
-			    included_resources = RESOURCE_GROUPS.split(" ").collect { "-g ${it}" }.join(" ")
-			}
-			def goa_mapping_url = ""
-			if (env.GOA_UNIPROT_ALL_URL) {
-			    goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
-			}
-			sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
-		    }
-
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			// Upload to skyhook to the expected location.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+	    agent {
+		    docker {
+		        image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
+		        args "-u root:root --tmpfs /opt:exec -w /opt"
 		    }
 		}
+	    steps {
+		    dir("./go-site") {
+		        git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+
+		        script {
+			        def excluded_datasets_args = ""
+			        if ( env.DATASET_EXCLUDES ) {
+			            excluded_datasets_args = DATASET_EXCLUDES.split(" ").collect { "-x ${it}" }.join(" ")
+			        }
+
+			        def included_resources = ""
+			        if (env.RESOURCE_GROUPS) {
+			                included_resources = RESOURCE_GROUPS.split(" ").collect { "-g ${it}" }.join(" ")
+			        }
+
+			        def goa_mapping_url = ""
+			        if (env.GOA_UNIPROT_ALL_URL) {
+			                goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
+			        }
+			        sh "cd scripts && pip3 install -r requirements.txt"
+			        sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
+			    }
+
+		        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			        // Upload to skyhook to the expected location.
+			        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+		        }
+		    }
+		    dir("./gopreprocess") {
+		        git branch: TARGET_GO_PREPROCESS_BRANCH, url: 'https://github.com/geneontology/gopreprocess.git'
+		        sh "pwd"
+		        sh "ls -lrt"
+		        sh "poetry install"
+		        sh "make download_human"
+		        sh "make download_rat"
+                sh "ls -lrt ~/.data/HUMAN/"
+                sh "ls -lrt ~/.data/RGD"
+                sh "ls -lrt ~/.data/MGI"
+		        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			        // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
+			        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ~/.data/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/preprocess_raw_files/'
+		        }
+		    }
 	    }
+
 	}
 	// See https://github.com/geneontology/go-ontology for details
 	// on the ontology release pipeline. This ticket runs
@@ -386,6 +412,34 @@ pipeline {
 		    // on disk after build as cleanup.
 		    sh 'git clean -fx || true'
 		}
+	    }
+	}
+	stage('Generate automated annotations'){
+		agent {
+		    docker {
+		        image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
+		        args "-u root:root --tmpfs /opt:exec -w /opt"
+		    }
+	    }
+	    steps {
+            dir("./gopreprocess") {
+                git branch: TARGET_GO_PREPROCESS_BRANCH, url: 'https://github.com/geneontology/gopreprocess.git'
+                sh "pwd"
+                sh "ls -lrt"
+                sh "poetry install"
+                sh "make convert_rat"
+                sh "make convert_human"
+                sh "make convert_p2g_annotations"
+                sh "make merge_gafs"
+                sh "ls -lrt ~/.data/GAF_OUTPUT"
+                withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			        // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
+			        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ~/.data/GAF_OUTPUT/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/preprocessed_GAF_output/'
+		            sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ~/.data/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/preprocess_raw_files/'
+		        }
+
+	        }
+
 	    }
 	}
 	stage('Minerva generations') {
@@ -493,7 +547,32 @@ pipeline {
 		)
 	    }
 	}
+    stage('Convert GPADs to GPAD 2.0, merge MGI autogenerated upstream GAFs into mgi-src.gaf and upload merged file to Skyhook') {
+        agent {
+            docker {
+                image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
+                args "-u root:root --tmpfs /opt:exec -w /opt"
+            }
+        }
+        steps {
+            dir("./gopreprocess") {
+		        git branch: TARGET_GO_PREPROCESS_BRANCH, url: 'https://github.com/geneontology/gopreprocess.git'
+		        sh "pwd"
+		        sh "ls -lrt"
+		        sh "poetry install"
+                sh "make convert_gpad"
+                sh "make merge_gafs"
+		        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			        // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
+			        sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ~/.data/GPAD_2_OUTPUT/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/preprocess_raw_files/'
+		        }
+		        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			        // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
+			        sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ~/.data/MGI/mgi-merged.gaf skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/mgi-src.gaf'
+		        }
+		    }
 
+    }
 	stage('Produce GAFs, TTLs, and journal (*)') {
 	    agent {
 		docker {
@@ -1363,86 +1442,6 @@ pipeline {
 		}
 	    }
 	}
-	// Big things to do on major branches.
-	stage('Deploy') {
-	    // For exploration of #204, we'll hold back attempts to push out to AmiGO for master and snapshot
-	    // so we don't keep clobbering #204 trials out.
-	    //when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
-	    when { anyOf { branch 'release' } }
-	    steps {
-		parallel(
-		    "AmiGO": {
-
-			// Ninja in our file credentials from Jenkins.
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY'), file(credentialsId: 'go-svn-private-key', variable: 'GO_SVN_IDENTITY'), file(credentialsId: 'ansible-bbop-local-slave', variable: 'DEPLOY_LOCAL_IDENTITY'), file(credentialsId: 'go-aws-ec2-ansible-slave', variable: 'DEPLOY_REMOTE_IDENTITY')]) {
-
-			    // Get our operations code and decend into ansible
-			    // working directory.
-			    dir('./operations') {
-
-				git([branch: 'master',
-				     credentialsId: 'bbop-agent-github-user-pass',
-				     url: 'https://github.com/geneontology/operations.git'])
-				dir('./ansible') {
-				    ///
-				    /// Push out to an AmiGO.
-				    ///
-				    script {
-					if( env.BRANCH_NAME == 'release' ){
-
-					    echo 'No current public push on release to Blazegraph.'
-					    // retry(3){
-					    //	sh 'ansible-playbook update-endpoint.yaml --inventory=hosts.local-rdf-endpoint --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_user=bbop --extra-vars="pipeline=current build=production endpoint=production"'
-					    // }
-
-					    echo 'No current public push on release to GOlr.'
-					    // retry(3){
-					    //	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-aux -e target_user=bbop'
-					    // }
-					    // retry(3){
-					    //	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-production -e target_user=bbop'
-					    // }
-
-					}else if( env.BRANCH_NAME == 'snapshot' ){
-
-					    echo 'Push snapshot out internal Blazegraph'
-					    retry(3){
-						sh 'ansible-playbook update-endpoint.yaml --inventory=hosts.local-rdf-endpoint --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_user=bbop --extra-vars="pipeline=current build=internal endpoint=internal"'
-					    }
-
-					    echo 'Push snapshot out to experimental AmiGO'
-					    retry(3){
-						sh 'ansible-playbook ./update-golr-w-snap.yaml --inventory=hosts.amigo --private-key="$DEPLOY_REMOTE_IDENTITY" -e target_host=amigo-golr-exp -e target_user=ubuntu'
-					    }
-
-					}else if( env.BRANCH_NAME == 'master' ){
-
-					    echo 'Push master out to experimental AmiGO'
-					    retry(3){
-						sh 'ansible-playbook ./update-golr-w-exp.yaml --inventory=hosts.amigo --private-key="$DEPLOY_REMOTE_IDENTITY" -e target_host=amigo-golr-exp -e target_user=ubuntu'
-					    }
-
-					}
-				    }
-				}
-			    }
-			}
-		    }
-		)
-	    }
-	    // WARNING: Extra safety as I expect this to sometimes fail.
-	    post {
-		always {
-		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-		}
-	    }
-	}
-	// stage('TODO: Final status') {
-	//     steps {
-	//	echo 'TODO: final'
-	//     }
-	// }
     }
     post {
 	// Let's let our people know if things go well.
@@ -1509,6 +1508,8 @@ void initialize() {
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/json || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/blazegraph || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data || true'
+    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocess_raw_files || true'
+    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocessed_GAF_output || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/pages || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/solr || true'
     sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/panther || true'
