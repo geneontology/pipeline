@@ -17,7 +17,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'master'
+	TARGET_GO_SITE_BRANCH = 'mouse_upstream_from_silver_325_pipeline'
 	// The branch of geneontology/go-stats to use.
 	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
@@ -32,9 +32,9 @@ pipeline {
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,smoxon@lbl.gov'
-	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,suzia@stanford.edu,smoxon@lbl.gov'
-	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss,pgaudet1@gmail.com,smoxon@lbl.gov'
+	TARGET_ADMIN_EMAILS = 'smoxon@lbl.gov'
+	TARGET_SUCCESS_EMAILS = 'smoxon@lbl.gov'
+	TARGET_RELEASE_HOLD_EMAILS = 'smoxon@lbl.gov'
 	// The file bucket(/folder) combination to use.
 	TARGET_BUCKET = 'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
