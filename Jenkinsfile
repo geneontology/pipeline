@@ -456,6 +456,7 @@ void watchdog() {
 	echo 'Only master can touch that target.'
 	sh '`exit -1`'
     }
+}
 
 // Reset and initialize skyhook base.
 void initialize() {
