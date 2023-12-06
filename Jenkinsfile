@@ -35,28 +35,28 @@ pipeline {
 	TARGET_ADMIN_EMAILS = 'smoxon@lbl.gov'
 	TARGET_SUCCESS_EMAILS = 'smoxon@lbl.gov'
 	TARGET_RELEASE_HOLD_EMAILS = 'smoxon@lbl.gov'
-	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-experimental'
-	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
-	// This variable should typically be 'TRUE', which will cause
-	// some additional basic checks to be made. There are some
-	// very exotic cases where these check may need to be skipped
-	// for a run, in that case this variable is set to 'FALSE'.
-	WE_ARE_BEING_SAFE_P = 'TRUE'
-	// Sanity check for solr index being built--overall min count.
-	// See https://github.com/geneontology/pipeline/issues/315 .
-	// Only used on release attempts (as it saves QC time and
-	// getting the number for all branches would be a trick).
-	SANITY_SOLR_DOC_COUNT_MIN = 11000000
-	SANITY_SOLR_BIOENTITY_DOC_COUNT_MIN = 1400000
-	// Control make to get through our loads faster if
-	// possible. Assuming we're cpu bound for some of these...
-	// wok has 48 "processors" over 12 "cores", so I have no idea;
-	// let's go with conservative and see if we get an
-	// improvement.
-	MAKECMD = 'make --jobs 3 --max-load 10.0'
-	//MAKECMD = 'make'
+    // The file bucket(/folder) combination to use.
+    TARGET_BUCKET = null
+    // The URL prefix to use when creating site indices.
+    TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+    // This variable should typically be 'TRUE', which will cause
+    // some additional basic checks to be made. There are some
+    // very exotic cases where these check may need to be skipped
+    // for a run, in that case this variable is set to 'FALSE'.
+    WE_ARE_BEING_SAFE_P = 'TRUE'
+    // Sanity check for solr index being built--overall min count.
+    // See https://github.com/geneontology/pipeline/issues/315 .
+    // Only used on release attempts (as it saves QC time and
+    // getting the number for all branches would be a trick).
+    SANITY_SOLR_DOC_COUNT_MIN = 11000000
+    SANITY_SOLR_BIOENTITY_DOC_COUNT_MIN = 1400000
+    // Control make to get through our loads faster if
+    // possible. Assuming we're cpu bound for some of these...
+    // wok has 48 "processors" over 12 "cores", so I have no idea;
+    // let's go with conservative and see if we get an
+    // improvement.
+    MAKECMD = 'make --jobs 3 --max-load 10.0'
+    //MAKECMD = 'make'
 
 	///
 	/// PANTHER/PAINT metadata.
@@ -70,14 +70,14 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_ARCHIVE_CONCEPT = '1170314'
-	// Distribution ID for the AWS CloudFront for this branch,
-	// used soley for invalidations. Versioned release does not
-	// need this as it is always a new location and the index
-	// upload already has an invalidation on it. For current,
-	// snapshot, and experimental.
-	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
-	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
+    ZENODO_ARCHIVE_CONCEPT = null
+    // Distribution ID for the AWS CloudFront for this branch,
+    // used soley for invalidations. Versioned release does not
+    // need this as it is always a new location and the index
+    // upload already has an invalidation on it. For current,
+    // snapshot, and experimental.
+    AWS_CLOUDFRONT_DISTRIBUTION_ID = null
+    AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = null
 
 	///
 	/// Ontobio Validation
@@ -134,15 +134,14 @@ pipeline {
 	// "silent")
 	//GORULE_TAGS_TO_SUPPRESS="silent"
 
-	// Optional. Groups to run.
-	RESOURCE_GROUPS="ecocyc goa mgi paint pseudocap wb"
-	// Optional. Datasets to skip within the resources that we
-	// will run (defined in the line above).
-	DATASET_EXCLUDES="goa_uniprot_gcrp goa_pdb goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human goa_human goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
-	// Optional. This acts as an override, /if/ it's grabbed (as
-	// defined above).
-	GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
-
+    // Optional. Groups to run.
+    RESOURCE_GROUPS="ecocyc goa mgi rgd paint pseudocap wb"
+    // Optional. Datasets to skip within the resources that we
+    // will run (defined in the line above).
+    DATASET_EXCLUDES="goa_pig_complex goa_pig_rna goa_pig_isoform goa_pig goa_uniprot_gcrp goa_pdb goa_chicken goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
+    // Optional. This acts as an override, /if/ it's grabbed (as
+    // defined above).
+    GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
     }
     options{
 	timestamps()
