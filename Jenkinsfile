@@ -443,6 +443,7 @@ pipeline {
 	    }
 	}
 }
+}
 
 // Reset and initialize skyhook base.
 void initialize() {
