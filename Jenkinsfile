@@ -207,54 +207,6 @@ pipeline {
 			sh 'cat branch.txt'
 			sh 'echo $START_DAY > dow.txt'
 			sh 'echo "$START_DAY"'
-		    },
-		    "Reset base": {
-			// Get a mount point ready
-			sh 'mkdir -p $WORKSPACE/mnt || true'
-			// Ninja in our file credentials from Jenkins.
-			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			    // Try and ssh fuse skyhook onto our local system.
-			    sh 'sshfs -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-			}
-			// Remove anything we might have left around from
-			// times past.
-			sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME || true'
-			// Rebuild directory structure.
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
-			// WARNING/BUG: needed for arachne to run at
-			// this point.
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/lib || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/ttl || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/blazegraph || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/annotations || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/pages || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/solr || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/panther || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
-			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/release_stats || true'
-			// Tag the top to let the world know I was at least
-			// here.
-			sh 'echo "Runtime summary." > $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-			sh 'echo "" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-			sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-			sh 'echo "" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-			sh 'echo "Release notes: https://github.com/geneontology/go-site/tree/master/releases" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-			sh 'echo "Branch: $BRANCH_NAME" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-			sh 'echo "Start day: $START_DAY" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-			sh 'echo "Start date: $START_DATE" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-
-			sh 'echo "Official release date: metadata/release-date.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-			sh 'echo "Official Zenodo archive DOI: metadata/release-archive-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-			sh 'echo "Official Zenodo archive DOI: metadata/release-reference-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-			sh 'echo "TODO: Note software versions." >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-			// TODO: This should be wrapped in exception
-			// handling. In fact, this whole thing should be.
-			sh 'fusermount -u $WORKSPACE/mnt/ || true'
 		    }
 		)
 	    }
