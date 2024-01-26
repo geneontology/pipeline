@@ -631,10 +631,13 @@ pipeline {
 		    sh 'pigz /opt/go-site/pipeline/target/blazegraph-internal.jnl'
 		    sh 'pigz /opt/go-site/pipeline/target/blazegraph-production.jnl'
 		    // Copy the journals directly to products.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
 		    // Copy the reports into reports.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 		    // Plus: flatten product reports in json,
 		    // md reports, text files, etc.
 		    sh 'find /opt/go-site/pipeline/target/groups -type f -regex "^.*\\.\\(json\\|txt\\|md\\)$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports \\;'
@@ -851,7 +854,7 @@ pipeline {
 			// Copy all of the reports to the reports
 			// directory.
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./combined.report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./assigned-by-combined-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./aggregate-rule-violation-report.md skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" ./users-and-groups-report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
 
 			// Copy generated pages over to page output.
@@ -973,9 +976,11 @@ pipeline {
 		sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    // Copy over index.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		    // Copy over log.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		}
 
 		// Solr should still be running in the background here
@@ -1013,7 +1018,8 @@ pipeline {
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    	retry(3) {
 			    // Copy over stats files.
-			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/stats/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/release_stats/'
+			    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/stats/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/release_stats/'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /tmp/stats/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/release_stats/'
 			}
 		    }
 		}
@@ -1489,52 +1495,60 @@ void watchdog() {
 
 // Reset and initialize skyhook base.
 void initialize() {
-    // Get a mount point ready
-    sh 'mkdir -p $WORKSPACE/mnt || true'
-    // Ninja in our file credentials from Jenkins.
-    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-	// Try and ssh fuse skyhook onto our local system.
-	sh 'sshfs -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-    }
-    // Remove anything we might have left around from
-    // times past.
-    sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME || true'
-    // Rebuild directory structure.
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
-    // WARNING/BUG: needed for arachne to run at
-    // this point.
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/lib || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/ttl || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/json || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/blazegraph || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/pages || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/solr || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/panther || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
-    sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/release_stats || true'
-    // Tag the top to let the world know I was at least
-    // here.
-    sh 'echo "Runtime summary." > $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    sh 'echo "" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    sh 'echo "" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    sh 'echo "Release notes: https://github.com/geneontology/go-site/tree/master/releases" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    sh 'echo "Branch: $BRANCH_NAME" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    sh 'echo "Start day: $START_DAY" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    sh 'echo "Start date: $START_DATE" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    sh 'echo "$START_DAY" > $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt'
-    sh 'echo "$START_DATE" > $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt'
 
-    sh 'echo "Official release date: metadata/release-date.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    sh 'echo "Official Zenodo archive DOI: metadata/release-archive-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    sh 'echo "TODO: Note software versions." >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-    // TODO: This should be wrapped in exception
-    // handling. In fact, this whole thing should be.
-    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+    // Possibly protect against issues like #350 by making sure
+    // $BRANCH_NAME is there and vaguely sane.
+    if(BRANCH_NAME instanceof String && BRANCH_NAME.size() >= 3 ) {
+
+	// Get a mount point ready
+	sh 'mkdir -p $WORKSPACE/mnt || true'
+	// Ninja in our file credentials from Jenkins.
+	withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+	    // Try and ssh fuse skyhook onto our local system.
+	    sh 'sshfs -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+	}
+	// Remove anything we might have left around from
+	// times past.
+	sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME || true'
+	// Rebuild directory structure.
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
+	// WARNING/BUG: needed for arachne to run at
+	// this point.
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/lib || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/ttl || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/json || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/blazegraph || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/pages || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/solr || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/panther || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/release_stats || true'
+	// Tag the top to let the world know I was at least
+	// here.
+	sh 'echo "Runtime summary." > $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	sh 'echo "" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	sh 'echo "" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	sh 'echo "Release notes: https://github.com/geneontology/go-site/tree/master/releases" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	sh 'echo "Branch: $BRANCH_NAME" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	sh 'echo "Start day: $START_DAY" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	sh 'echo "Start date: $START_DATE" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	sh 'echo "$START_DAY" > $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt'
+	sh 'echo "$START_DATE" > $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt'
+
+	sh 'echo "Official release date: metadata/release-date.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	sh 'echo "Official Zenodo archive DOI: metadata/release-archive-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	sh 'echo "TODO: Note software versions." >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	// TODO: This should be wrapped in exception
+	// handling. In fact, this whole thing should be.
+	sh 'fusermount -u $WORKSPACE/mnt/ || true'
+    }else{
+	sh 'echo "HOW DID THIS EVEN HAPPEN?"'
+    }
 }

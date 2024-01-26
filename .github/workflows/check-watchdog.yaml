@@ -1,0 +1,29 @@
+name: Check Jenkins Watchdog Step
+
+on:
+  pull_request:
+    paths:
+      - 'Jenkinsfile'
+
+jobs:
+  check-modifications:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.head_ref }}
+
+    - name: Fetch master branch
+      run: git fetch origin master:master
+
+    - name: Check for modifications in the watchdog function
+      run: |
+        set -x
+        if git diff --unified=0 master ${{ github.head_ref }} Jenkinsfile | grep 'void watchdog()'; then
+          echo "ERROR: The watchdog function in the Jenkinsfile has been modified."
+          exit 1
+        else
+          echo "watchdog OK"
+          exit 0
+        fi
