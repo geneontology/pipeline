@@ -474,7 +474,6 @@ pipeline {
 			}
 		    }
 		}
-
 	    }
 	}
 	// WARNING: This stage is a hack required to work around data damage described in https://github.com/geneontology/go-site/issues/1484 and
@@ -530,7 +529,6 @@ pipeline {
 		    // Upload noctua valid to skyhook
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/noctua*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data'
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/*.report.* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
-		}
 	    }
 	}
 	// A new step to think about. What is our core metadata?
