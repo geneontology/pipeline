@@ -461,7 +461,7 @@ pipeline {
 				// Hack for iterating quickly on
 				// https://github.com/geneontology/pipeline/issues/313 .
 				sh 'wget -N https://raw.githubusercontent.com/geneontology/go-site/$TARGET_GO_SITE_BRANCH/scripts/collate-gpads.pl'
-				sh 'perl ./collate-gpads.pl legacy/gpad/*.gpad'
+				sh 'perl ./collate-gpads.pl legacy/gpad'
 
 				// Rename, compress, and move to skyhook.
 				sh 'mcp "legacy/*.gpad" "legacy/noctua_#1-src.gpad"'
