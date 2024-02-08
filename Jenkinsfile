@@ -331,11 +331,11 @@ pipeline {
 			emailext to: "${TARGET_RELEASE_HOLD_EMAILS}",
 			    subject: "GO Pipeline waiting on input for ${env.BRANCH_NAME}",
 			    body: "The ${env.BRANCH_NAME} pipeline is waiting on user input. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
-			lock(resource: 'migration-run', inversePrecedence: true){
-			    echo "Holding lock after model cleanup."
-			    timeout(time:1, unit:'HOURS') {
-				input message:'Proceed after model cleanup?'
-			    }
+			// lock(resource: 'migration-run', inversePrecedence: true){
+			//     echo "Holding lock after model cleanup."
+			//     timeout(time:1, unit:'HOURS') {
+			// 	input message:'Proceed after model cleanup?'
+			//     }
 			}
 			echo 'Positive input given after model cleanup.'
 
@@ -360,11 +360,11 @@ pipeline {
 			emailext to: "${TARGET_RELEASE_HOLD_EMAILS}",
 			    subject: "GO Pipeline waiting on input for ${env.BRANCH_NAME}",
 			    body: "The ${env.BRANCH_NAME} pipeline is waiting on user input. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
-			lock(resource: 'migration-run', inversePrecedence: true){
-			    echo "Holding lock after ontology update."
-			    timeout(time:1, unit:'HOURS') {
-				input message:'Proceed after ontology update?'
-			    }
+			// lock(resource: 'migration-run', inversePrecedence: true){
+			//     echo "Holding lock after ontology update."
+			//     timeout(time:1, unit:'HOURS') {
+			// 	input message:'Proceed after ontology update?'
+			//     }
 			}
 			echo 'Positive input given after ontology update.'
 
