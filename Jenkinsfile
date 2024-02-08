@@ -32,31 +32,31 @@ pipeline {
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'smoxon@lbl.gov'
-	TARGET_SUCCESS_EMAILS = 'smoxon@lbl.gov'
-	TARGET_RELEASE_HOLD_EMAILS = 'smoxon@lbl.gov'
-    // The file bucket(/folder) combination to use.
-    TARGET_BUCKET = null
-    // The URL prefix to use when creating site indices.
-    TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
-    // This variable should typically be 'TRUE', which will cause
-    // some additional basic checks to be made. There are some
-    // very exotic cases where these check may need to be skipped
-    // for a run, in that case this variable is set to 'FALSE'.
-    WE_ARE_BEING_SAFE_P = 'TRUE'
-    // Sanity check for solr index being built--overall min count.
-    // See https://github.com/geneontology/pipeline/issues/315 .
-    // Only used on release attempts (as it saves QC time and
-    // getting the number for all branches would be a trick).
-    SANITY_SOLR_DOC_COUNT_MIN = 11000000
-    SANITY_SOLR_BIOENTITY_DOC_COUNT_MIN = 1400000
-    // Control make to get through our loads faster if
-    // possible. Assuming we're cpu bound for some of these...
-    // wok has 48 "processors" over 12 "cores", so I have no idea;
-    // let's go with conservative and see if we get an
-    // improvement.
-    MAKECMD = 'make --jobs 3 --max-load 10.0'
-    //MAKECMD = 'make'
+	TARGET_ADMIN_EMAILS = 'smoxon@lbl.gov,sjcarbon@lbl.gov'
+	TARGET_SUCCESS_EMAILS = 'smoxon@lbl.gov,sjcarbon@lbl.gov'
+	TARGET_RELEASE_HOLD_EMAILS = 'smoxon@lbl.gov,sjcarbon@lbl.gov'
+	// The file bucket(/folder) combination to use.
+	TARGET_BUCKET = null
+	// The URL prefix to use when creating site indices.
+	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	// This variable should typically be 'TRUE', which will cause
+	// some additional basic checks to be made. There are some
+	// very exotic cases where these check may need to be skipped
+	// for a run, in that case this variable is set to 'FALSE'.
+	WE_ARE_BEING_SAFE_P = 'TRUE'
+	// Sanity check for solr index being built--overall min count.
+	// See https://github.com/geneontology/pipeline/issues/315 .
+	// Only used on release attempts (as it saves QC time and
+	// getting the number for all branches would be a trick).
+	SANITY_SOLR_DOC_COUNT_MIN = 11000000
+	SANITY_SOLR_BIOENTITY_DOC_COUNT_MIN = 1400000
+	// Control make to get through our loads faster if
+	// possible. Assuming we're cpu bound for some of these...
+	// wok has 48 "processors" over 12 "cores", so I have no idea;
+	// let's go with conservative and see if we get an
+	// improvement.
+	MAKECMD = 'make --jobs 3 --max-load 10.0'
+	//MAKECMD = 'make'
 
 	///
 	/// PANTHER/PAINT metadata.
@@ -70,14 +70,14 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-    ZENODO_ARCHIVE_CONCEPT = null
-    // Distribution ID for the AWS CloudFront for this branch,
-    // used soley for invalidations. Versioned release does not
-    // need this as it is always a new location and the index
-    // upload already has an invalidation on it. For current,
-    // snapshot, and experimental.
-    AWS_CLOUDFRONT_DISTRIBUTION_ID = null
-    AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = null
+	ZENODO_ARCHIVE_CONCEPT = null
+	// Distribution ID for the AWS CloudFront for this branch,
+	// used soley for invalidations. Versioned release does not
+	// need this as it is always a new location and the index
+	// upload already has an invalidation on it. For current,
+	// snapshot, and experimental.
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = null
+	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = null
 
 	///
 	/// Ontobio Validation
@@ -407,87 +407,89 @@ pipeline {
 				// .
 				checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
 
-				// Make all software products
-				// available in bin/ (and lib/).
-				sh 'mkdir -p bin/'
-				sh 'mkdir -p lib/'
+				// // Make all software products
+				// // available in bin/ (and lib/).
+				// sh 'mkdir -p bin/'
+				// sh 'mkdir -p lib/'
+				// withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+				//     sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+				//     // WARNING/BUG: needed for blazegraph-runner
+				//     // to run at this point.
+				//     sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+				// }
+				// sh 'chmod +x bin/*'
+
+				// // Compile models.
+				// sh 'mkdir -p legacy/gpad'
+				// withEnv(['MINERVA_CLI_MEMORY=128G']){
+				//     // "Import" models.
+				//     sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
+				//     // Convert GO-CAM to GPAD.
+				//     sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES --ontojournal ontojournal.jnl -i blazegraph.jnl --gpad-output legacy/gpad'
+				// }
+
+				// // Collation.
+				// // Hack for iterating quickly on
+				// // https://github.com/geneontology/pipeline/issues/313 .
+				// sh 'wget -N https://raw.githubusercontent.com/geneontology/go-site/$TARGET_GO_SITE_BRANCH/scripts/collate-gpads.pl'
+				// sh 'perl ./collate-gpads.pl legacy/gpad'
+
+				// // Rename, compress, and move to skyhook.
+				// sh 'mcp "legacy/*.gpad" "legacy/noctua_#1-src.gpad"'
+				// sh 'gzip -vk legacy/noctua_*.gpad'
 				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-				    // WARNING/BUG: needed for blazegraph-runner
-				    // to run at this point.
-				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
-				}
-				sh 'chmod +x bin/*'
-
-				// Compile models.
-				sh 'mkdir -p legacy/gpad'
-				withEnv(['MINERVA_CLI_MEMORY=128G']){
-				    // "Import" models.
-				    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
-				    // Convert GO-CAM to GPAD.
-				    sh './bin/minerva-cli.sh --lego-to-gpad-sparql --ontology $MINERVA_INPUT_ONTOLOGIES --ontojournal ontojournal.jnl -i blazegraph.jnl --gpad-output legacy/gpad'
-				}
-
-				// Collation.
-				// Hack for iterating quickly on
-				// https://github.com/geneontology/pipeline/issues/313 .
-				sh 'wget -N https://raw.githubusercontent.com/geneontology/go-site/$TARGET_GO_SITE_BRANCH/scripts/collate-gpads.pl'
-				sh 'perl ./collate-gpads.pl legacy/gpad'
-
-				// Rename, compress, and move to skyhook.
-				sh 'mcp "legacy/*.gpad" "legacy/noctua_#1-src.gpad"'
-				sh 'gzip -vk legacy/noctua_*.gpad'
-				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+				    //sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/confinement-for-325/noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
 				}
 			    }
 			}
-		    },
-		    "JSON model generation": {
+//		    },
+		    // }
+		    // "JSON model generation": {
 
-			// May be parallelized in the future, but may need to
-			// serve as input into into mega step.
-			script {
+		    // 	// May be parallelized in the future, but may need to
+		    // 	// serve as input into into mega step.
+		    // 	script {
 
-			    // Create a relative working directory and setup our
-			    // data environment.
-			    dir('./json-noctua-models') {
+		    // 	    // Create a relative working directory and setup our
+		    // 	    // data environment.
+		    // 	    dir('./json-noctua-models') {
 
-				// Attempt to trim/prune/speed up
-				// noctua-models as we do for
-				// go-ontology for
-				// https://github.com/geneontology/pipeline/issues/278
-				// .
-				checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
+		    // 		// Attempt to trim/prune/speed up
+		    // 		// noctua-models as we do for
+		    // 		// go-ontology for
+		    // 		// https://github.com/geneontology/pipeline/issues/278
+		    // 		// .
+		    // 		checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
 
-				// Make all software products
-				// available in bin/ (and lib/).
-				sh 'mkdir -p bin/'
-				sh 'mkdir -p lib/'
-				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-				    // WARNING/BUG: needed for blazegraph-runner
-				    // to run at this point.
-				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
-				}
-				sh 'chmod +x bin/*'
+		    // 		// Make all software products
+		    // 		// available in bin/ (and lib/).
+		    // 		sh 'mkdir -p bin/'
+		    // 		sh 'mkdir -p lib/'
+		    // 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+		    // 		    // WARNING/BUG: needed for blazegraph-runner
+		    // 		    // to run at this point.
+		    // 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+		    // 		}
+		    // 		sh 'chmod +x bin/*'
 
-				// Compile models.
-				sh 'mkdir -p jsonout'
-				withEnv(['MINERVA_CLI_MEMORY=128G']){
-				    // "Import" models.
-				    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
-				    // JSON out to directory.
-				    sh './bin/minerva-cli.sh --dump-owl-json --journal blazegraph.jnl --ontojournal blazegraph-go-lego-reacto-neo.jnl --folder jsonout'
-				}
+		    // 		// Compile models.
+		    // 		sh 'mkdir -p jsonout'
+		    // 		withEnv(['MINERVA_CLI_MEMORY=128G']){
+		    // 		    // "Import" models.
+		    // 		    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
+		    // 		    // JSON out to directory.
+		    // 		    sh './bin/minerva-cli.sh --dump-owl-json --journal blazegraph.jnl --ontojournal blazegraph-go-lego-reacto-neo.jnl --folder jsonout'
+		    // 		}
 
-				// Compress and out.
-				sh 'tar --use-compress-program=pigz -cvf noctua-models-json.tgz -C jsonout .'
-				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY noctua-models-json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/'
-				}
-			    }
-			}
+		    // 		// Compress and out.
+		    // 		sh 'tar --use-compress-program=pigz -cvf noctua-models-json.tgz -C jsonout .'
+		    // 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY noctua-models-json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/'
+		    // 		}
+		    // 	    }
+		    // 	}
 		    }
 		)
 	    }
