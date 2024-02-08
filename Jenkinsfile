@@ -441,7 +441,18 @@ pipeline {
 				// sh 'gzip -vk legacy/noctua_*.gpad'
 				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 				    //sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY legacy/noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
-				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY skyhook@skyhook.berkeleybop.org:/confinement-for-325/noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
+				    sh 'wget http://skyhook.berkeleybop.org/confinement-for-325/noctua_complexportal-src.gpad.gz'
+				    sh 'wget http://skyhook.berkeleybop.org/confinement-for-325/noctua_fb-src.gpad.gz'
+				    sh 'wget http://skyhook.berkeleybop.org/confinement-for-325/noctua_mgi-src.gpad.gz'
+				    sh 'wget http://skyhook.berkeleybop.org/confinement-for-325/noctua_pr-src.gpad.gz'
+				    sh 'wget http://skyhook.berkeleybop.org/confinement-for-325/noctua_rgd-src.gpad.gz'
+				    sh 'wget http://skyhook.berkeleybop.org/confinement-for-325/noctua_rnacentral-src.gpad.gz'
+				    sh 'wget http://skyhook.berkeleybop.org/confinement-for-325/noctua_sgd-src.gpad.gz'
+				    sh 'wget http://skyhook.berkeleybop.org/confinement-for-325/noctua_uniprotkb-src.gpad.gz'
+				    sh 'wget http://skyhook.berkeleybop.org/confinement-for-325/noctua_wb-src.gpad.gz'
+				    sh 'wget http://skyhook.berkeleybop.org/confinement-for-325/noctua_xenbase-src.gpad.gz'
+				    sh 'wget http://skyhook.berkeleybop.org/confinement-for-325/noctua_zfin-src.gpad.gz'
+				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY noctua_*-src.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/'
 				}
 			    }
 			}
