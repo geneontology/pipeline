@@ -717,6 +717,8 @@ pipeline {
 
 		    // Run the noctua gpad through ontobio
 		    withEnv(["ONTOLOGY=${VALIDATION_ONTOLOGY_URL}"]){
+			sh 'find /opt/go-site/noctua_sources -type f'
+			// ^^^ DEBUG
 			sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess noctua_gpad"
 		    }
 
