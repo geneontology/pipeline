@@ -136,7 +136,7 @@ pipeline {
 	//GORULE_TAGS_TO_SUPPRESS="silent"
 
 	// Optional. Groups to run.
-	RESOURCE_GROUPS="ecocyc goa mgi rgd paint pseudocap wb"
+	RESOURCE_GROUPS="goa mgi rgd paint pseudocap wb"
 	// Optional. Datasets to skip within the resources that we
 	// will run (defined in the line above).
 	DATASET_EXCLUDES="goa_pig_complex goa_pig_rna goa_pig_isoform goa_pig goa_uniprot_gcrp goa_pdb goa_chicken goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
@@ -319,7 +319,9 @@ pipeline {
 			                goa_mapping_url = "-m goa_uniprot_all gaf ${GOA_UNIPROT_ALL_URL}"
 			        }
 			        sh "cd scripts && pip3 install -r requirements.txt"
-			        sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
+
+			        sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --parallel 1 --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
+			        // sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
 			    }
 
 		        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
