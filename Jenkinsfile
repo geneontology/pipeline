@@ -83,7 +83,7 @@ pipeline {
 	///
 	/// Ontobio Validation
 	///
-	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/master/ontology/go.json"
+	VALIDATION_ONTOLOGY_URL="https://snapshot.geneontology.org/ontology/go.json"
 
 	///
 	/// Minerva input.
@@ -91,7 +91,7 @@ pipeline {
 
 	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	    "https://snapshot.geneontology.org/ontology/extensions/go-lego.owl"
 	].join(" ")
 
 	///
@@ -102,7 +102,7 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-amigo.owl"
+	    "https://snapshot.geneontology.org/ontology/extensions/go-amigo.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
 	    //"http://skyhook.berkeleybop.org/master/products/upstream_and_raw_data/paint_other.gaf.gz",
@@ -160,7 +160,6 @@ pipeline {
 		watchdog();
 
 		// Give us a minute to cancel if we want.
-		sleep time: 1, unit: 'MINUTES'
 		cleanWs deleteDirs: true, disableDeferredWipeout: true
 	    }
 	}
@@ -350,70 +349,6 @@ pipeline {
 	// on the ontology release pipeline. This ticket runs
 	// daily(TODO?) and creates all the files normally included in
 	// a release, and deploys to S3.
-	stage('Produce ontology (*)') {
-	    agent {
-		docker {
-		    // Upgrade test for: geneontology/go-ontology#25019, from v1.2.32
-    		    image 'obolibrary/odkfull:v1.4'
-		    // Reset Jenkins Docker agent default to original
-		    // root.
-		    args '-u root:root'
-		}
-	    }
-	    // CHECKPOINT: Recover key environmental variables.
-	    environment {
-		START_DOW = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
-		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
-	    }
-	    steps {
-		// Create a relative working directory and setup our
-		// data environment.
-		dir('./go-ontology') {
-
-		    // We're starting to run into problems with
-		    // ontology download taking too long for the
-		    // default 10m, so try and get into the guts of
-		    // the git commands a little. Issues #248.
-		    // git branch: TARGET_GO_ONTOLOGY_BRANCH, url: 'https://github.com/geneontology/go-ontology.git'
-                    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_GO_ONTOLOGY_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/go-ontology.git', refspec: "+refs/heads/${env.TARGET_GO_ONTOLOGY_BRANCH}:refs/remotes/origin/${env.TARGET_GO_ONTOLOGY_BRANCH}"]]]
-
-		    // Default namespace.
-		    sh 'env'
-
-		    dir('./src/ontology') {
-			retry(3){
-			    sh 'make RELEASEDATE=$START_DATE OBO=http://purl.obolibrary.org/obo ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
-			}
-			retry(3){
-			    sh 'make prepare_release'
-			}
-		    }
-
-		    // Make sure that we copy any files there,
-		    // including the core dump of produced.
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			//sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology'
-			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -r target/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/ontology/'
-		    }
-
-		    // Now that the files are safely away onto skyhook for
-		    // debugging, test for the core dump.
-		    script {
-			if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
-
-			    def found_core_dump_p = fileExists 'target/core_dump.owl'
-			    if( found_core_dump_p ){
-				error 'ROBOT core dump detected--bailing out.'
-			    }
-			}
-		    }
-
-		    // Try and force destruction of anything remaining
-		    // on disk after build as cleanup.
-		    sh 'git clean -fx || true'
-		}
-	    }
-	}
 	stage('Generate automated annotations'){
 		agent {
 		    docker {
