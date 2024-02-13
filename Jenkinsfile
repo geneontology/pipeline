@@ -513,6 +513,8 @@ void initialize() {
 	// TODO: This should be wrapped in exception
 	// handling. In fact, this whole thing should be.
 	sh 'fusermount -u $WORKSPACE/mnt/ || true'
-    }else{
-	sh 'echo "HOW DID THIS EVEN HAPPEN?"'
+    }
+    else {
+	    sh 'echo "HOW DID THIS EVEN HAPPEN?"'
+	}
 }
