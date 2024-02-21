@@ -17,7 +17,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'go-site-2063-check-valid-id-in-dbxref'
+	TARGET_GO_SITE_BRANCH = 'issue-2063-check-valid-id-in-dbxref'
 	// The branch of geneontology/go-stats to use.
 	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
