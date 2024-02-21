@@ -17,7 +17,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'issue-2063-check-valid-id-in-dbxref'
+	TARGET_GO_SITE_BRANCH = 'go-site-2063-check-valid-id-in-dbxref'
 	// The branch of geneontology/go-stats to use.
 	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
@@ -82,7 +82,7 @@ pipeline {
 	///
 	/// Ontobio Validation
 	///
-	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/issue-2063-check-valid-id-in-dbxref/ontology/go.json"
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/go-site-2063-check-valid-id-in-dbxref/ontology/go.json"
 
 	///
 	/// Minerva input.
@@ -90,7 +90,7 @@ pipeline {
 
 	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/issue-2063-check-valid-id-in-dbxref/ontology/extensions/go-lego.owl"
+	    "http://skyhook.berkeleybop.org/go-site-2063-check-valid-id-in-dbxref/ontology/extensions/go-lego.owl"
 	].join(" ")
 
 	///
@@ -101,19 +101,19 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/issue-2063-check-valid-id-in-dbxref/ontology/extensions/go-amigo.owl"
+	    "http://skyhook.berkeleybop.org/go-site-2063-check-valid-id-in-dbxref/ontology/extensions/go-amigo.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
-	    "http://skyhook.berkeleybop.org/issue-2063-check-valid-id-in-dbxref/products/upstream_and_raw_data/paint_other.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-2063-check-valid-id-in-dbxref/annotations/goa_chicken.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-2063-check-valid-id-in-dbxref/annotations/goa_chicken_complex.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-2063-check-valid-id-in-dbxref/annotations/goa_uniprot_all_noiea.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-2063-check-valid-id-in-dbxref/annotations/mgi.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-2063-check-valid-id-in-dbxref/annotations/pombase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/issue-2063-check-valid-id-in-dbxref/annotations/wb.gaf.gz"
+	    "http://skyhook.berkeleybop.org/go-site-2063-check-valid-id-in-dbxref/products/upstream_and_raw_data/paint_other.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-site-2063-check-valid-id-in-dbxref/annotations/goa_chicken.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-site-2063-check-valid-id-in-dbxref/annotations/goa_chicken_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-site-2063-check-valid-id-in-dbxref/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-site-2063-check-valid-id-in-dbxref/annotations/mgi.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-site-2063-check-valid-id-in-dbxref/annotations/pombase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-site-2063-check-valid-id-in-dbxref/annotations/wb.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
-	    "http://skyhook.berkeleybop.org/issue-2063-check-valid-id-in-dbxref/products/panther/arbre.tgz"
+	    "http://skyhook.berkeleybop.org/go-site-2063-check-valid-id-in-dbxref/products/panther/arbre.tgz"
 	].join(" ")
 
 	///
