@@ -339,14 +339,10 @@ pipeline {
 		// Build index into tmpfs.
 		sh 'bash /tmp/run-indexer.sh'
 
-		// Immediately check to see if it looks like we have
-		// enough docs. SANITY_SOLR_DOC_COUNT_MIN must be
-		// greater than what we seen in the index.
-		echo "SANITY_SOLR_DOC_COUNT_MIN:${env.SANITY_SOLR_DOC_COUNT_MIN}"
-		sh 'curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json"'
-		sh 'if [ $SANITY_SOLR_DOC_COUNT_MIN -gt $(curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json" | grep -oh \'"numFound":[[:digit:]]*\' | grep -oh [[:digit:]]*) ]; then exit 1; else echo "We seem to be clear wrt doc count"; fi'
-
-		// Copy tmpfs Solr contents onto skyhook.
+		// Copy tmpfs Solr contents onto skyhook. Moving this
+		// earlier so we can use the index to identify
+		// problems.
+		// https://github.com/geneontology/neo/issues/118
 		sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    // Copy over index.
@@ -354,6 +350,13 @@ pipeline {
 		    // Copy over log.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		}
+
+		// Immediately check to see if it looks like we have
+		// enough docs. SANITY_SOLR_DOC_COUNT_MIN must be
+		// greater than what we seen in the index.
+		echo "SANITY_SOLR_DOC_COUNT_MIN:${env.SANITY_SOLR_DOC_COUNT_MIN}"
+		sh 'curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json"'
+		sh 'if [ $SANITY_SOLR_DOC_COUNT_MIN -gt $(curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json" | grep -oh \'"numFound":[[:digit:]]*\' | grep -oh [[:digit:]]*) ]; then exit 1; else echo "We seem to be clear wrt doc count"; fi'
 
 		///
 		/// Produce various blazegraphs.
