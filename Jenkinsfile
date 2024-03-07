@@ -368,6 +368,7 @@ pipeline {
                 sh "make convert_human"
                 sh "make convert_p2g_annotations"
                 sh "make merge_gafs"
+                sh "make validate_merged_gafs"
                 sh "ls -lrt ~/.data/GAF_OUTPUT"
                 withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			        // Upload pystow'd files from gopreprocess downloader to skyhook upstream and raw data folder.
