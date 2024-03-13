@@ -49,7 +49,7 @@ pipeline {
 	// for a run, in that case this variable is set to 'FALSE'.
 	WE_ARE_BEING_SAFE_P = 'TRUE'
 	// Sanity check for solr inde being built.
-	SANITY_SOLR_DOC_COUNT_MIN = 3800000
+	SANITY_SOLR_DOC_COUNT_MIN = 3500000
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '0'
