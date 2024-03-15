@@ -342,7 +342,7 @@ pipeline {
 			// 2) Ontology updates (replaced_by).
 			withEnv(['MINERVA_CLI_MEMORY=8G']){
 			    // Update journal ontology terms.
-			    sh './bin/minerva-cli.sh --replace-obsolete -j blazegraph.jnl --ontology http://snapshot.geneontology.org/ontology/extensions/go-lego-reacto.owl'
+			    sh './bin/minerva-cli.sh --replace-obsolete -j blazegraph.jnl --ontology http://snapshot.geneontology.org/go-lego-reacto.owl'
 			    // Dump them back out from the journal.
 			    sh './bin/minerva-cli.sh --dump-owl-models -j blazegraph.jnl -f models/'
 
