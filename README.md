@@ -61,48 +61,37 @@ different.
 
 ### master
 
-The main development and fast testing branch. It has no public
-exposure worth mentioning, but contains the same code as snapshot and
-release.
+The main development and fast testing branch. It has no public exposure worth mentioning, but contains the same code as snapshot and release.
 
 ### snapshot
 
-This runs about once a day, automatically feeding snapshot.go.org.
+This runs about once a day (although is having issues at the moment https://github.com/orgs/geneontology/projects/149), automatically feeding snapshot.go.org. This is a matched set of annotation/GO-CAM data and an ontology build. It has no version, but can act as an un-QCed current state of the GO data for specifc types of users.
 
 ### release
 
-This runs about once a month, automatically feeding current.go.org and
-release.go.org.
+This runs about once a month (although is having issues at the moment https://github.com/orgs/geneontology/projects/149), automatically feeding current.go.org and
+release.go.org. This is a matched set of annotation/GO-CAM data and an ontology build. It has both a dated version and a DOI; it has been automatically and manually QCed to ensure no oddities.
 
-This pipeline automatically feeds the "staging" version of AmiGO for
-testing, but requires a manual deployment to AmiGO once the release is
-finalized.
+This pipeline automatically feeds the "staging" version of AmiGO for testing, but requires a manual deployment to AmiGO once the release is finalized.
 
 ### issue-35-neo-test
 
-This runs about once a week, Thursday morning, unless manually
-triggered, to update the noctua-golr endpoint for a data refresh of
-some kind. It requires a manual deployment. This is also the generator
-for go-lego and controls the file location for Minerva's defaults.
+This runs about once a week, Wednesday morning, unless manually triggered. Its purpose is to keep the noctua-golr endpoint (curation systems) up-to-date, where it requires a manual deployment. It produces a "super ontology", of both GO and NEO (all editable entities in the GO cinematic universe), which is realized as a Solr index. In addition to this, it produces go-lego-reacto.owl (used by minerva) and blazegraph-go-lego-reacto-neo.jnl.gz (also used by minerva), which are minerva file default locations.
 
 ### issue-go-site-1530-summary-emails
 
-This branch is temporary to allow for summary emails to start getting sent
-again, while we work on migrating cron-based emails to GHA (see
-https://github.com/geneontology/go-site/issues/1530). It executes at
-about 16:15 PT daily.
+This runs daily at 4pm and sends the summary emails.
+This branch is (ideally) temporary, while we work on migrating cron-based emails to GHA (see https://github.com/geneontology/go-site/issues/1530).
 
 ### issue-265-go-cam-products
 
-This branch is temporary to allow for the creation of JSON files for
-consumption by the GO-CAM API.
+This branch is (ideally) temporary. It creates JSON files for consumption by the GO-CAM API, and is run manually as part of the release process.
 
 ### go-ontology-dev
 
-This is a standing branch that we want to use in the future to test
-changes to the full ontology build without disrupting the other branches.
-It is pared down to just setup and the ontology build and is tied to the `dev`
-branch of go-ontology.
+This is a standing branch that runs the entire ontology build, as part of an extended QC, as GH checks are quite narrow. If it passes, the product is pushed out to https://ontology-build.geneontology.org, for curation sites and other places that want the latest ontology, but cannot produce it themselves. It has no version.
+
+(NOTE: Previously, this was a standing branch that we wanted to use in the future to test changes to the full ontology build without disrupting the other branches. For this, it is pared down to just setup and the ontology build and is tied to the `dev` branch of go-ontology.)
 
 # Quality control/assurance
 
