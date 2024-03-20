@@ -36,9 +36,9 @@ pipeline {
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,suzia@stanford.edu,smoxon@lbl.gov'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss,pgaudet1@gmail.com,smoxon@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-experimental'
+	TARGET_BUCKET = 'go-data-product-snapshot'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	TARGET_INDEXER_PREFIX = 'http://snapshot.geneontology.org'
 	// This variable should typically be 'TRUE', which will cause
 	// some additional basic checks to be made. There are some
 	// very exotic cases where these check may need to be skipped
@@ -55,7 +55,7 @@ pipeline {
 	// wok has 48 "processors" over 12 "cores", so I have no idea;
 	// let's go with conservative and see if we get an
 	// improvement.
-	MAKECMD = 'make --jobs 3 --max-load 10.0'
+	MAKECMD = 'make --jobs --max-load 12.0'
 	//MAKECMD = 'make'
 
 	///
@@ -70,19 +70,19 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_ARCHIVE_CONCEPT = '1170314'
+	ZENODO_ARCHIVE_CONCEPT = '425666'
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
 	// need this as it is always a new location and the index
 	// upload already has an invalidation on it. For current,
 	// snapshot, and experimental.
-	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E2CDVG5YT5R4K4'
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E3UPPWY0HYLLL2'
 	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
 
 	///
 	/// Ontobio Validation
 	///
-	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/master/ontology/go.json"
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/snapshot/ontology/go.json"
 
 	///
 	/// Minerva input.
@@ -90,7 +90,7 @@ pipeline {
 
 	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-lego.owl"
+	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-lego.owl"
 	].join(" ")
 
 	///
@@ -101,19 +101,47 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/master/ontology/extensions/go-amigo.owl"
+	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-amigo.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
-	    //"http://skyhook.berkeleybop.org/master/products/upstream_and_raw_data/paint_other.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_chicken_complex.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/mgi.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/pombase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz"
+	    "http://skyhook.berkeleybop.org/snapshot/products/upstream_and_raw_data/paint_other.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/cgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/dictybase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/ecocyc.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/fb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/genedb_lmajor.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/genedb_tbrucei.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/genedb_pfalciparum.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_chicken.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_chicken_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_chicken_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_cow.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_cow_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_cow_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_dog.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_dog_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_dog_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_human.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_human_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_human_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_pig.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_pig_complex.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_pig_rna.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/japonicusdb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/mgi.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/pombase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/pseudocap.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/rgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/sgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/sgn.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/tair.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/wb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/xenbase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/snapshot/annotations/zfin.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
-	    "http://skyhook.berkeleybop.org/master/products/panther/arbre.tgz"
+	    "http://skyhook.berkeleybop.org/snapshot/products/panther/arbre.tgz"
 	].join(" ")
 
 	///
@@ -132,16 +160,16 @@ pipeline {
 	// for no rule suppression (default behavior everything), or a
 	// single value (practically speaking pretty much always
 	// "silent")
-	//GORULE_TAGS_TO_SUPPRESS="silent"
+	GORULE_TAGS_TO_SUPPRESS="silent"
 
 	// Optional. Groups to run.
-	RESOURCE_GROUPS="ecocyc goa mgi paint pseudocap wb"
+	//RESOURCE_GROUPS=""
 	// Optional. Datasets to skip within the resources that we
 	// will run (defined in the line above).
-	DATASET_EXCLUDES="goa_uniprot_gcrp goa_pdb goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human goa_human goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
+	//DATASET_EXCLUDES=""
 	// Optional. This acts as an override, /if/ it's grabbed (as
 	// defined above).
-	GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
+	//GOA_UNIPROT_ALL_URL=""
 
     }
     options{
@@ -149,7 +177,20 @@ pipeline {
 	buildDiscarder(logRotator(numToKeepStr: '14'))
     }
     stages {
+	// Very first: pause for a few minutes to give a chance to
+	// cancel and clean the workspace before use.
+	stage('Ready and clean') {
+	    steps {
 
+		// Check to make sure we have coherent metadata so we
+		// don't clobber good products.
+		watchdog();
+
+		// Give us a minute to cancel if we want.
+		sleep time: 1, unit: 'MINUTES'
+		cleanWs deleteDirs: true, disableDeferredWipeout: true
+	    }
+	}
 	// WARNING: This stage is a hack required to work around data damage described in https://github.com/geneontology/go-site/issues/1484 and
 	// https://github.com/geneontology/pipeline/issues/220.
 	// Redownload annotations and run ontobio-parse-assocs over them in various ways.
@@ -971,5 +1012,22 @@ pipeline {
 		subject: "GO Pipeline FAIL for ${env.BRANCH_NAME}",
 		body: "There has been a pipeline failure in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
 	}
+    }
+}
+
+// Check that we do not affect public targets on non-mainline runs.
+void watchdog() {
+    if( BRANCH_NAME != 'master' && TARGET_BUCKET == 'go-data-product-experimental'){
+	echo 'Only master can touch that target.'
+	sh '`exit -1`'
+    }else if( BRANCH_NAME != 'snapshot' && TARGET_BUCKET == 'go-data-product-snapshot'){
+	echo 'Only master can touch that target.'
+	sh '`exit -1`'
+    }else if( BRANCH_NAME != 'snapshot-post-fail' && TARGET_BUCKET == 'go-data-product-snapshot'){
+	echo 'Only snashot* can touch that target.'
+	sh '`exit -1`'
+    }else if( BRANCH_NAME != 'release' && TARGET_BUCKET == 'go-data-product-release'){
+	echo 'Only master can touch that target.'
+	sh '`exit -1`'
     }
 }
