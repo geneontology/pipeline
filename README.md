@@ -97,6 +97,10 @@ This is a standing branch that runs the entire ontology build, as part of an ext
 
 This standing branch is used to simulate what an ontology update looks like from minerva's perspective WRT obsoletions, etc. The migration is simulated against the products produced by `issue-265-go-cam-products`.
 
+### goa-copy-to-mirror
+
+This is a standing branch that populates the GO mirror of GOA products used in our pipeline. It runs every other day and is the proximate source of GOA annotation. See https://github.com/geneontology/pipeline/issues/305 and https://github.com/geneontology/pipeline/issues/337 .
+
 # Quality control/assurance
 
 ## Manual QC steps
