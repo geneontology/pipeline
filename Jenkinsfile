@@ -793,7 +793,7 @@ pipeline {
 	    }
 	}
 	stage('Publish') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'snapshot-post-fail'; branch 'master' } }
 	    steps {
 		// Experimental stanza to support mounting the sshfs
 		// using the "hidden" skyhook identity.
