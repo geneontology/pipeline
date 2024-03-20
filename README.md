@@ -93,6 +93,10 @@ This is a standing branch that runs the entire ontology build, as part of an ext
 
 (NOTE: Previously, this was a standing branch that we wanted to use in the future to test changes to the full ontology build without disrupting the other branches. For this, it is pared down to just setup and the ontology build and is tied to the `dev` branch of go-ontology.)
 
+### noctua-models-migrations
+
+This standing branch is used to simulate what an ontology update looks like from minerva's perspective WRT obsoletions, etc. The migration is simulated against the products produced by `issue-265-go-cam-products`.
+
 # Quality control/assurance
 
 ## Manual QC steps
