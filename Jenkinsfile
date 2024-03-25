@@ -249,6 +249,11 @@ pipeline {
 	}
 	// A new step to think about. What is our core metadata?
 	stage('Produce metadata') {
+	    // CHECKPOINT: Recover key environmental variables.
+	    environment {
+		START_DOW = sh(script: 'curl http://skyhook.berkeleybop.org/snapshot/metadata/dow.txt', , returnStdout: true).trim()
+		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/snapshot/metadata/date.txt', , returnStdout: true).trim()
+	    }
 	    steps {
 
 		// Prep a copyover point, as the overhead for doing
@@ -794,6 +799,11 @@ pipeline {
 	}
 	stage('Publish') {
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'snapshot-post-fail'; branch 'master' } }
+	    // CHECKPOINT: Recover key environmental variables.
+	    environment {
+		START_DOW = sh(script: 'curl http://skyhook.berkeleybop.org/snapshot/metadata/dow.txt', , returnStdout: true).trim()
+		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/snapshot/metadata/date.txt', , returnStdout: true).trim()
+	    }
 	    steps {
 		// Experimental stanza to support mounting the sshfs
 		// using the "hidden" skyhook identity.
