@@ -1233,7 +1233,9 @@ pipeline {
 				sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/copyover'
 				// Tarball the whole directory for
 				// "deep" archive (handmade BDBag).
-				sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/copyover .'
+				// Exclude "large" production
+				// products (#353).
+				sh 'tar --use-compress-program=pigz -cvf --exclude "golr-index-contents.tgz" --exclude "blazegraph-internal.jnl.gz" --exclude "blazegraph-production.jnl.gz" go-release-archive.tgz -C $WORKSPACE/copyover .'
 
 				// We have the archives, now let's try
 				// and get them into position--this is
