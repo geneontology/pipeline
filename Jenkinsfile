@@ -227,7 +227,7 @@ pipeline {
 		}
 
 		// Copy snapshot work over to release.
-		sh 'rsync -vhac --exclude "index.html" $WORKSPACE/mnt/snapshot $WORKSPACE/mnt/release'
+		sh 'rsync -vhac --progress --exclude "index.html" $WORKSPACE/mnt/snapshot/ $WORKSPACE/mnt/release'
 	    }
 
 	    // WARNING: Extra safety as I expect this to sometimes fail.
