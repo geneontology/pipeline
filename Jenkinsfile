@@ -208,7 +208,7 @@ pipeline {
 	}
 
 	// Reset base.
-	stage('Initialize (minimized') {
+	stage('Initialize (minimized)') {
 	    steps {
 		minimal_initialize();
 	    }
