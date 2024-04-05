@@ -191,6 +191,7 @@ pipeline {
 	buildDiscarder(logRotator(numToKeepStr: '14'))
     }
     stages {
+
 	// Very first: pause for a few minutes to give a chance to
 	// cancel and clean the workspace before use.
 	stage('Ready and clean') {
@@ -206,47 +207,38 @@ pipeline {
 	    }
 	}
 
-	// Build owltools and get it into the shared filesystem.
-	stage('Steal hard work from snapshot') {
+	// Reset base.
+	stage('Initialize (minimized') {
 	    steps {
-		sh 'rsync -vhac -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" --exclude "index.html" skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/ skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/'
+		minimal_initialize();
 	    }
 	}
 
-	// stage('Initialize') {
-	//     steps {
+	// Build owltools and get it into the shared filesystem.
+	stage('Steal hard work from snapshot in hard-coded way') {
+	    steps {
 
-	// 	///
-	// 	/// Automatic run variables.
-	// 	///
+		// Get a mount point ready
+		sh 'mkdir -p $WORKSPACE/mnt || true'
+		// Ninja in our file credentials from Jenkins.
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    // Try and ssh fuse skyhook onto our local system.
+		    sh 'sshfs -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		}
 
-	// 	// Pin dates and day to beginning of run.
-	// 	script {
-	// 	    env.START_DATE = sh (
-	// 		script: 'date +%Y-%m-%d',
-	// 		returnStdout: true
-	// 	    ).trim()
+		// Copy snapshot work over to release.
+		sh 'rsync -vhac --exclude "index.html" $WORKSPACE/mnt/snapshot $WORKSPACE/mnt/release'
+	    }
 
-	// 	    env.START_DAY = sh (
-	// 		script: 'date +%A',
-	// 		returnStdout: true
-	// 	    ).trim()
-	// 	}
+	    // WARNING: Extra safety as I expect this to sometimes fail.
+	    post {
+		always {
+		    // Bail on the remote filesystem.
+		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+		}
+	    }
+	}
 
-	// 	// Reset base.
-	// 	initialize();
-
-	// 	sh 'env > env.txt'
-	// 	sh 'echo $BRANCH_NAME > branch.txt'
-	// 	sh 'echo "$BRANCH_NAME"'
-	// 	sh 'cat env.txt'
-	// 	sh 'cat branch.txt'
-	// 	sh 'echo $START_DAY > dow.txt'
-	// 	sh 'echo "$START_DAY"'
-	// 	sh 'echo $START_DATE > date.txt'
-	// 	sh 'echo "$START_DATE"'
-	//     }
-	// }
 	// // Build owltools and get it into the shared filesystem.
 	// stage('Ready production software') {
 	//     steps {
@@ -1536,7 +1528,7 @@ void watchdog() {
 }
 
 // Reset and initialize skyhook base.
-void initialize() {
+void minimal_initialize() {
 
     // Possibly protect against issues like #350 by making sure
     // $BRANCH_NAME is there and vaguely sane.
@@ -1552,41 +1544,10 @@ void initialize() {
 	// Remove anything we might have left around from
 	// times past.
 	sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME || true'
-	// Rebuild directory structure.
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/bin || true'
-	// WARNING/BUG: needed for arachne to run at
-	// this point.
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/lib || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/ttl || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/json || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/blazegraph || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/pages || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/solr || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/panther || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/products/gaferencer || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/metadata || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
-	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/release_stats || true'
-	// Tag the top to let the world know I was at least
-	// here.
-	sh 'echo "Runtime summary." > $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-	sh 'echo "" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-	sh 'date >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-	sh 'echo "" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-	sh 'echo "Release notes: https://github.com/geneontology/go-site/tree/master/releases" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-	sh 'echo "Branch: $BRANCH_NAME" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-	sh 'echo "Start day: $START_DAY" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-	sh 'echo "Start date: $START_DATE" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-	sh 'echo "$START_DAY" > $WORKSPACE/mnt/$BRANCH_NAME/metadata/dow.txt'
-	sh 'echo "$START_DATE" > $WORKSPACE/mnt/$BRANCH_NAME/metadata/date.txt'
 
-	sh 'echo "Official release date: metadata/release-date.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-	sh 'echo "Official Zenodo archive DOI: metadata/release-archive-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
-	sh 'echo "TODO: Note software versions." >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+	// Sufficient directory structure.
+	sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME || true'
+
 	// TODO: This should be wrapped in exception
 	// handling. In fact, this whole thing should be.
 	sh 'fusermount -u $WORKSPACE/mnt/ || true'
