@@ -675,61 +675,61 @@ pipeline {
 	// https://github.com/geneontology/pipeline/issues/220.
 	// Redownload annotations and run ontobio-parse-assocs over them in various ways.
 
-// 	stage('Temporary post filter') {
-// 	    agent {
-// 		docker {
-// 		    image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
-// 		    args "-u root:root --tmpfs /opt:exec -w /opt"
-// 		}
-// 	    }
-// 	    steps {
-//
-// 		// Starting with https://github.com/geneontology/go-site/issues/1484,
-// 		// prepare a working directory based around go-site.
-// 		sh "cd /opt/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
-//
-// 		sh "mkdir -p /opt/go-site/annotations /opt/go-site/annotations_new /opt/go-site/gaferencer-products"
-//
-// 		sh "cd /opt/go-site/pipeline && pip3 install -r requirements.txt"
-//
-// 		// Download gaferencer products and /annotations
-// 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-// 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/* /opt/go-site/annotations/'
-// 		    // Get rid of goa_uniprot_all_noiea-type products
-// 		    // as they take too long to run.
-// 		    sh 'rm -f /opt/go-site/annotations/*uniprot_all* || true'
-// 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz /opt/go-site/gaferencer-products/'
-//
-// 		    //sh "$MAKECMD -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
-// 		    sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
-//
-// 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-// 		    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
-//
-// 		    // From here, we are making corrections to the Noctua
-// 		    // GPADs (https://github.com/geneontology/pipeline/issues/220) to fix errors that are
-// 		    // apparent in the model upstream.
-// 		    sh "mkdir -p /opt/go-site/noctua_sources /opt/go-site/noctua_target"
-//
-// 		    // Download source noctua files from skyhook
-// 		    // Download noctua_*.gpad.gz from products/upstream_and_raw_data/ in skyhook
-// 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/noctua_*-src.gpad.gz /opt/go-site/noctua_sources/'
-// 		    // Do we need GPI files for GO Rules? Maybe? Try and see if these are needed for GO Rules.
-//
-// 		    // Run the noctua gpad through ontobio
-// 		    withEnv(["ONTOLOGY=${VALIDATION_ONTOLOGY_URL}"]){
-// 			sh 'find /opt/go-site/noctua_sources -type f'
-// 			// ^^^ DEBUG
-// 			sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess noctua_gpad"
-// 		    }
-//
-// 		    // Upload result files to skyhook
-// 		    // Upload noctua valid to skyhook
-// 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/noctua*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data'
-// 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/*.report.* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
-// 		}
-// 	    }
-// 	}
+	stage('Temporary post filter') {
+	    agent {
+		docker {
+		    image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
+		    args "-u root:root --tmpfs /opt:exec -w /opt"
+		}
+	    }
+	    steps {
+
+		// Starting with https://github.com/geneontology/go-site/issues/1484,
+		// prepare a working directory based around go-site.
+		sh "cd /opt/ && git clone -b $TARGET_GO_SITE_BRANCH https://github.com/geneontology/go-site.git"
+
+		sh "mkdir -p /opt/go-site/annotations /opt/go-site/annotations_new /opt/go-site/gaferencer-products"
+
+		sh "cd /opt/go-site/pipeline && pip3 install -r requirements.txt"
+
+		// Download gaferencer products and /annotations
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations/* /opt/go-site/annotations/'
+		    // Get rid of goa_uniprot_all_noiea-type products
+		    // as they take too long to run.
+		    sh 'rm -f /opt/go-site/annotations/*uniprot_all* || true'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/all.gaferences.json.gz /opt/go-site/gaferencer-products/'
+
+		    //sh "$MAKECMD -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
+		    sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess all"
+
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/annotations_new/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+		    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/gaferencer-products/all.gaferences.json.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/gaferencer/gaferences.json.gz'
+
+		    // From here, we are making corrections to the Noctua
+		    // GPADs (https://github.com/geneontology/pipeline/issues/220) to fix errors that are
+		    // apparent in the model upstream.
+		    sh "mkdir -p /opt/go-site/noctua_sources /opt/go-site/noctua_target"
+
+		    // Download source noctua files from skyhook
+		    // Download noctua_*.gpad.gz from products/upstream_and_raw_data/ in skyhook
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data/noctua_*-src.gpad.gz /opt/go-site/noctua_sources/'
+		    // Do we need GPI files for GO Rules? Maybe? Try and see if these are needed for GO Rules.
+
+		    // Run the noctua gpad through ontobio
+		    withEnv(["ONTOLOGY=${VALIDATION_ONTOLOGY_URL}"]){
+			sh 'find /opt/go-site/noctua_sources -type f'
+			// ^^^ DEBUG
+			sh "make -f /opt/go-site/scripts/Makefile-gaf-reprocess noctua_gpad"
+		    }
+
+		    // Upload result files to skyhook
+		    // Upload noctua valid to skyhook
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/noctua*.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/upstream_and_raw_data'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/noctua_target/*.report.* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports'
+		}
+	    }
+	}
 	// A new step to think about. What is our core metadata?
 	stage('Produce metadata') {
 	    steps {
