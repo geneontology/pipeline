@@ -7,6 +7,8 @@ pipeline {
 	cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
 	// cron('0 0 2-31/2 * *')
+	// Every Monday, for "new" "snapshot" setup.
+	cron('0 0 * * Mon')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
     }
