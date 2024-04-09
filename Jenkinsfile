@@ -381,7 +381,49 @@ pipeline {
 
 	    }
 	}
-}
+	stage('Publish') {
+	    when { anyOf { branch 'silver-issue-325-gopreprocess' } }
+	    steps {
+	        sh 'mkdir -p $WORKSPACE/mnt/ || true'
+	        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		        sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		    }
+		    withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+		        dir('./go-site') {
+			        git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
+
+			        sh 'python3 -m venv mypyenv'
+			        withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
+
+			        // Extra package for the indexer.
+			        sh 'python3 ./mypyenv/bin/pip3 install --force-reinstall pystache==0.5.4'
+
+			        // Extra package for the uploader.
+			        sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
+
+			        // Let's be explicit here as well, as there were recent issues.
+			        //
+			        sh 'python3 ./mypyenv/bin/pip3 install rsa'
+			        sh 'python3 ./mypyenv/bin/pip3 install awscli'
+
+			        // ...and push it up to S3.
+			        sh 's3cmd -c $S3CMD_JSON --mime-type=text/html --cf-invalidate put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocess_raw_files/*-p2go-homology.gaf s3://go-mirror/'
+                    sh 's3cmd -c $S3CMD_JSON --mime-type=text/html --cf-invalidate put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocess_raw_files/* s3://go-mirror/$BRANCH_NAME/preprocess_raw_files/'
+                    sh 's3cmd -c $S3CMD_JSON --mime-type=text/html --cf-invalidate put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocessed_GAF_output/* s3://go-mirror/$BRANCH_NAME/preprocessed_GAF_output/'
+			        // files are up.
+			        sh 'echo "[preview]" > ./awscli_config.txt && echo "cloudfront=true" >> ./awscli_config.txt'
+			        sh 'AWS_CONFIG_FILE=./awscli_config.txt python3 ./mypyenv/bin/aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION_ID --paths "/*"'
+			    }
+		    }
+		}
+	}
+	// WARNING: Extra safety as I expect this to sometimes fail.
+	post {
+	    always {
+		    // Bail on the remote filesystem.
+		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+		}
+	}
 }
 // Check that we do not affect public targets on non-mainline runs.
 void watchdog() {
