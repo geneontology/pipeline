@@ -1287,6 +1287,12 @@ pipeline {
 	    }
 	}
 	stage('Publish') {
+	    // CHECKPOINT: Recover key environmental variables.
+	    environment {
+		START_DOW = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/dow.txt', , returnStdout: true).trim()
+		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
+	    }
+
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
 		// Experimental stanza to support mounting the sshfs
