@@ -887,7 +887,7 @@ pipeline {
 				    // debugging buckets are intended
 				    // to be RO directly in S3 for
 				    // debugging.
-				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/snapshot/ --bucket go-data-product-daily/$START_DAY --number $BUILD_ID --pipeline snapshot'
+				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/snapshot/ --bucket go-data-product-daily/$START_DOW --number $BUILD_ID --pipeline snapshot'
 
 				}else if( env.BRANCH_NAME == 'master' ){
 				    // Pass.
