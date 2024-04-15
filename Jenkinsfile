@@ -2,14 +2,6 @@ pipeline {
     agent any
     // In additional to manual runs, trigger somewhere at midnight to
     // give us the max time in a day to get things right.
-    //triggers {
-	// Master never runs--Feb 31st.
-	// cron('0 0 31 2 *')
-	// Nightly @12am, for "snapshot", skip "release" night.
-	//cron('0 0 2-31/2 * *')
-	// First of the month @12am, for "release" (also "current").
-	//cron('0 0 1 * *')
-    //}
     environment {
 
         ///
@@ -143,7 +135,6 @@ pipeline {
         // Optional. This acts as an override, /if/ it's grabbed (as
         // defined above).
         GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
-
     }
     options{
 	    timestamps()
@@ -414,6 +405,7 @@ pipeline {
                     }
                 }
             }
+        }
 	}
 }
 
