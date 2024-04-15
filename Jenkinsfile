@@ -415,15 +415,8 @@ pipeline {
                 }
             }
 	}
-
-    // WARNING: Extra safety as I expect this to sometimes fail.
-    post {
-	    always {
-		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-		}
-	}
 }
+
 // Check that we do not affect public targets on non-mainline runs.
 void watchdog() {
     if( BRANCH_NAME != 'master' && TARGET_BUCKET == 'go-data-product-experimental'){
