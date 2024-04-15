@@ -382,7 +382,7 @@ pipeline {
 	    }
 	}
 	stage('Publish') {
-	    when { anyOf { branch 'silver-issue-325-gopreprocess' } }
+	    when { anyOf { branch 'p2go-homology-upstream-file-generator' } }
 	    steps {
 	        sh 'mkdir -p $WORKSPACE/mnt/ || true'
 	        withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
