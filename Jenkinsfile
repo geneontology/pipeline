@@ -7,8 +7,8 @@ pipeline {
 	// cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
 	// cron('0 0 2-31/2 * *')
-	// Every Monday, for "new" "snapshot" setup.
-	cron('0 0 * * 1')
+	// Every Sunday, for "new" "snapshot" setup.
+	cron('0 0 * * 0')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
     }
@@ -662,12 +662,9 @@ pipeline {
 		    sh 'pigz /opt/go-site/pipeline/target/blazegraph-internal.jnl'
 		    sh 'pigz /opt/go-site/pipeline/target/blazegraph-production.jnl'
 		    // Copy the journals directly to products.
-		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
-		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
 		    // Copy the reports into reports.
-		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /opt/go-site/pipeline/target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 		    // Plus: flatten product reports in json,
 		    // md reports, text files, etc.
@@ -989,16 +986,7 @@ pipeline {
 		// than what we seen in the index.
 		script {
 		    if( env.BRANCH_NAME == 'release' ){
-
-			// Test overall.
-			echo "SANITY_SOLR_DOC_COUNT_MIN:${env.SANITY_SOLR_DOC_COUNT_MIN}"
-			sh 'curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json"'
-			sh 'if [ $SANITY_SOLR_DOC_COUNT_MIN -gt $(curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json" | grep -oh \'"numFound":[[:digit:]]*\' | grep -oh [[:digit:]]*) ]; then exit 1; else echo "We seem to be clear wrt doc count"; fi'
-
-			// Test bioentity.
-			echo "SANITY_SOLR_BIOENTITY_DOC_COUNT_MIN:${env.SANITY_SOLR_BIOENTITY_DOC_COUNT_MIN}"
-			sh 'curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json&fq=document_category:bioentity"'
-			sh 'if [ $SANITY_SOLR_BIOENTITY_DOC_COUNT_MIN -gt $(curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json&fq=document_category:bioentity" | grep -oh \'"numFound":[[:digit:]]*\' | grep -oh [[:digit:]]*) ]; then exit 1; else echo "We seem to be clear wrt doc count"; fi'
+			// Pulled out for: https://github.com/geneontology/pipeline/issues/374.
 		    }
 		}
 
@@ -1358,19 +1346,7 @@ pipeline {
 				// Also, some runs have special maps
 				// to buckets...
 				if( env.BRANCH_NAME == 'release' ){
-
-				    // "release" -> dated path for
-				    // indexing (clobbering
-				    // "current"'s index.
-				    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
-				    // "release" -> dated path for S3.
-				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
-
-				    // Build the capper index.html...
-				    sh 'python3 ./scripts/bucket-indexer.py --credentials $S3_PUSH_JSON --bucket go-data-product-release --inject ./scripts/directory-index-template.html --prefix http://release.geneontology.org > top-level-index.html'
-				    // ...and push it up to S3.
-				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
-
+				    // Pulled out for https://github.com/geneontology/pipeline/issues/374.
 				}else if( env.BRANCH_NAME == 'snapshot' ){
 
 				    // Currently, the "daily"
@@ -1431,20 +1407,7 @@ pipeline {
 				    ///
 				    script {
 					if( env.BRANCH_NAME == 'release' ){
-
-					    echo 'No current public push on release to Blazegraph.'
-					    // retry(3){
-					    //	sh 'ansible-playbook update-endpoint.yaml --inventory=hosts.local-rdf-endpoint --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_user=bbop --extra-vars="pipeline=current build=production endpoint=production"'
-					    // }
-
-					    echo 'No current public push on release to GOlr.'
-					    // retry(3){
-					    //	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-aux -e target_user=bbop'
-					    // }
-					    // retry(3){
-					    //	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-production -e target_user=bbop'
-					    // }
-
+					    // Pulled out for https://github.com/geneontology/pipeline/issues/374.
 					}else if( env.BRANCH_NAME == 'snapshot' ){
 
 					    echo 'Push snapshot out internal Blazegraph'
