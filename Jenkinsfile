@@ -97,13 +97,8 @@ pipeline {
             "https://snapshot.geneontology.org/ontology/extensions/go-amigo.owl"
         ].join(" ")
         GOLR_INPUT_GAFS = [
-            //"http://skyhook.berkeleybop.org/master/products/upstream_and_raw_data/paint_other.gaf.gz",
-            "http://skyhook.berkeleybop.org/master/annotations/goa_chicken.gaf.gz",
-            "http://skyhook.berkeleybop.org/master/annotations/goa_chicken_complex.gaf.gz",
             "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
             "http://skyhook.berkeleybop.org/master/annotations/mgi.gaf.gz",
-            "http://skyhook.berkeleybop.org/master/annotations/pombase.gaf.gz",
-            "http://skyhook.berkeleybop.org/master/annotations/wb.gaf.gz"
         ].join(" ")
         GOLR_INPUT_PANTHER_TREES = [
             "http://skyhook.berkeleybop.org/master/products/panther/arbre.tgz"
