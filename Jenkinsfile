@@ -461,7 +461,7 @@ pipeline {
 
 			// Run commands.
 			sh 'wget http://localhost:8888/models/go -O gocam-goterms.json'
-			sh 'wget --time=1800 http://localhost:8888/models/gp -O gocam-gps.json'
+			sh 'wget --timeout=1800 http://localhost:8888/models/gp -O gocam-gps.json'
 			sh 'wget http://localhost:8888/models?causalmf=2 -O gocam-models.json'
 			sh 'wget http://localhost:8888/models/pmid -O gocam-pmids.json'
 
