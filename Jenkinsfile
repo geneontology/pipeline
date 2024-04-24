@@ -1000,7 +1000,7 @@ pipeline {
 	// Let's let our people know if things go well.
 	success {
 	    script {
-		if( env.BRANCH_NAME == 'release' ){
+		if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'snapshot-post-fail' ){
 		    echo "There has been a successful run of the ${env.BRANCH_NAME} pipeline."
 		    emailext to: "${TARGET_SUCCESS_EMAILS}",
 			subject: "GO Pipeline success for ${env.BRANCH_NAME}",
