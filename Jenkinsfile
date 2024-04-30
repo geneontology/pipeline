@@ -680,6 +680,10 @@ pipeline {
 		    }
 		}
 
+		// Give ourselves a five-minute breather before trying
+		// to shutdown the docker image.
+		// NOTE: this is a theory of swapping for #371.
+		sleep time: 5, unit: 'MINUTES'
 	    }
 	}
 	// WARNING: This stage is a hack required to work around data damage described in https://github.com/geneontology/go-site/issues/1484 and
