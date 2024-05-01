@@ -388,7 +388,7 @@ pipeline {
                             sh 'python3 ./mypyenv/bin/pip3 install awscli'
 
                             // ...and push it up to S3.
-                            sh 's3cmd -c $S3CMD_JSON --mime-type=text/html --cf-invalidate put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocess_raw_files/*-p2go-homology.gaf.gz s3://go-mirror/'
+                            sh 's3cmd -c $S3CMD_JSON --mime-type=text/html --cf-invalidate put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocessed_GAF_output/*-p2go-homology.gaf.gz s3://go-mirror/'
                             sh 's3cmd -c $S3CMD_JSON --mime-type=text/html --cf-invalidate put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocess_raw_files/* s3://go-mirror/$BRANCH_NAME/preprocess_raw_files/'
                             sh 's3cmd -c $S3CMD_JSON --mime-type=text/html --cf-invalidate put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocessed_GAF_output/* s3://go-mirror/$BRANCH_NAME/preprocessed_GAF_output/'
                             // files are up.
