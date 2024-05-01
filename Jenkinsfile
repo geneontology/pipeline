@@ -390,8 +390,9 @@ pipeline {
                             // ...and push it up to S3.
                             sh 's3cmd -c $S3CMD_JSON --mime-type=text/html --cf-invalidate put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocessed_GAF_output/*-p2go-homology.gaf.gz s3://go-mirror/'
                             // files are up.
-                            sh 'echo "[preview]" > ./awscli_config.txt && echo "cloudfront=true" >> ./awscli_config.txt'
-                            sh 'AWS_CONFIG_FILE=./awscli_config.txt python3 ./mypyenv/bin/aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION_ID --paths "/*"'
+                            // TODO: ask Seth what these do:
+                            // sh 'echo "[preview]" > ./awscli_config.txt && echo "cloudfront=true" >> ./awscli_config.txt'
+                            // sh 'AWS_CONFIG_FILE=./awscli_config.txt python3 ./mypyenv/bin/aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION_ID --paths "/*"'
                         }
                     }
                 }
