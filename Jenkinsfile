@@ -340,9 +340,6 @@ pipeline {
 				sh 'python3 ./scripts/reports-page-gen.py --report ./assigned-by-combined-report.json --template ./scripts/assigned-by-reports-page-template.html --date $START_DATE > assigned-by-gorule-report.html'
 			    }
 			}
-
-			// Generate the new GO refs data.
-			sh 'python3 ./scripts/aggregate-references.py -v --directory ./metadata/gorefs --json ./metadata/go-refs.json --stanza ./metadata/GO.references'
 		    }
 
 		    // Get the date into the metadata, in a similar format
