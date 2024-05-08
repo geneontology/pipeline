@@ -215,7 +215,7 @@ pipeline {
 			sh 'rm -f explanations.txt || true'
 			sh 'rm -f gorules_report.json || true'
 			sh 'rm -f main_report.txt || true'
-			sh './bin/minerva-cli.sh --validate-go-cams --shex -i blazegraph-internal.jnl -r ./ -ontojournal blazegraph-go-lego-reacto-neo.jnl'
+			sh './bin/minerva-cli.sh --validate-go-cams --shex -i blazegraph-internal.jnl -r ./ --ontojournal blazegraph-go-lego-reacto-neo.jnl'
 		    }
 
 		    // Port files out to skyhook snapshot.
