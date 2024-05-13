@@ -2,6 +2,10 @@ pipeline {
     agent any
     // In additional to manual runs, trigger somewhere at midnight to
     // give us the max time in a day to get things right.
+    triggers {
+    // Every Thursday at 8am
+    cron('0 8 * * 4')
+    }
     environment {
 
         ///
