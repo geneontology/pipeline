@@ -182,52 +182,52 @@ pipeline {
 	    }
 	}
 
-	// stage('GO-CAM reports') {
-	//     steps {
-	// 	script {
+	stage('GO-CAM reports') {
+	    steps {
+		script {
 
-	// 	    // Get minerva available.
-	// 	    sh 'pwd'
-	// 	    sh 'ls'
-	// 	    sh 'mkdir -p bin/'
-	// 	    sh 'mkdir -p lib/'
-	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/bin/* bin/'
-	// 		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/lib/* lib/'
-	// 	    }
-	// 	    sh 'chmod +x bin/*'
+		    // Get minerva available.
+		    sh 'pwd'
+		    sh 'ls'
+		    sh 'mkdir -p bin/'
+		    sh 'mkdir -p lib/'
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/bin/* bin/'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/lib/* lib/'
+		    }
+		    sh 'chmod +x bin/*'
 
-	// 	    // Get internal blazegraph.
-	// 	    sh 'rm -f blazegraph-internal.jnl || true'
-	// 	    sh 'rm -f blazegraph-internal.jnl.gz || true'
-	// 	    sh 'wget -N http://skyhook.berkeleybop.org/snapshot/products/blazegraph/blazegraph-internal.jnl.gz'
-	// 	    sh 'gunzip blazegraph-internal.jnl.gz'
+		    // Get internal blazegraph.
+		    sh 'rm -f blazegraph-internal.jnl || true'
+		    sh 'rm -f blazegraph-internal.jnl.gz || true'
+		    sh 'wget -N http://skyhook.berkeleybop.org/snapshot/products/blazegraph/blazegraph-internal.jnl.gz'
+		    sh 'gunzip blazegraph-internal.jnl.gz'
 
-	// 	    // Get onto blazegraph.
-	// 	    sh 'rm -f blazegraph-go-lego-reacto-neo.jnl || true'
-	// 	    sh 'rm -f blazegraph-go-lego-reacto-neo.jnl.gz || true'
-	// 	    sh 'wget -N http://skyhook.berkeleybop.org/blazegraph-go-lego-reacto-neo.jnl.gz'
-	// 	    sh 'gunzip blazegraph-go-lego-reacto-neo.jnl.gz'
+		    // Get onto blazegraph.
+		    sh 'rm -f blazegraph-go-lego-reacto-neo.jnl || true'
+		    sh 'rm -f blazegraph-go-lego-reacto-neo.jnl.gz || true'
+		    sh 'wget -N http://skyhook.berkeleybop.org/blazegraph-go-lego-reacto-neo.jnl.gz'
+		    sh 'gunzip blazegraph-go-lego-reacto-neo.jnl.gz'
 
-	// 	    // Clean and run reports command.
-	// 	    withEnv(['MINERVA_CLI_MEMORY=128G']){
-	// 		sh 'rm -f activity_report.txt || true'
-	// 		sh 'rm -f explanations.txt || true'
-	// 		sh 'rm -f gorules_report.json || true'
-	// 		sh 'rm -f main_report.txt || true'
-	// 		sh './bin/minerva-cli.sh --validate-go-cams --shex -i blazegraph-internal.jnl -r ./ --ontojournal blazegraph-go-lego-reacto-neo.jnl'
-	// 	    }
+		    // Clean and run reports command.
+		    withEnv(['MINERVA_CLI_MEMORY=128G']){
+			sh 'rm -f activity_report.txt || true'
+			sh 'rm -f explanations.txt || true'
+			sh 'rm -f gorules_report.json || true'
+			sh 'rm -f main_report.txt || true'
+			sh './bin/minerva-cli.sh --validate-go-cams --check-graph-type --shex -i blazegraph-internal.jnl -r ./ --ontojournal blazegraph-go-lego-reacto-neo.jnl'
+		    }
 
-	// 	    // Port files out to skyhook snapshot.
-	// 	    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-	// 		sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY activity_report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_activity_report.txt'
-	// 		sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY explanations.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_explanations.txt'
-	// 		sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY gorules_report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_gorules_report.txt'
-	// 		sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY main_report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_main_report.txt'
-	// 	    }
-	// 	}
-	//     }
-	// }
+		    // Port files out to skyhook snapshot.
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY activity_report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_activity_report.txt'
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY explanations.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_explanations.txt'
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY gorules_report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_gorules_report.txt'
+			sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY main_report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_main_report.txt'
+		    }
+		}
+	    }
+	}
 
 	// WARNING: This stage is a hack required to work around data damage described in https://github.com/geneontology/go-site/issues/1484 and
 	// https://github.com/geneontology/pipeline/issues/220.
