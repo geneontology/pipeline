@@ -187,13 +187,10 @@ pipeline {
 		script {
 
 		    // Get minerva available.
-		    sh 'pwd'
-		    sh 'ls'
-		    sh 'mkdir -p bin/'
-		    sh 'mkdir -p lib/'
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/bin/* bin/'
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/lib/* lib/'
+		    dir('./minerva') {
+			// Remember that git lays out into CWD.
+			git branch: TARGET_MINERVA_BRANCH, url: 'https://github.com/geneontology/minerva.git'
+			sh './build-cli.sh'
 		    }
 		    sh 'chmod +x bin/*'
 
@@ -215,7 +212,7 @@ pipeline {
 			sh 'rm -f explanations.txt || true'
 			sh 'rm -f gorules_report.json || true'
 			sh 'rm -f main_report.txt || true'
-			sh './bin/minerva-cli.sh --validate-go-cams --check-graph-type --shex -i blazegraph-internal.jnl -r ./ --ontojournal blazegraph-go-lego-reacto-neo.jnl'
+			sh './minerva-cli/bin/minerva-cli.sh --validate-go-cams --check-graph-type --shex -i blazegraph-internal.jnl -r ./ --ontojournal blazegraph-go-lego-reacto-neo.jnl'
 		    }
 
 		    // Port files out to skyhook snapshot.
