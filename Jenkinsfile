@@ -192,7 +192,7 @@ pipeline {
 			git branch: TARGET_MINERVA_BRANCH, url: 'https://github.com/geneontology/minerva.git'
 			sh './build-cli.sh'
 		    }
-		    sh 'chmod +x bin/*'
+		    sh 'chmod +x ./minerval-cli/bin/*'
 
 		    // Get internal blazegraph.
 		    sh 'rm -f blazegraph-internal.jnl || true'
