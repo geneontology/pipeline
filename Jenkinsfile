@@ -231,6 +231,37 @@ pipeline {
 	//     }
 	// }
 
+	stage('TTL pathways package') {
+	    steps {
+		script {
+
+		    // Setup repo.
+		    dir('./sparql-for-pathway-go-cams') {
+			// Remember that git lays out into CWD.
+			git branch: 'main', url: 'https://github.com/geneontology/sparql-for-pathway-go-cams.git'
+
+			// Get production blazegraph.
+			sh 'rm -f blazegraph-production.jnl || true'
+			sh 'rm -f blazegraph-production.jnl.gz || true'
+			sh 'wget -N http://skyhook.berkeleybop.org/snapshot/products/blazegraph/blazegraph-production.jnl.gz'
+			sh 'gunzip blazegraph-production.jnl.gz'
+
+			// Get noctua-models checkout.
+			sh 'pwd'
+			sh 'ls -AlFrt'
+			sh "git clone -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/noctua-models.git"
+
+			sh 'NOCTUA_MODELS_PATH=./noctua-models make target/pathway-like_go-cams.tar.gz'
+
+			// Port files out to skyhook snapshot.
+			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY target/pathway-like_go-cams.tar.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/products/ttl/pathway-like_go-cams.tar.gz'
+			}
+		    }
+		}
+	    }
+	}
+
 	// WARNING: This stage is a hack required to work around data damage described in https://github.com/geneontology/go-site/issues/1484 and
 	// https://github.com/geneontology/pipeline/issues/220.
 	// Redownload annotations and run ontobio-parse-assocs over them in various ways.
