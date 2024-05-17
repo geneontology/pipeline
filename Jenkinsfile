@@ -223,7 +223,7 @@ pipeline {
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY activity_report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_activity_report.txt'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY explanations.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_explanations.txt'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY gorules_report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_gorules_report.txt'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY gorules_report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_gorules_report.json'
 			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY main_report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_main_report.txt'
 			}
 		    }
