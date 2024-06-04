@@ -249,7 +249,10 @@ pipeline {
 			// Get noctua-models checkout.
 			sh 'pwd'
 			sh 'ls -AlFrt'
-			sh "git clone -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/noctua-models.git"
+			// Change check method to address
+			// https://github.com/geneontology/pipeline/issues/377.
+			// sh "git clone -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/noctua-models.git"
+			checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
 
 			sh 'NOCTUA_MODELS_PATH=./noctua-models make target/pathway-like_go-cams.tar.gz'
 
