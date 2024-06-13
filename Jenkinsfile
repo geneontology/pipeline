@@ -806,7 +806,7 @@ pipeline {
 			}
 
 			// Generate the new GO refs data.
-			sh 'python3 ./scripts/aggregate-references.py -v --directory ./metadata/gorefs --json ./metadata/go-refs.json --stanza ./metadata/GO.references'
+			//sh 'python3 ./scripts/aggregate-references.py -v --directory ./metadata/gorefs --json ./metadata/go-refs.json --stanza ./metadata/GO.references'
 		    }
 
 		    // Get the date into the metadata, in a similar format
