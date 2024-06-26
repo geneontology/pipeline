@@ -432,7 +432,7 @@ pipeline {
 			    // with even skinnier checkout.
 			    sh "ls -AlFrt"
 			    sh "echo 'noctua-models'"
-			    sh "git clone -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/go-site.git"
+			    sh "git clone -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/noctua-models.git"
 			    sh "ls -AlFrt"
 
 			    // Create a relative working directory and setup our
@@ -494,7 +494,7 @@ pipeline {
 			    // with even skinnier checkout.
 			    sh "ls -AlFrt"
 			    sh "echo 'json-noctua-models'"
-			    sh "git clone -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/go-site.git json-noctua-models"
+			    sh "git clone -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/noctua-models.git json-noctua-models"
 			    sh "ls -AlFrt"
 
 			    // Create a relative working directory and setup our
