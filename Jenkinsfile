@@ -382,6 +382,9 @@ pipeline {
 		    // Generate combined annotation and assigned-by combined report for driving
 		    // annotation download pages and drop it into
 		    // reports/ for copyover.
+		    sh 'ls -AlF .'
+		    sh 'ls -AlF ./'
+		    sh 'ls -AlF $WORKSPACE/copyover'
 		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./combined.report.json'
 		    sh 'python3 ./scripts/combined_assigned_by.py -v --input ./combined.report.json --output ./assigned-by-combined-report.json'
 		    // Generate the static download page directly from
