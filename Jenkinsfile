@@ -573,6 +573,8 @@ pipeline {
 			    /// targets in the go-site Makefile.
 			    sh 'cd /opt/go-site/pipeline && PATH=/opt/bin:$PATH $MAKECMD PY_BIN=/usr/local/bin/ -e target/sparta-report.json'
 			}
+			sh 'echo "Done with executing Megamake file commands"'
+            sh 'ls /opt/go-site/pipeline/target/groups/*gpad*'
 		    }
 		}
 		// Copy products over to skyhook.
