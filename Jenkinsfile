@@ -683,6 +683,11 @@ pipeline {
 			}
 		    }
 		}
+		// Temporary stop here so that we can have an index to
+		// examine for data issues before going with "full"
+		// snapshot. 2024-07-15.
+		echo 'Only master can touch that target.'
+		sh '`exit -1`'
 	    }
 	}
 
