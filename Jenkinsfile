@@ -1471,6 +1471,12 @@ pipeline {
 			subject: "GO Pipeline success for ${env.BRANCH_NAME}",
 			body: "There has been successful run of the ${env.BRANCH_NAME} pipeline. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
 		}
+		if( env.BRANCH_NAME == 'snapshot' ){
+		    echo "There has been a successful run of the first stage ${env.BRANCH_NAME} pipeline."
+		    emailext to: "${TARGET_ADMIN_EMAILS}",
+			subject: "GO Pipeline success for first stage ${env.BRANCH_NAME}",
+			body: "There has been successful run of the first stage ${env.BRANCH_NAME} pipeline. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}"
+		}
 	    }
 	}
 	// Let's let our internal people know if things change.
