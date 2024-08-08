@@ -4,11 +4,11 @@ pipeline {
     // give us the max time in a day to get things right.
     triggers {
 	// Master never runs--Feb 31st.
-	// cron('0 0 31 2 *')
+	cron('0 0 31 2 *')
 	// Nightly @12am, for "snapshot", skip "release" night.
 	// cron('0 0 2-31/2 * *')
 	// Every Sunday, for "new" "snapshot" setup.
-	cron('0 0 * * 0')
+	//cron('0 0 * * 0')
 	// First of the month @12am, for "release" (also "current").
 	//cron('0 0 1 * *')
     }
@@ -19,7 +19,7 @@ pipeline {
 	///
 
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'master'
+	TARGET_GO_SITE_BRANCH = 'issue-pipeline-382-raw-data'
 	// The branch of geneontology/go-stats to use.
 	TARGET_GO_STATS_BRANCH = 'master'
 	// The branch of go-ontology to use.
@@ -38,9 +38,9 @@ pipeline {
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,suzia@stanford.edu,smoxon@lbl.gov'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss,pgaudet1@gmail.com,smoxon@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-snapshot'
+	TARGET_BUCKET = 'go-data-raw-data'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = 'http://snapshot.geneontology.org'
+	TARGET_INDEXER_PREFIX = 'http://raw-data.geneontology.org'
 	// This variable should typically be 'TRUE', which will cause
 	// some additional basic checks to be made. There are some
 	// very exotic cases where these check may need to be skipped
@@ -72,19 +72,19 @@ pipeline {
 
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
-	ZENODO_ARCHIVE_CONCEPT = '425666'
+	ZENODO_ARCHIVE_CONCEPT = 'null'
 	// Distribution ID for the AWS CloudFront for this branch,
 	// used soley for invalidations. Versioned release does not
 	// need this as it is always a new location and the index
 	// upload already has an invalidation on it. For current,
 	// snapshot, and experimental.
-	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'E3UPPWY0HYLLL2'
-	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'E2HF1DWYYDLTQP'
+	AWS_CLOUDFRONT_DISTRIBUTION_ID = 'null'
+	AWS_CLOUDFRONT_RELEASE_DISTRIBUTION_ID = 'null'
 
 	///
 	/// Ontobio Validation
 	///
-	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/snapshot/ontology/go.json"
+	VALIDATION_ONTOLOGY_URL="http://skyhook.berkeleybop.org/go-raw-data/ontology/go.json"
 
 	///
 	/// Minerva input.
@@ -92,7 +92,7 @@ pipeline {
 
 	// Minerva operating profile.
 	MINERVA_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-lego.owl"
+	    "http://skyhook.berkeleybop.org/go-raw-data/ontology/extensions/go-lego.owl"
 	].join(" ")
 
 	///
@@ -103,37 +103,37 @@ pipeline {
 	GOLR_SOLR_MEMORY = "128G"
 	GOLR_LOADER_MEMORY = "192G"
 	GOLR_INPUT_ONTOLOGIES = [
-	    "http://skyhook.berkeleybop.org/snapshot/ontology/extensions/go-amigo.owl"
+	    "http://skyhook.berkeleybop.org/go-raw-data/ontology/extensions/go-amigo.owl"
 	].join(" ")
 	GOLR_INPUT_GAFS = [
-	    "http://skyhook.berkeleybop.org/snapshot/products/upstream_and_raw_data/paint_other.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/cgd.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/dictybase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/ecocyc.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/fb.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/genedb_lmajor.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/genedb_tbrucei.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/genedb_pfalciparum.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_chicken.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_cow.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_dog.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_human.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_pig.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/goa_uniprot_all_noiea.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/japonicusdb.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/mgi.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/pombase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/pseudocap.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/rgd.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/sgd.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/sgn.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/tair.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/wb.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/xenbase.gaf.gz",
-	    "http://skyhook.berkeleybop.org/snapshot/annotations/zfin.gaf.gz"
+	    "http://skyhook.berkeleybop.org/go-raw-data/products/upstream_and_raw_data/paint_other.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/cgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/dictybase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/ecocyc.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/fb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/genedb_lmajor.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/genedb_tbrucei.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/genedb_pfalciparum.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/goa_chicken.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/goa_cow.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/goa_dog.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/goa_human.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/goa_pig.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/goa_uniprot_all_noiea.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/japonicusdb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/mgi.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/pombase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/pseudocap.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/rgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/sgd.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/sgn.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/tair.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/wb.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/xenbase.gaf.gz",
+	    "http://skyhook.berkeleybop.org/go-raw-data/annotations/zfin.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
-	    "http://skyhook.berkeleybop.org/snapshot/products/panther/arbre.tgz"
+	    "http://skyhook.berkeleybop.org/go-raw-data/products/panther/arbre.tgz"
 	].join(" ")
 
 	///
