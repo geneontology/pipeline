@@ -161,7 +161,7 @@ pipeline {
 	//DATASET_EXCLUDES=""
 	// Optional. This acts as an override, /if/ it's grabbed (as
 	// defined above).
-	//GOA_UNIPROT_ALL_URL=""
+	GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/empty.gaf.gz"
 
     }
     options{
