@@ -38,7 +38,7 @@ pipeline {
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,suzia@stanford.edu,smoxon@lbl.gov'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,pascale.gaudet@sib.swiss,pgaudet1@gmail.com,smoxon@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-raw-data'
+	TARGET_BUCKET = 'go-data-product-raw-data'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://raw-data.geneontology.org'
 	// This variable should typically be 'TRUE', which will cause
@@ -1504,7 +1504,7 @@ void watchdog() {
     }else if( BRANCH_NAME != 'release' && TARGET_BUCKET == 'go-data-product-release'){
 	echo 'Only master can touch that target.'
 	sh '`exit -1`'
-    }else if( BRANCH_NAME != 'go-raw-data' && TARGET_BUCKET == 'go-data-raw-data'){
+    }else if( BRANCH_NAME != 'go-raw-data' && TARGET_BUCKET == 'go-data-product-raw-data'){
 	echo 'Only go-raw-data can touch that target.'
 	sh '`exit -1`'
     }
