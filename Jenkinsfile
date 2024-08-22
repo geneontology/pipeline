@@ -670,8 +670,8 @@ pipeline {
 		    sh 'pigz /opt/go-site/pipeline/target/blazegraph-internal.jnl'
 		    sh 'pigz /opt/go-site/pipeline/target/blazegraph-production.jnl'
 		    // Copy the journals directly to products.
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
-		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+		    //sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/blazegraph-production.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
+		    //sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/blazegraph-internal.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/blazegraph/'
 		    // Copy the reports into reports.
 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/go-site/pipeline/target/sparta-report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/reports/'
 		    // Plus: flatten product reports in json,
@@ -1297,6 +1297,11 @@ pipeline {
 		sh 'mkdir -p $WORKSPACE/mnt/ || true'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		    // Shave things down a little bit by removing
+		    // top-level annotations/. (#382) A slightly
+		    // "harsh" way of doing this, but the only one
+		    // that I am sure will not affect computation.
+		    sh 'rm -r -f $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 		}
 		// Copy the product to the right location. As well,
 		// archive.
