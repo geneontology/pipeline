@@ -67,7 +67,7 @@ pipeline {
 	/// PANTHER/PAINT metadata.
 	///
 
-	PANTHER_VERSION = '17.0'
+	PANTHER_VERSION = '19.0'
 
 	///
 	/// Application tokens.
