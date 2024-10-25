@@ -245,7 +245,7 @@ pipeline {
 		    withEnv(['PATH+EXTRA=:bin:./bin', 'JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G']){
 			retry(3){
 			    sh 'make clean'
-			    sh 'make all'
+			    sh 'make ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
 			    // TODO: need non-zero return on runoak/oaklib CLI
 			    // https://github.com/geneontology/neo/issues/89
 			    //sh 'make test'
