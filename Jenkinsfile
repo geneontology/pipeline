@@ -217,6 +217,14 @@ pipeline {
 	// daily(TODO?) and creates all the files normally included in
 	// a release, and deploys to S3.
 	stage('Produce NEO') {
+	    agent {
+		docker {
+    		    image 'obolibrary/odkfull:v1.5.2'
+		    // Reset Jenkins Docker agent default to original
+		    // root.
+		    args '-u root:root'
+		}
+	    }
 	    steps {
 		// Create a relative working directory and setup our
 		// data environment.
