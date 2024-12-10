@@ -399,7 +399,7 @@ pipeline {
 		    // Default namespace.
 		    sh 'env'
 
-		    //sh 'git pull'
+		    sh 'git pull'
 
 		    dir('./src/ontology') {
 			script {
