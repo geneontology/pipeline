@@ -402,7 +402,8 @@ pipeline {
 		    // Default namespace.
 		    sh 'env'
 
-		    sh 'git pull'
+		    sh 'git status'
+		    sh 'git clean -fx'
 
 		    dir('./src/ontology') {
 			script {
