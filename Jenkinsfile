@@ -386,9 +386,12 @@ pipeline {
 	    }
 	    steps {
 
+		sh 'git config --global --add safe.directory \'*\''
+
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
+
 		    // We're starting to run into problems with
 		    // ontology download taking too long for the
 		    // default 10m, so try and get into the guts of
