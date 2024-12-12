@@ -386,6 +386,8 @@ pipeline {
 	    }
 	    steps {
 
+		// Try and correct the permission leak issue (related
+		// to #199) within the image for better sanitation.
 		sh 'git config --global --add safe.directory \'*\''
 
 		// Create a relative working directory and setup our
@@ -402,6 +404,9 @@ pipeline {
 		    // Default namespace.
 		    sh 'env'
 
+		    // Explicitly examine repo, then try and force
+		    // cleaning. Related to #199.
+		    sh 'git log -1'
 		    sh 'git status'
 		    sh 'git clean -fx'
 
