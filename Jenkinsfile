@@ -360,6 +360,11 @@ pipeline {
 		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
 	    }
 	    steps {
+
+		// Try and correct the permission leak issue (related
+		// to #199) within the image for better sanitation.
+		sh 'git config --global --add safe.directory \'*\''
+
 		// Create a relative working directory and setup our
 		// data environment.
 		dir('./go-ontology') {
@@ -373,6 +378,12 @@ pipeline {
 
 		    // Default namespace.
 		    sh 'env'
+
+		    // Explicitly examine repo, then try and force
+		    // cleaning. Related to #199.
+		    sh 'git log -1'
+		    sh 'git status'
+		    sh 'git clean -fx'
 
 		    dir('./src/ontology') {
 			retry(3){
