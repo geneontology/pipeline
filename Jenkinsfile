@@ -713,6 +713,11 @@ pipeline {
 	}
 	// A new step to think about. What is our core metadata?
 	stage('Produce metadata') {
+	    // CHECKPOINT: Recover key environmental variables.
+	    environment {
+		START_DOW = sh(script: 'curl http://skyhook.berkeleybop.org/snapshot/metadata/dow.txt', , returnStdout: true).trim()
+		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/snapshot/metadata/date.txt', , returnStdout: true).trim()
+	    }
 	    steps {
 
 		// Prep a copyover point, as the overhead for doing
@@ -761,6 +766,9 @@ pipeline {
 		    // Generate combined annotation and assigned-by combined report for driving
 		    // annotation download pages and drop it into
 		    // reports/ for copyover.
+		    sh 'ls -AlF .'
+		    sh 'ls -AlF ./'
+		    sh 'ls -AlF $WORKSPACE/copyover'
 		    sh 'python3 ./scripts/aggregate-json-reports.py -v --directory $WORKSPACE/copyover --metadata ./metadata/datasets --output ./combined.report.json'
 		    sh 'python3 ./scripts/combined_assigned_by.py -v --input ./combined.report.json --output ./assigned-by-combined-report.json'
 		    // Generate the static download page directly from
@@ -799,9 +807,6 @@ pipeline {
 				sh 'python3 ./scripts/reports-page-gen.py --report ./assigned-by-combined-report.json --template ./scripts/assigned-by-reports-page-template.html --date $START_DATE > assigned-by-gorule-report.html'
 			    }
 			}
-
-			// Generate the new GO refs data.
-			sh 'python3 ./scripts/aggregate-references.py -v --directory ./metadata/gorefs --json ./metadata/go-refs.json --stanza ./metadata/GO.references'
 		    }
 
 		    // Get the date into the metadata, in a similar format
@@ -850,7 +855,7 @@ pipeline {
 		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 
 			// Copy all upstream metadata into metadata folder.
-			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" metadata/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/metadata'
+			sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" metadata/* skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/metadata'
 
 			// Copy all of the reports to the reports
 			// directory.
