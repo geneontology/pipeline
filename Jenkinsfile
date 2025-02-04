@@ -115,9 +115,9 @@ pipeline {
 	].join(" ")
 	// WARNING: hard-coded for the moment.
 	GOLR_INPUT_GAFS = [
-	    "http://skyhook.berkeleybop.org/confinement-for-pipeline-388/union1.gaf.gz"
-	    "http://skyhook.berkeleybop.org/confinement-for-pipeline-388/union2.gaf.gz"
-	    "http://skyhook.berkeleybop.org/confinement-for-pipeline-388/union3.gaf.gz"
+	    "http://skyhook.berkeleybop.org/confinement-for-pipeline-388/union1.gaf.gz",
+	    "http://skyhook.berkeleybop.org/confinement-for-pipeline-388/union2.gaf.gz",
+	    "http://skyhook.berkeleybop.org/confinement-for-pipeline-388/union3.gaf.gz",
 	    "http://skyhook.berkeleybop.org/confinement-for-pipeline-388/union4.gaf.gz"
 	].join(" ")
 	GOLR_INPUT_PANTHER_TREES = [
