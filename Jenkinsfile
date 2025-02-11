@@ -1192,7 +1192,7 @@ pipeline {
 			    sh 'python3 ./mypyenv/bin/pip3 install requests-toolbelt'
 
 			    // Need as replacement for awful requests lib.
-			    sh 'python3 ./mypyenv/bin/pip3 install pycurl'
+			    sh 'python3 ./mypyenv/bin/pip3 install pycurl==7.45.3'
 
 			    // Apparently something wrong with default
 			    // version; error like
