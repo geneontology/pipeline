@@ -483,61 +483,6 @@ pipeline {
 				}
 			    }
 			}
-		    },
-		    "JSON model generation": {
-
-			// May be parallelized in the future, but may need to
-			// serve as input into into mega step.
-			script {
-
-			    // Attempt to fix
-			    // https://github.com/geneontology/pipeline/issues/378
-			    // with even skinnier checkout.
-			    sh "ls -AlFrt"
-			    sh "echo 'json-noctua-models'"
-			    sh "git clone --no-tags --depth=1 -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/noctua-models.git json-noctua-models"
-			    sh "ls -AlFrt"
-
-			    // Create a relative working directory and setup our
-			    // data environment.
-			    dir('./json-noctua-models') {
-				sh "ls -AlFrt"
-
-				// // Attempt to trim/prune/speed up
-				// // noctua-models as we do for
-				// // go-ontology for
-				// // https://github.com/geneontology/pipeline/issues/278
-				// // .
-				//checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
-
-				// Make all software products
-				// available in bin/ (and lib/).
-				sh 'mkdir -p bin/'
-				sh 'mkdir -p lib/'
-				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
-				    // WARNING/BUG: needed for blazegraph-runner
-				    // to run at this point.
-				    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
-				}
-				sh 'chmod +x bin/*'
-
-				// Compile models.
-				sh 'mkdir -p jsonout'
-				withEnv(['MINERVA_CLI_MEMORY=128G']){
-				    // "Import" models.
-				    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
-				    // JSON out to directory.
-				    sh './bin/minerva-cli.sh --dump-owl-json --journal blazegraph.jnl --ontojournal blazegraph-go-lego-reacto-neo.jnl --folder jsonout'
-				}
-
-				// Compress and out.
-				sh 'tar --use-compress-program=pigz -cvf noctua-models-json.tgz -C jsonout .'
-				withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-				    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY noctua-models-json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/'
-				}
-			    }
-			}
 		    }
 		)
 	    }
