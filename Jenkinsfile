@@ -182,54 +182,62 @@ pipeline {
 	    }
 	}
 
-	// stage('GO-CAM reports') {
-	//     steps {
-	// 	script {
+	stage('GO-CAM JSON model generation') {
+	    steps {
+		// May be parallelized in the future, but may need to
+		// serve as input into into mega step.
+		script {
 
-	// 	    // Get minerva available.
-	// 	    dir('./minerva') {
-	// 		// Remember that git lays out into CWD.
-	// 		git branch: TARGET_MINERVA_BRANCH, url: 'https://github.com/geneontology/minerva.git'
-	// 		sh './build-cli.sh'
+		    // Attempt to fix
+		    // https://github.com/geneontology/pipeline/issues/378
+		    // with even skinnier checkout.
+		    sh "ls -AlFrt"
+		    sh "echo 'json-noctua-models'"
+		    sh "git clone --no-tags --depth=1 -b $TARGET_NOCTUA_MODELS_BRANCH https://github.com/geneontology/noctua-models.git json-noctua-models"
+		    sh "ls -AlFrt"
 
-	// 		sh 'ls ./'
-	// 		sh 'ls ./minerva-cli/'
-	// 		sh 'ls ./minerva-cli/bin/'
-	// 		sh 'ls ./minerva-cli/bin/minerva-cli.sh'
-	// 		sh 'chmod +x ./minerva-cli/bin/minerva-cli.sh'
+		    // Create a relative working directory and setup our
+		    // data environment.
+		    dir('./json-noctua-models') {
+			sh "ls -AlFrt"
 
-	// 		// Get internal blazegraph.
-	// 		sh 'rm -f blazegraph-internal.jnl || true'
-	// 		sh 'rm -f blazegraph-internal.jnl.gz || true'
-	// 		sh 'wget -N http://skyhook.berkeleybop.org/snapshot/products/blazegraph/blazegraph-internal.jnl.gz'
-	// 		sh 'gunzip blazegraph-internal.jnl.gz'
+			// // Attempt to trim/prune/speed up
+			// // noctua-models as we do for
+			// // go-ontology for
+			// // https://github.com/geneontology/pipeline/issues/278
+			// // .
+			//checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: TARGET_NOCTUA_MODELS_BRANCH]], extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true, timeout: 120]], userRemoteConfigs: [[url: 'https://github.com/geneontology/noctua-models.git', refspec: "+refs/heads/${env.TARGET_NOCTUA_MODELS_BRANCH}:refs/remotes/origin/${env.TARGET_NOCTUA_MODELS_BRANCH}"]]]
 
-	// 		// Get onto blazegraph.
-	// 		sh 'rm -f blazegraph-go-lego-reacto-neo.jnl || true'
-	// 		sh 'rm -f blazegraph-go-lego-reacto-neo.jnl.gz || true'
-	// 		sh 'wget -N http://skyhook.berkeleybop.org/blazegraph-go-lego-reacto-neo.jnl.gz'
-	// 		sh 'gunzip blazegraph-go-lego-reacto-neo.jnl.gz'
+			// Make all software products
+			// available in bin/ (and lib/).
+			sh 'mkdir -p bin/'
+			sh 'mkdir -p lib/'
+			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/bin/* ./bin/'
+			    // WARNING/BUG: needed for blazegraph-runner
+			    // to run at this point.
+			    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/lib/* ./lib/'
+			}
+			sh 'chmod +x bin/*'
 
-	// 		// Clean and run reports command.
-	// 		withEnv(['MINERVA_CLI_MEMORY=128G']){
-	// 		    sh 'rm -f activity_report.txt || true'
-	// 		    sh 'rm -f explanations.txt || true'
-	// 		    sh 'rm -f gorules_report.json || true'
-	// 		    sh 'rm -f main_report.txt || true'
-	// 		    sh './minerva-cli/bin/minerva-cli.sh --validate-go-cams --check-graph-type --shex -i blazegraph-internal.jnl -r ./ --ontojournal blazegraph-go-lego-reacto-neo.jnl'
-	// 		}
+			// Compile models.
+			sh 'mkdir -p jsonout'
+			withEnv(['MINERVA_CLI_MEMORY=128G']){
+			    // "Import" models.
+			    sh './bin/minerva-cli.sh --import-owl-models -f models -j blazegraph.jnl'
+			    // JSON out to directory.
+			    sh './bin/minerva-cli.sh --dump-owl-json --journal blazegraph.jnl --ontojournal blazegraph-go-lego-reacto-neo.jnl --folder jsonout'
+			}
 
-	// 		// Port files out to skyhook snapshot.
-	// 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-	// 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY activity_report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_activity_report.txt'
-	// 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY explanations.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_explanations.txt'
-	// 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY gorules_report.json skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_gorules_report.json'
-	// 		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY main_report.txt skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/reports/go-cam_main_report.txt'
-	// 		}
-	// 	    }
-	// 	}
-	//     }
-	// }
+			// Compress and out.
+			sh 'tar --use-compress-program=pigz -cvf noctua-models-json.tgz -C jsonout .'
+			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY noctua-models-json.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/'
+			}
+		    }
+		}
+	    }
+	}
 
 	stage('TTL pathways package') {
 	    steps {
