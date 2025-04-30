@@ -312,6 +312,13 @@ pipeline {
 
                         sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --parallel 1 --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
                         // sh "python3 ./scripts/download_source_gafs.py all --datasets ./metadata/datasets --target ./target/ --type gaf ${excluded_datasets_args} ${included_resources} ${goa_mapping_url}"
+
+			// Try and hack around
+			// https://github.com/geneontology/gopreprocess/issues/77
+			sh 'rm -f target/goa_human-src.gaf.gz || true'
+			sh 'wget -N https://ftp.ebi.ac.uk/pub/databases/GO/goa/HUMAN/goa_human.gaf.gz -O target//goa_human-src.gaf.gz'
+			sh 'rm -f target/goa_human_isoform-src.gaf.gz || true'
+			sh 'wget -N https://ftp.ebi.ac.uk/pub/databases/GO/goa/HUMAN/goa_human_isoform.gaf.gz -O target//goa_human_isoform-src.gaf.gz'
                     }
 
                     withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
