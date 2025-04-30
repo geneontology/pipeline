@@ -316,9 +316,11 @@ pipeline {
 			// Try and hack around
 			// https://github.com/geneontology/gopreprocess/issues/77
 			sh 'rm -f target/goa_human-src.gaf.gz || true'
-			sh 'wget -N https://ftp.ebi.ac.uk/pub/databases/GO/goa/HUMAN/goa_human.gaf.gz -O target//goa_human-src.gaf.gz'
+			sh 'wget -N https://ftp.ebi.ac.uk/pub/databases/GO/goa/HUMAN/goa_human.gaf.gz -O target/goa_human-src.gaf.gz'
 			sh 'rm -f target/goa_human_isoform-src.gaf.gz || true'
-			sh 'wget -N https://ftp.ebi.ac.uk/pub/databases/GO/goa/HUMAN/goa_human_isoform.gaf.gz -O target//goa_human_isoform-src.gaf.gz'
+			sh 'wget -N https://ftp.ebi.ac.uk/pub/databases/GO/goa/HUMAN/goa_human_isoform.gaf.gz -O target/goa_human_isoform-src.gaf.gz'
+			sh 'rm -f target/rgd-src.gaf.gz || true'
+			sh 'wget -N https://github.com/rat-genome-database/rgd-annotation-files/raw/master/gene_association.rgd.gz -O target/rgd-src.gaf.gz'
                     }
 
                     withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
