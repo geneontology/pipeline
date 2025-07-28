@@ -376,7 +376,7 @@ pipeline {
 
 		    // Setup for future use as we need tools.
 		    sh 'apt-get update'
-		    sh 'apt-get -u install maven openjdk-8-jre-headless wget curl less git pigz'
+		    sh 'apt-get -y install maven openjdk-8-jre-headless wget curl less git pigz'
 
 		    // Build/ready blazegraph (from go-graphstore
 		    // pom.xml).
