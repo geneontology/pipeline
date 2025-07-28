@@ -362,7 +362,8 @@ pipeline {
 	stage("Create GO-CAM JSON products") {
 	    agent {
 		docker {
-		    image 'maven:3.6.3-openjdk-8'
+		    //image 'maven:3.6.3-openjdk-8'
+		    image 'ubuntu:jammy'
 		    args "-u root:root --tmpfs /opt:exec -w /opt"
 		}
 	    }
@@ -373,14 +374,14 @@ pipeline {
 		    // to have this pinned to master.
 		    git branch: 'master', url: 'https://github.com/geneontology/go-graphstore.git'
 
+		    // Setup for future use as we need tools.
+		    sh 'apt-get update'
+		    sh 'apt-get -u install maven openjdk-8-jre-headless wget curl less git pigz'
+
 		    // Build/ready blazegraph (from go-graphstore
 		    // pom.xml).
 		    sh 'ls -AlF'
 		    sh 'mvn package'
-
-		    // Setup for future use as we need tools.
-		    sh 'apt-get update'
-		    sh 'apt-get -y install pigz'
 
 		    // WARNING/TEMP: Get a blazegraph journal, get it
 		    // setup in the right spot.
@@ -416,8 +417,8 @@ pipeline {
 		    sh 'curl -I http://localhost:9876/blazegraph/'
 
 		    // Setup environmant to run npm.
-		    sh 'curl -fsSL https://deb.nodesource.com/setup_17.x | bash -'
-		    sh 'apt-get install -y nodejs'
+		    //sh 'curl -fsSL https://deb.nodesource.com/setup_17.x | bash -'
+		    sh 'apt-get install -y nodejs npm'
 		    dir("./go-graphstore/api-gorest-2021") {
 			// Note: I currently cannot imagine a reason not
 			// to have this pinned to master.
@@ -474,8 +475,8 @@ pipeline {
 			// location in S3. Grab tools needed.
 			withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
 			    // Setup s3cmd.
-			    sh 'apt-get install -y python-pip'
-			    sh 'pip install s3cmd'
+			    sh 'apt-get install -y python3-pip'
+			    sh 'pip3 install s3cmd'
 
 			    // Standard.
 			    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/json put gocam-goterms.json s3://go-public/files/gocam-goterms.json'
