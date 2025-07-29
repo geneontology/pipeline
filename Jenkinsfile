@@ -461,10 +461,14 @@ pipeline {
 			sh 'rm -f gocam-*.json.gz || true'
 
 			// Run commands.
-			sh 'wget http://localhost:8888/models/go -O gocam-goterms.json'
-			sh 'wget --timeout=1800 http://localhost:8888/models/gp -O gocam-gps.json'
-			sh 'wget http://localhost:8888/models?causalmf=2 -O gocam-models.json'
-			sh 'wget http://localhost:8888/models/pmid -O gocam-pmids.json'
+			// sh 'wget http://localhost:8888/models/go -O gocam-goterms.json'
+			// sh 'wget --timeout=1800 http://localhost:8888/models/gp -O gocam-gps.json'
+			// sh 'wget http://localhost:8888/models?causalmf=2 -O gocam-models.json'
+			// sh 'wget http://localhost:8888/models/pmid -O gocam-pmids.json'
+			sh 'curl http://localhost:8888/models/go -o gocam-goterms.json'
+			sh 'curl -m 1800 http://localhost:8888/models/gp -o gocam-gps.json'
+			sh 'curl http://localhost:8888/models?causalmf=2 -o gocam-models.json'
+			sh 'curl http://localhost:8888/models/pmid -o gocam-pmids.json'
 
 			// Upload to skyhook to the expected location.
 			withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
