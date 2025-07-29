@@ -270,7 +270,7 @@ pipeline {
 	    agent {
 		docker {
 		    //image 'maven:3.6.3-openjdk-8'
-		    image 'ubuntu:jammy'
+		    image 'ubuntu:noble'
 		    args "-u root:root --tmpfs /opt:exec -w /opt"
 		}
 	    }
