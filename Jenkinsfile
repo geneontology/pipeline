@@ -141,20 +141,19 @@ pipeline {
 		START_DATE = sh(script: 'curl http://skyhook.berkeleybop.org/$BRANCH_NAME/metadata/date.txt', , returnStdout: true).trim()
 	    }
 	    steps {
-		dir("./gocam-py") {
-		    git branch: TARGET_GOCAM_PY_BRANCH, url: 'https://github.com/geneontology/gocam-py.git'
+		sh "mkdir -p /opt/go-site"
+		sh "cd /opt/ && git clone -b $TARGET_GOCAM_PY_BRANCH https://github.com/geneontology/gocam-py.git"
+		sh "cd /opt/gocam-py"
+		sh "pwd"
+		sh "ls -lrt"
+		sh "pip3 install poetry"
+		sh "poetry install"
+		sh "poetry run gocam translate-collection --max-workers 20"
 
-		    sh "pwd"
-		    sh "ls -lrt"
-		    sh "pip3 install poetry"
-		    sh "poetry install"
-		    sh "poetry run gocam translate-collection --max-workers 20"
-
-		    // Find and copy the generated tar.gz files to skyhook
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'find /tmp/networkx -name "*.tar.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/ \\;'
-			sh 'find /tmp/cx2 -name "*.tar.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/ \\;'
-		    }
+		// Find and copy the generated tar.gz files to skyhook
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'find /opt/gocam-py/networkx -name "*.tar.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/ \\;'
+		    sh 'find /opt/gocam-py/cx2 -name "*.tar.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/ \\;'
 		}
 	    }
 	}
