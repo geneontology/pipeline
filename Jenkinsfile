@@ -1,14 +1,7 @@
 pipeline {
     agent any
-    // In additional to manual runs, trigger somewhere at midnight to
-    // give us the max time in a day to get things right.
     triggers {
-	// Master never runs--Feb 31st.
-	cron('0 0 31 2 *')
-	// Nightly @12am, for "snapshot", skip "release" night.
-	//cron('0 0 2-31/2 * *')
-	// First of the month @12am, for "release" (also "current").
-	//cron('0 0 1 * *')
+        // No triggers - pipeline will only run manually
     }
     environment {
 
@@ -1368,31 +1361,6 @@ pipeline {
 		always {
 		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-		}
-	    }
-	}
-	stage('GO-CAM Translation') {
-	    agent {
-		docker {
-		    image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
-		    args "-u root:root --tmpfs /opt:exec -w /opt"
-		}
-	    }
-	    steps {
-		dir("./gocam-py") {
-		    git branch: TARGET_GOCAM_PY_BRANCH, url: 'https://github.com/geneontology/gocam-py.git'
-		    
-		    sh "pwd"
-		    sh "ls -lrt"
-		    sh "pip3 install poetry"
-		    sh "poetry install"
-		    sh "poetry run gocam translate-collection --max-workers 20"
-		    
-		    // Find and copy the generated tar.gz files to skyhook
-		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-			sh 'find /tmp/networkx -name "*.tar.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/ \\;'
-			sh 'find /tmp/cx2 -name "*.tar.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/ \\;'
-		    }
 		}
 	    }
 	}
