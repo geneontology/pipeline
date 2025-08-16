@@ -31,9 +31,9 @@ pipeline {
 	TARGET_SUCCESS_EMAILS = 'sjcarbon@lbl.gov,smoxon@lbl.gov'
 	TARGET_RELEASE_HOLD_EMAILS = 'sjcarbon@lbl.gov,smoxon@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-experimental'
+	TARGET_BUCKET = 'null'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	TARGET_INDEXER_PREFIX = 'null'
 	// This variable should typically be 'TRUE', which will cause
 	// some additional basic checks to be made. There are some
 	// very exotic cases where these check may need to be skipped
