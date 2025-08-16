@@ -30,6 +30,8 @@ pipeline {
 	TARGET_ROBOT_BRANCH = 'master'
 	// The branch of noctua-models to use.
 	TARGET_NOCTUA_MODELS_BRANCH = 'master'
+	// The branch/tag of gocam-py to use.
+	TARGET_GOCAM_PY_BRANCH = 'v0.5.3-rc2'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,debert@usc.edu,smoxon@lbl.gov'
@@ -1366,6 +1368,31 @@ pipeline {
 		always {
 		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+		}
+	    }
+	}
+	stage('GO-CAM Translation') {
+	    agent {
+		docker {
+		    image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
+		    args "-u root:root --tmpfs /opt:exec -w /opt"
+		}
+	    }
+	    steps {
+		dir("./gocam-py") {
+		    git branch: TARGET_GOCAM_PY_BRANCH, url: 'https://github.com/geneontology/gocam-py.git'
+		    
+		    sh "pwd"
+		    sh "ls -lrt"
+		    sh "pip3 install poetry"
+		    sh "poetry install"
+		    sh "poetry run gocam translate-collection --max-workers 20"
+		    
+		    // Find and copy the generated tar.gz files to skyhook
+		    withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+			sh 'find /tmp/networkx -name "*.tar.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/ \\;'
+			sh 'find /tmp/cx2 -name "*.tar.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/ \\;'
+		    }
 		}
 	    }
 	}
