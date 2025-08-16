@@ -148,6 +148,7 @@ pipeline {
 		sh "cd /opt/gocam-py && ls -lrt"
 		sh "cd /opt/gocam-py && pip3 install poetry"
 		sh "cd /opt/gocam-py && poetry install"
+		sh "cd /opt/gocam-py && pip3 install networkx"
 		sh "cd /opt/gocam-py && poetry run gocam translate-collection --max-workers 20"
 
 		// Find and copy the generated tar.gz files to skyhook
