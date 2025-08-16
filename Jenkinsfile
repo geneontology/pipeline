@@ -89,8 +89,8 @@ pipeline {
 		// don't clobber good products.
 		watchdog();
 
-		// Give us a minute to cancel if we want.
-		sleep time: 1, unit: 'MINUTES'
+		// Give us a beat to cancel if we want.
+		sleep time: 15, unit: 'SECONDS'
 		cleanWs deleteDirs: true, disableDeferredWipeout: true
 	    }
 	}
@@ -145,10 +145,10 @@ pipeline {
 		sh "cd /opt/ && git clone -b $TARGET_GOCAM_PY_BRANCH https://github.com/geneontology/gocam-py.git"
 		sh "cd /opt/gocam-py"
 		sh "pwd"
-		sh "ls -lrt"
-		sh "pip3 install poetry"
-		sh "poetry install"
-		sh "poetry run gocam translate-collection --max-workers 20"
+		sh "cd /opt/gocam-py && ls -lrt"
+		sh "cd /opt/gocam-py && pip3 install poetry"
+		sh "cd /opt/gocam-py && poetry install"
+		sh "cd /opt/gocam-py && poetry run gocam translate-collection --max-workers 20"
 
 		// Find and copy the generated tar.gz files to skyhook
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
