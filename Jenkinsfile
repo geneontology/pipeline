@@ -8,10 +8,10 @@ pipeline {
         TARGET_GO_SITE_BRANCH = 'master'
         TARGET_GOCAM_PY_BRANCH = 'v0.5.3-rc2'
         TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov,smoxon@lbl.gov'
-        
+
         // GO-CAM translation parameters
         GOCAM_MAX_WORKERS = '20'
-        GOCAM_OUTPUT_DIR = '/tmp'
+        GOCAM_OUTPUT_DIR = '/opt/gocam-py'
         GOCAM_BATCH_SIZE = '100'
     }
     options{
@@ -47,11 +47,13 @@ pipeline {
                 }
             }
             steps {
+		// Prep.
+                sh "apt-get update && apt-get install -y graphviz graphviz-dev"
+		// Run.
                 sh "mkdir -p /opt/go-site"
                 sh "cd /opt/ && git clone -b $TARGET_GOCAM_PY_BRANCH https://github.com/geneontology/gocam-py.git"
                 sh "cd /opt/gocam-py && pwd"
                 sh "cd /opt/gocam-py && ls -lrt"
-                sh "apt-get update && apt-get install -y graphviz graphviz-dev"
                 sh "cd /opt/gocam-py && pip3 install poetry"
                 sh "cd /opt/gocam-py && poetry install --all-extras"
                 sh "cd /opt/gocam-py && poetry run gocam translate-collection --max-workers $GOCAM_MAX_WORKERS --output $GOCAM_OUTPUT_DIR --batch-size $GOCAM_BATCH_SIZE"
