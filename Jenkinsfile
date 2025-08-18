@@ -65,6 +65,14 @@ pipeline {
 	PANTHER_VERSION = '19.0'
 
 	///
+	/// GO-CAM (gocam-py) metadata.
+	///
+        TARGET_GOCAM_PY_BRANCH = 'v0.5.3-rc2'
+        GOCAM_MAX_WORKERS = '20'
+        GOCAM_OUTPUT_DIR = '/opt/gocam-py'
+        GOCAM_BATCH_SIZE = '100'
+
+	///
 	/// Application tokens.
 	///
 
@@ -238,6 +246,32 @@ pipeline {
 		}
 	    }
 	}
+
+        stage('GO-CAM Translation') {
+            agent {
+                docker {
+                    image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
+                    args "-u root:root --tmpfs /opt:exec -w /opt"
+                }
+            }
+            steps {
+		// Prep.
+                sh "apt-get update && apt-get install -y graphviz graphviz-dev"
+		// Run.
+                sh "mkdir -p /opt/go-site"
+                sh "cd /opt/ && git clone -b $TARGET_GOCAM_PY_BRANCH https://github.com/geneontology/gocam-py.git"
+                sh "cd /opt/gocam-py && pwd"
+                sh "cd /opt/gocam-py && ls -lrt"
+                sh "cd /opt/gocam-py && pip3 install poetry"
+                sh "cd /opt/gocam-py && poetry install --all-extras"
+                sh "cd /opt/gocam-py && poetry run gocam translate-collection --max-workers $GOCAM_MAX_WORKERS --output $GOCAM_OUTPUT_DIR --batch-size $GOCAM_BATCH_SIZE"
+
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/gocam-py/go-cam-networkx.tar.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/products/json/'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/gocam-py/go-cam-cx2.tar.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/products/json/'
+		}
+            }
+        }
 
 	stage('TTL pathways package') {
 	    steps {
