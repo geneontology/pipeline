@@ -58,11 +58,10 @@ pipeline {
                 sh "cd /opt/gocam-py && poetry install --all-extras"
                 sh "cd /opt/gocam-py && poetry run gocam translate-collection --max-workers $GOCAM_MAX_WORKERS --output $GOCAM_OUTPUT_DIR --batch-size $GOCAM_BATCH_SIZE"
 
-                // Find and copy the generated tar.gz files to skyhook
-                withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-                    sh 'find /opt/gocam-py/networkx -name "*.tar.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/ \\;'
-                    sh 'find /opt/gocam-py/cx2 -name "*.tar.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/json/ \\;'
-                }
+		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/gocam-py/go-cam-networkx.tar.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/products/json/'
+		    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY /opt/gocam-py/go-cam-cx2.tar.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/snapshot/products/json/'
+		}
             }
         }
     }
