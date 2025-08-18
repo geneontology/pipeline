@@ -1,8 +1,8 @@
 pipeline {
     agent any
-    triggers {
-        // No triggers - pipeline will only run manually
-    }
+    // triggers {
+    //     // No triggers - pipeline will only run manually
+    // }
     environment {
         // Basic environment variables for GO-CAM translation
         TARGET_GO_SITE_BRANCH = 'master'
