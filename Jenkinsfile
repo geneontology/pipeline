@@ -346,7 +346,7 @@ pipeline {
 				// mappings in mind.
 				if( env.BRANCH_NAME == 'release' ){
 				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/snapshot/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
-				}else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'snapshot-post-fail' ){
+				}else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'snapshot-post-fail' || env.BRANCH_NAME == 'snapshot-post-post-fail' ){
 				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/snapshot/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
 				}
 
@@ -377,7 +377,7 @@ pipeline {
 				    // Archive full archive.
 				    if( env.BRANCH_NAME == 'release' ){
 					sh 'python3 ./scripts/zenodo-version-update.py --verbose --key $ZENODO_PRODUCTION_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
-				    }else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'snapshot-post-fail' ){
+				    }else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'snapshot-post-fail' || env.BRANCH_NAME == 'snapshot-post-post-fail' ){
 					// WARNING: to save Zenodo 1TB
 					// a month, for snapshot,
 					// we'll lie about the DOI
@@ -427,7 +427,7 @@ pipeline {
 	    }
 	}
 	stage('Publish') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'snapshot-post-fail'; branch 'master' } }
+	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'snapshot-post-fail'; branch 'snapshot-post-post-fail'; branch 'master' } }
 	    // CHECKPOINT: Recover key environmental variables.
 	    environment {
 		START_DOW = sh(script: 'curl http://skyhook.berkeleybop.org/snapshot/metadata/dow.txt', , returnStdout: true).trim()
@@ -510,7 +510,7 @@ pipeline {
 				    // ...and push it up to S3.
 				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
 
-				}else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'snapshot-post-fail' ){
+				}else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'snapshot-post-fail' || env.BRANCH_NAME == 'snapshot-post-post-fail' ){
 
 				    // Currently, the "daily"
 				    // debugging buckets are intended
@@ -584,7 +584,7 @@ pipeline {
 					    //	sh 'ansible-playbook ./update-golr.yaml --inventory=hosts.amigo --private-key="$DEPLOY_LOCAL_IDENTITY" -e target_host=amigo-golr-production -e target_user=bbop'
 					    // }
 
-					}else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'snapshot-post-fail' ){
+					}else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'snapshot-post-fail' || env.BRANCH_NAME == 'snapshot-post-post-fail' ){
 
 					    echo 'Push snapshot out internal Blazegraph'
 					    retry(3){
@@ -629,7 +629,7 @@ pipeline {
 	// Let's let our people know if things go well.
 	success {
 	    script {
-		if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'snapshot-post-fail' ){
+		if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'snapshot-post-fail' || env.BRANCH_NAME == 'snapshot-post-post-fail' ){
 		    echo "There has been a successful run of the ${env.BRANCH_NAME} pipeline."
 		    emailext to: "${TARGET_SUCCESS_EMAILS}",
 			subject: "GO Pipeline success for ${env.BRANCH_NAME}",
@@ -659,11 +659,20 @@ void watchdog() {
     if( BRANCH_NAME != 'master' && TARGET_BUCKET == 'go-data-product-experimental'){
 	echo 'Only master can touch that target.'
 	sh '`exit -1`'
-    }else if( BRANCH_NAME != 'snapshot-post-fail' && TARGET_BUCKET == 'go-data-product-snapshot'){
-	echo 'Only master can touch that target.'
-	sh '`exit -1`'
+    // }else if( BRANCH_NAME != 'snapshot-post-fail' && TARGET_BUCKET == 'go-data-product-snapshot'){
+    // 	echo 'Only master can touch that target.'
+    // 	sh '`exit -1`'
+    }else if( TARGET_BUCKET == 'go-data-product-snapshot' ){
+	if( BRANCH_NAME == 'snapshot-post-fail' ){
+	    echo 'Legal snapshot branch 1.'
+	}else if( BRANCH_NAME == 'snapshot-post-post-fail' ){
+	    echo 'Legal snapshot branch 2.'
+	}else{
+	    echo 'Only post or post-post fail can touch that target.'
+	    sh '`exit -1`'
+	}
     }else if( BRANCH_NAME != 'release' && TARGET_BUCKET == 'go-data-product-release'){
-	echo 'Only master can touch that target.'
+	echo 'Only release can touch that target.'
 	sh '`exit -1`'
     }
 }
