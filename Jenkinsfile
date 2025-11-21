@@ -508,7 +508,8 @@ pipeline {
 				    // Build the capper index.html...
 				    sh 'python3 ./scripts/bucket-indexer.py --credentials $S3_PUSH_JSON --bucket go-data-product-release --inject ./scripts/directory-index-template.html --prefix http://release.geneontology.org > top-level-index.html'
 				    // ...and push it up to S3.
-				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
+				    //sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
+				    sh 's3cmd -c $S3CMD_JSON --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
 
 				}else if( env.BRANCH_NAME == 'snapshot' || env.BRANCH_NAME == 'snapshot-post-fail' || env.BRANCH_NAME == 'snapshot-post-post-fail' ){
 
