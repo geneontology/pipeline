@@ -251,7 +251,7 @@ pipeline {
             agent {
                 docker {
                     image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
-                    args "-u root:root --tmpfs /opt:exec -w /opt"
+                    args "-u root:root --init --tmpfs /opt:exec -w /opt"
                 }
             }
             steps {
@@ -318,7 +318,7 @@ pipeline {
 	    agent {
 		docker {
 		    image 'geneontology/dev-base:ea32b54c822f7a3d9bf20c78208aca452af7ee80_2023-08-28T125255'
-		    args "-u root:root --tmpfs /opt:exec -w /opt"
+		    args "-u root:root --init --tmpfs /opt:exec -w /opt"
 		}
 	    }
 	    steps {
@@ -600,7 +600,7 @@ pipeline {
 		    image 'geneontology/golr-autoindex:28a693d28b37196d3f79acdea8c0406c9930c818_2022-03-17T171930_master'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
-		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
+		    args '-u root:root --init --mount type=tmpfs,destination=/srv/solr/data'
 		}
 	    }
 	    // CHECKPOINT: Recover key environmental variables.
