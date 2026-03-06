@@ -600,7 +600,7 @@ pipeline {
 		    image 'geneontology/golr-autoindex:28a693d28b37196d3f79acdea8c0406c9930c818_2022-03-17T171930_master'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
-		    args '-u root:root --init --mount type=tmpfs,destination=/srv/solr/data'
+		    args '-u root:root --init --stop-timeout 60 --mount type=tmpfs,destination=/srv/solr/data'
 		}
 	    }
 	    // CHECKPOINT: Recover key environmental variables.
@@ -684,6 +684,13 @@ pipeline {
 			}
 		    }
 		}
+
+		// Gracefully stop Solr and other background
+		// processes before the stage ends to help
+		// container cleanup; for #316.
+		sh 'pkill -f solr || true'
+		sh 'pkill -f java || true'
+		sh 'sleep 5'
 	    }
 	}
 	//...
