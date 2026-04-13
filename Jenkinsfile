@@ -219,7 +219,7 @@ pipeline {
 	stage('Produce NEO') {
 	    agent {
 		docker {
-    		    image 'obolibrary/odkfull:v1.5.2'
+    		    image 'obolibrary/odkfull:v1.6.1'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
@@ -279,7 +279,7 @@ pipeline {
 	    agent {
 		docker {
 		    // Upgrade test for: geneontology/go-ontology#25019, from v1.2.32
-    		    image 'obolibrary/odkfull:v1.5.4'
+    		    image 'obolibrary/odkfull:v1.6.1'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
@@ -417,7 +417,7 @@ pipeline {
 	stage('Sanity 0') {
 	    agent {
 		docker {
-		    image 'obolibrary/odkfull:v1.2.22'
+		    image 'obolibrary/odkfull:v1.6.1'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root'
