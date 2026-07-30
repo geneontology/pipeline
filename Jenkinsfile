@@ -402,6 +402,12 @@ pipeline {
 
                             // ...and push it up to S3.
                             sh 's3cmd -c $S3CMD_JSON --mime-type=text/html --cf-invalidate put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocessed_GAF_output/*-p2go-homology.gaf.gz s3://go-mirror/'
+                            // Keep a dated copy so a bad run can be rolled back: the
+                            // stable key above is overwritten in place and the bucket is
+                            // not versioned. Same mime-type as above so a restore is a
+                            // straight metadata-preserving copy back over the stable key.
+                            // geneontology/operations#97
+                            sh 's3cmd -c $S3CMD_JSON --mime-type=text/html put $WORKSPACE/mnt/$BRANCH_NAME/products/upstream_and_raw_data/preprocessed_GAF_output/mgi-p2go-homology.gaf.gz s3://go-mirror/p2go-homology-archive/mgi-p2go-homology-$(date -u +%Y%m%d).gaf.gz'
                             // files are up.
                             // TODO: ask Seth what these do:
                             // sh 'echo "[preview]" > ./awscli_config.txt && echo "cloudfront=true" >> ./awscli_config.txt'
