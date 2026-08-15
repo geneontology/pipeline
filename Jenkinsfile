@@ -101,11 +101,11 @@ pipeline {
             "https://snapshot.geneontology.org/ontology/extensions/go-amigo.owl"
         ].join(" ")
         GOLR_INPUT_GAFS = [
-            "http://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
-            "http://skyhook.berkeleybop.org/master/annotations/mgi.gaf.gz",
+            "https://skyhook.berkeleybop.org/master/annotations/goa_uniprot_all_noiea.gaf.gz",
+            "https://skyhook.berkeleybop.org/master/annotations/mgi.gaf.gz",
         ].join(" ")
         GOLR_INPUT_PANTHER_TREES = [
-            "http://skyhook.berkeleybop.org/master/products/panther/arbre.tgz"
+            "https://skyhook.berkeleybop.org/master/products/panther/arbre.tgz"
         ].join(" ")
 
         ///
@@ -133,7 +133,7 @@ pipeline {
         DATASET_EXCLUDES="goa_pig_complex goa_pig_rna goa_pig_isoform goa_pig goa_uniprot_gcrp goa_pdb goa_chicken goa_chicken_isoform goa_chicken_rna goa_cow goa_cow_complex goa_cow_isoform goa_cow_rna goa_dog goa_dog_complex goa_dog_isoform goa_dog_rna goa_human_complex goa_human_rna paint_cgd paint_dictybase paint_fb paint_goa_chicken paint_goa_human paint_other paint_rgd paint_sgd paint_tair paint_zfin"
         // Optional. This acts as an override, /if/ it's grabbed (as
         // defined above).
-        GOA_UNIPROT_ALL_URL="http://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
+        GOA_UNIPROT_ALL_URL="https://skyhook.berkeleybop.org/goa_uniprot_short.gaf.gz"
     }
     options{
 	    timestamps()
