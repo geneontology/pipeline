@@ -80,9 +80,9 @@ pipeline {
 	    //"http://purl.obolibrary.org/obo/wbbt.owl",
 	    //"http://purl.obolibrary.org/obo/go/extensions/go-modules-annotations.owl",
 	    //"http://purl.obolibrary.org/obo/go/extensions/go-taxon-subsets.owl"
-            //"http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/neo.owl"
-            "http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/extensions/go-lego.owl",
-            "http://skyhook.berkeleybop.org/issue-35-neo-test/ontology/neo.owl"
+            //"https://skyhook.berkeleybop.org/issue-35-neo-test/ontology/neo.owl"
+            "https://skyhook.berkeleybop.org/issue-35-neo-test/ontology/extensions/go-lego.owl",
+            "https://skyhook.berkeleybop.org/issue-35-neo-test/ontology/neo.owl"
 	].join(" ")
     }
     options{
@@ -379,12 +379,12 @@ pipeline {
 		sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_2_1_6_RC/blazegraph.jar'
 		//sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_RELEASE_2_1_5/blazegraph.jar'
 		sh 'curl -L -o /tmp/blazegraph.properties https://raw.githubusercontent.com/geneontology/minerva/master/minerva-core/src/main/resources/org/geneontology/minerva/blazegraph.properties'
-		sh 'curl -L -o /tmp/go-lego.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego.owl'
-		sh 'curl -L -o /tmp/neo.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/neo.owl'
+		sh 'curl -L -o /tmp/go-lego.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego.owl'
+		sh 'curl -L -o /tmp/neo.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/neo.owl'
 		// BUG/TODO: This will need to point inward at some point.
 		// Attempt to pull "locally" from skyhook--it should now be built as part of the go makefile release target.
 		//sh 'curl -L -o /tmp/reacto.owl http://snapshot.geneontology.org/ontology/extensions/reacto.owl'
-		sh 'curl -L -o /tmp/reacto.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/reacto.owl'
+		sh 'curl -L -o /tmp/reacto.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/reacto.owl'
 		// DEBUG: confirm for the moment.
 		sh 'ls -AlF /tmp/*'
 		sh 'head -100 /tmp/go-lego.owl'
@@ -408,7 +408,7 @@ pipeline {
 		    // holding location for ShEx and stable Noctua
 		    // deployment. Pseudo-publish.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego-reacto-neo.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/blazegraph-go-lego-reacto-neo.jnl.gz'
-		    sh 'curl -L -o /tmp/go-lego-reacto.owl http://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego-reacto.owl'
+		    sh 'curl -L -o /tmp/go-lego-reacto.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego-reacto.owl'
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/go-lego-reacto.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/go-lego-reacto.owl'
 		}
 	    }
