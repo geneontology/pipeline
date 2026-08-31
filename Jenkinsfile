@@ -50,8 +50,8 @@ pipeline {
 	WE_ARE_BEING_SAFE_P = 'TRUE'
 	// Sanity check for solr inde being built.
 	// CAVEAT: keep this within a few percent of the last good
-	// build (4,554,123 on 2026-08-31) -- a loose floor waves a
-	// substantially partial index through as the rolling artifact.
+	// build's numFound -- a loose floor waves a substantially
+	// partial index through as the rolling artifact.
 	//SANITY_SOLR_DOC_COUNT_MIN = 3500000
 	SANITY_SOLR_DOC_COUNT_MIN = 4400000
 	// The Zenodo concept ID to use for releases (and occasionally
@@ -355,10 +355,7 @@ pipeline {
 		// Fetch the indexer script fresh from this branch:
 		// a script fix + "Restart from Stage" takes effect
 		// without an image rebuild or a full pipeline
-		// re-run (pattern from pipeline-from-goa). Replaces
-		// the image-baked /tmp/run-indexer.sh, which
-		// swallowed loader failures (no set -e) and could
-		// not carry JVM/GC changes.
+		// re-run (pattern from pipeline-from-goa).
 		// CAVEAT: tip-fetch means a push to the branch mid-run
 		// changes what an in-flight build executes; the hash
 		// line is the provenance record of what actually ran.
