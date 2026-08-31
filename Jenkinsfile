@@ -49,7 +49,11 @@ pipeline {
 	// for a run, in that case this variable is set to 'FALSE'.
 	WE_ARE_BEING_SAFE_P = 'TRUE'
 	// Sanity check for solr inde being built.
-	SANITY_SOLR_DOC_COUNT_MIN = 3500000
+	// CAVEAT: keep this within a few percent of the last good
+	// build (4,554,123 on 2026-08-31) -- a loose floor waves a
+	// substantially partial index through as the rolling artifact.
+	//SANITY_SOLR_DOC_COUNT_MIN = 3500000
+	SANITY_SOLR_DOC_COUNT_MIN = 4400000
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '0'
@@ -62,8 +66,14 @@ pipeline {
 	//MAKECMD = 'make --jobs 3 --max-load 10.0'
 	MAKECMD = 'make'
 	// GOlr load profile.
+	// CAVEAT: bigger is not safer for the Solr side -- an
+	// oversized fixed heap makes worst-case GC/swap pauses long
+	// enough that the loader's TCP connection dies while Solr
+	// itself survives. The index is a few GB; keep this
+	// right-sized.
 	//GOLR_SOLR_MEMORY = "128G"
-	GOLR_SOLR_MEMORY = "192G"
+	//GOLR_SOLR_MEMORY = "192G"
+	GOLR_SOLR_MEMORY = "32G"
 	//GOLR_LOADER_MEMORY = "192G"
 	//GOLR_LOADER_MEMORY = "320G"
 	GOLR_LOADER_MEMORY = "384G"
@@ -342,30 +352,33 @@ pipeline {
 		/// Produce Solr index.
 		///
 
-                // sh 'ls /srv'
-                // sh 'ls /tmp'
+		// Fetch the indexer script fresh from this branch:
+		// a script fix + "Restart from Stage" takes effect
+		// without an image rebuild or a full pipeline
+		// re-run (pattern from pipeline-from-goa). Replaces
+		// the image-baked /tmp/run-indexer.sh, which
+		// swallowed loader failures (no set -e) and could
+		// not carry JVM/GC changes.
+		// CAVEAT: tip-fetch means a push to the branch mid-run
+		// changes what an in-flight build executes; the hash
+		// line is the provenance record of what actually ran.
+		sh "mkdir -p ./scripts && curl -fsSL --retry 3 https://raw.githubusercontent.com/geneontology/pipeline/${env.BRANCH_NAME}/scripts/run-neo-golr-indexer.sh -o ./scripts/run-neo-golr-indexer.sh && sha256sum ./scripts/run-neo-golr-indexer.sh"
 
-		// Build index into tmpfs.
-		sh 'bash /tmp/run-indexer.sh'
-
-		// Copy tmpfs Solr contents onto skyhook. Moving this
-		// earlier so we can use the index to identify
-		// problems.
-		// https://github.com/geneontology/neo/issues/118
-		sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
+		// Build index into tmpfs, gate on doc count, upload
+		// artifact + GC logs. On failure the partial index
+		// still lands on skyhook for inspection
+		// (https://github.com/geneontology/neo/issues/118)
+		// but as *.FAILED.tgz -- never the rolling artifact.
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // Copy over index.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
-		    // Copy over log.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    // Activity (not wall-clock) timeout: a wedged
+		    // Solr shows up as console silence. Longest
+		    // legitimate silent phase observed is ~41 min
+		    // (flex-load setup), so kill at 2h of silence
+		    // rather than letting TCP decide.
+		    timeout(time: 120, unit: 'MINUTES', activity: true) {
+			sh 'bash ./scripts/run-neo-golr-indexer.sh'
+		    }
 		}
-
-		// Immediately check to see if it looks like we have
-		// enough docs. SANITY_SOLR_DOC_COUNT_MIN must be
-		// greater than what we seen in the index.
-		echo "SANITY_SOLR_DOC_COUNT_MIN:${env.SANITY_SOLR_DOC_COUNT_MIN}"
-		sh 'curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json"'
-		sh 'if [ $SANITY_SOLR_DOC_COUNT_MIN -gt $(curl "http://localhost:8080/solr/select?q=*:*&rows=0&wt=json" | grep -oh \'"numFound":[[:digit:]]*\' | grep -oh [[:digit:]]*) ]; then exit 1; else echo "We seem to be clear wrt doc count"; fi'
 
 		///
 		/// Produce various blazegraphs.
@@ -376,15 +389,15 @@ pipeline {
 
 		// An awkward download and protective cleanup dance.
 		sh 'rm blazegraph.jnl || true'
-		sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_2_1_6_RC/blazegraph.jar'
+		sh 'curl -fL --retry 3 -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_2_1_6_RC/blazegraph.jar'
 		//sh 'curl -L -o /tmp/blazegraph.jar https://github.com/blazegraph/database/releases/download/BLAZEGRAPH_RELEASE_2_1_5/blazegraph.jar'
-		sh 'curl -L -o /tmp/blazegraph.properties https://raw.githubusercontent.com/geneontology/minerva/master/minerva-core/src/main/resources/org/geneontology/minerva/blazegraph.properties'
-		sh 'curl -L -o /tmp/go-lego.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego.owl'
-		sh 'curl -L -o /tmp/neo.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/neo.owl'
+		sh 'curl -fL --retry 3 -o /tmp/blazegraph.properties https://raw.githubusercontent.com/geneontology/minerva/master/minerva-core/src/main/resources/org/geneontology/minerva/blazegraph.properties'
+		sh 'curl -fL --retry 3 -o /tmp/go-lego.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego.owl'
+		sh 'curl -fL --retry 3 -o /tmp/neo.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/neo.owl'
 		// BUG/TODO: This will need to point inward at some point.
 		// Attempt to pull "locally" from skyhook--it should now be built as part of the go makefile release target.
 		//sh 'curl -L -o /tmp/reacto.owl http://snapshot.geneontology.org/ontology/extensions/reacto.owl'
-		sh 'curl -L -o /tmp/reacto.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/reacto.owl'
+		sh 'curl -fL --retry 3 -o /tmp/reacto.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/reacto.owl'
 		// DEBUG: confirm for the moment.
 		sh 'ls -AlF /tmp/*'
 		sh 'head -100 /tmp/go-lego.owl'
@@ -408,7 +421,7 @@ pipeline {
 		    // holding location for ShEx and stable Noctua
 		    // deployment. Pseudo-publish.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/blazegraph-go-lego-reacto-neo.jnl.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/blazegraph-go-lego-reacto-neo.jnl.gz'
-		    sh 'curl -L -o /tmp/go-lego-reacto.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego-reacto.owl'
+		    sh 'curl -fL --retry 3 -o /tmp/go-lego-reacto.owl https://skyhook.berkeleybop.org/$BRANCH_NAME/ontology/extensions/go-lego-reacto.owl'
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/go-lego-reacto.owl skyhook@skyhook.berkeleybop.org:/home/skyhook/go-lego-reacto.owl'
 		}
 	    }
