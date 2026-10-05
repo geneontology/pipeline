@@ -76,7 +76,8 @@ pipeline {
 	GOLR_SOLR_MEMORY = "32G"
 	//GOLR_LOADER_MEMORY = "192G"
 	//GOLR_LOADER_MEMORY = "320G"
-	GOLR_LOADER_MEMORY = "384G"
+	//GOLR_LOADER_MEMORY = "384G"
+	GOLR_LOADER_MEMORY = "512G"
 	GOLR_INPUT_ONTOLOGIES = [
 	    //"http://purl.obolibrary.org/obo/go/snapshot/extensions/go-lego.owl",
 	    //"http://purl.obolibrary.org/obo/eco.owl",
