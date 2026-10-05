@@ -118,6 +118,7 @@ echo "Running owltools loader (heap $LOADER_XMS..$LOADER_MEM)"
 java \
     -Xms"$LOADER_XMS" \
     -Xmx"$LOADER_MEM" \
+    -XX:+UseG1GC -XX:MaxGCPauseMillis=500 \
     "-Xlog:gc*:file=$WORK/golr-gc-loader.log:time,uptime:filecount=3,filesize=50m" \
     -DentityExpansionLimit=8172000 \
     -Djava.awt.headless=true \
