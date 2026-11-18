@@ -29,6 +29,15 @@ pipeline {
         TARGET_GO_STATS_BRANCH = 'master'
         // The branch of go-ontology to use.
         TARGET_GO_NEO_BRANCH = 'master'
+        // Where NEO comes from. 'latest' builds NEO in this run,
+        // from TARGET_GO_NEO_BRANCH. Any other value is the URL of
+        // a directory that holds an already-produced neo.owl and
+        // neo.obo; those files are used as they are (a pinned
+        // NEO) and the rest of the run, including the ontology
+        // build, proceeds as usual.
+        // TEMPORARY PIN, to be set back to 'latest': see
+        // https://github.com/geneontology/pipeline/issues/432
+        TARGET_NEO_SOURCE = 'https://skyhook.berkeleybop.org/issue-35-neo-test.2026-09-21/ontology'
         // The branch of go-ontology to use.
         TARGET_GO_ONTOLOGY_BRANCH = 'master'
         // The branch of minerva to use.
@@ -175,6 +184,7 @@ pipeline {
 			sh 'echo "Branch: $BRANCH_NAME" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
 			sh 'echo "Start day: $START_DAY" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
 			sh 'echo "Start date: $START_DATE" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
+			sh 'echo "NEO source: $TARGET_NEO_SOURCE" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
 
 			sh 'echo "Official release date: metadata/release-date.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
 			sh 'echo "Official Zenodo archive DOI: metadata/release-archive-doi.json" >> $WORKSPACE/mnt/$BRANCH_NAME/summary.txt'
@@ -252,14 +262,34 @@ pipeline {
 		    }
 		    sh 'chmod +x bin/*'
 
-		    //
-		    withEnv(['PATH+EXTRA=:bin:./bin', 'JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G']){
-			retry(3){
-			    sh 'make clean'
-			    sh 'make ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
-			    // TODO: need non-zero return on runoak/oaklib CLI
-			    // https://github.com/geneontology/neo/issues/89
-			    //sh 'make test'
+		    // Build NEO, or fetch an already-produced one; see
+		    // TARGET_NEO_SOURCE above.
+		    script {
+			if( env.TARGET_NEO_SOURCE == 'latest' ){
+			    withEnv(['PATH+EXTRA=:bin:./bin', 'JAVA_OPTS=-Xmx128G', 'OWLTOOLS_MEMORY=128G', 'BGMEM=128G']){
+				retry(3){
+				    sh 'make clean'
+				    sh 'make ROBOT_ENV="ROBOT_JAVA_ARGS=-Xmx48G" all'
+				    // TODO: need non-zero return on runoak/oaklib CLI
+				    // https://github.com/geneontology/neo/issues/89
+				    //sh 'make test'
+				}
+			    }
+			}else{
+			    // Download under temporary names; a transfer that
+			    // ends early fails curl and is tried again.
+			    retry(3){
+				sh 'curl -fL --retry 3 -o neo.owl.tmp "${TARGET_NEO_SOURCE%/}/neo.owl"'
+				sh 'curl -fL --retry 3 -o neo.obo.tmp "${TARGET_NEO_SOURCE%/}/neo.obo"'
+			    }
+			    // Fail here, not later, on a cut-short or wrong
+			    // file: the OWL must have its closing tag and
+			    // the OBO must have terms.
+			    sh 'tail -c 2000 neo.owl.tmp | grep -q "</rdf:RDF>"'
+			    sh 'test "$(grep -c "^id: " neo.obo.tmp)" -gt 1000'
+			    sh 'mv -f neo.owl.tmp neo.owl && mv -f neo.obo.tmp neo.obo'
+			    // For comparison with the source after the run.
+			    sh 'ls -l neo.owl neo.obo && sha256sum neo.owl neo.obo'
 			}
 		    }
 
@@ -277,10 +307,16 @@ pipeline {
 		    // See commented out section below.
 		    //
 		    // Deploy to S3 location for pickup by PURL via CF.
-		    sh 'apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y -u install s3cmd'
-		    withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-			sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.owl s3://go-build/build-noctua-entity-ontology/latest/'
-			sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.obo s3://go-build/build-noctua-entity-ontology/latest/'
+		    // Only a NEO built in this run is published; a pinned
+		    // NEO leaves the published copy as it is.
+		    script {
+			if( env.TARGET_NEO_SOURCE == 'latest' ){
+			    sh 'apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y -u install s3cmd'
+			    withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'aws_go_access_key', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'aws_go_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+				sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.owl s3://go-build/build-noctua-entity-ontology/latest/'
+				sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=application/rdf+xml --cf-invalidate put neo.obo s3://go-build/build-noctua-entity-ontology/latest/'
+			    }
+			}
 		    }
 		}
 	    }
