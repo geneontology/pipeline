@@ -136,11 +136,11 @@ unrecoverably failed while operating with Zenodo. See worknotes for 2021-07-07 f
 - [ ] become jenkins user (to be able to write output files)
 - [ ] get the releases into zenodo in `jenkins@wok:~/workspace/neontology\_pipeline\_release-L3OLSRDNGI3ZIUODKFYUI4AO45X5C6RUGMOQAC5WV2Q6ZQOIFHMA/go-site$`
 	```bash
-	time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205166 --file go-release-archive.tgz --output ./release-archive-doi.json --revision 2020-04-23
+	time python3 ./scripts/zenodo-version-update.py --verbose --key <ZENODO_TOKEN> --concept 1205166 --file go-release-archive.tgz --output ./release-archive-doi.json --revision 2020-04-23
 	```
 	success
 	```bash
-	time python3 ./scripts/zenodo-version-update.py --verbose --key OJBR7cntKKysaXiWHkoVdwVCZp4eoMyGC5a84OnykTMUROmLIOzXN3TiEEsU --concept 1205159 --file go-release-reference.tgz --output ./release-reference-doi.json --revision 2020-04-23
+	time python3 ./scripts/zenodo-version-update.py --verbose --key <ZENODO_TOKEN> --concept 1205159 --file go-release-reference.tgz --output ./release-reference-doi.json --revision 2020-04-23
 	```
 	success
 - [ ] get DOIs and ensure in files as needed
